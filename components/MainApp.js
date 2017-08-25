@@ -9,6 +9,7 @@ import MenuItem from 'material-ui/MenuItem';
 import axios from 'axios';
 
 import Index from './Index';
+import FormExample from './FormExample';
 
 /* ESTE FRAGMENTO DE CODIGO ES REQUERIDO PARA LOS EVENTOS DE TIPO TOUCH O CLICK EN COMPONENTES MATERIAL-UI */
 var injectTapEventPlugin = require("react-tap-event-plugin");
@@ -18,6 +19,7 @@ injectTapEventPlugin();
 /* PAGINAS USADAS PARA EL ENRUTAMIENTO */
 const PAGES = {
     index: <Index />,
+    formExample: <FormExample />
 };
 
 const MainApp = React.createClass({
@@ -63,6 +65,7 @@ const MainApp = React.createClass({
 
                     <Drawer open={this.state.drawerOpen} docked={false} onRequestChange={this.onDrawerRequestChange} >
                         <MenuItem onTouchTap={e => this.gotoPage('index')}>Principal</MenuItem>
+                        <MenuItem onTouchTap={e => this.gotoPage('formExample')}>Ejemplo formulario</MenuItem>
                     </Drawer>
 
                     {currentPage}
