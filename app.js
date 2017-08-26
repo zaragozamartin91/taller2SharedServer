@@ -1,7 +1,9 @@
 const express = require('express');
 const path = require('path');
+var fs = require('fs')
 const favicon = require('serve-favicon');
-const logger = require('morgan');
+const morgan = require('morgan');
+var rfs = require('rotating-file-stream');
 const bodyParser = require('body-parser');
 
 const session = require('express-session');
@@ -20,10 +22,26 @@ app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 
 app.use(favicon(path.join(__dirname, 'public', 'images', 'favicon.ico')));
-app.use(logger('dev'));
+
+/* CONFIGURACION DE LOGS ------------------------------------------------------------------------ */
+
+let logDirectory = path.join(__dirname, 'log')
+// Verificamos que el directorio log/ exista 
+fs.existsSync(logDirectory) || fs.mkdirSync(logDirectory)
+// creamos un stream de archivo para logs rotativos
+let accessLogStream = rfs('sharedServer.log', {
+  interval: '1d', // rotar log 1 vez por dia 
+  path: logDirectory
+})
+// logueamos en un archivo
+app.use(morgan('combined', { stream: accessLogStream }));
+// logueamos por consola
+app.use(morgan('dev'));
+
+/* CONFIGURACION DE MIDDLEWARE DE PARSEO DE BODY ------------------------------------------------------------------------ */
+
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
-
 
 /* CONFIGURACION DE SESION ------------------------------------------------------------------------ */
 /* PARA MAS INFORMACION SOBRE LA CONFIGURACION DE LA SESION, VISITAR:
