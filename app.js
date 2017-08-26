@@ -5,7 +5,6 @@ const logger = require('morgan');
 const bodyParser = require('body-parser');
 
 const session = require('express-session');
-//const MySQLStore = require('express-mysql-session')(session);
 //const SessionManager = require('./model/SessionManager');
 const messages = require('./middleware/messages');
 
