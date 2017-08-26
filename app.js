@@ -2,8 +2,7 @@ const express = require('express');
 const path = require('path');
 var fs = require('fs')
 const favicon = require('serve-favicon');
-const morgan = require('morgan');
-var rfs = require('rotating-file-stream');
+const log4js = require('log4js');
 const bodyParser = require('body-parser');
 
 const session = require('express-session');
@@ -28,15 +27,9 @@ app.use(favicon(path.join(__dirname, 'public', 'images', 'favicon.ico')));
 let logDirectory = path.join(__dirname, 'log')
 // Verificamos que el directorio log/ exista 
 fs.existsSync(logDirectory) || fs.mkdirSync(logDirectory)
-// creamos un stream de archivo para logs rotativos
-let accessLogStream = rfs('sharedServer.log', {
-  interval: '1d', // rotar log 1 vez por dia 
-  path: logDirectory
-})
-// logueamos en un archivo
-app.use(morgan('combined', { stream: accessLogStream }));
-// logueamos por consola
-app.use(morgan('dev'));
+
+log4js.configure(path.join(__dirname, "config", "log4js.json"));
+app.use(log4js.connectLogger(log4js.getLogger("http"), { level: 'auto' }));
 
 /* CONFIGURACION DE MIDDLEWARE DE PARSEO DE BODY ------------------------------------------------------------------------ */
 
