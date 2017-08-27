@@ -1,6 +1,6 @@
 const express = require('express');
 const path = require('path');
-var fs = require('fs')
+const fs = require('fs')
 const favicon = require('serve-favicon');
 const log4js = require('log4js');
 const bodyParser = require('body-parser');
