@@ -2,3 +2,5 @@ node_modules/*
 public/lib/*
 songs/*
 log/*
+public/javascripts/*.bundle.js
+
