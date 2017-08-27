@@ -1,7 +1,12 @@
 {
   "name": "taller2_shared_server",
   "version": "1.0.0",
+  "description": "Shared server de taller2",
+  "engines": {
+    "node": "6.11.1"
+  },
   "private": true,
+  "main": "app.js",
   "scripts": {
     "start": "node app.js",
     "build": "node_modules/.bin/webpack -p",
@@ -36,5 +41,9 @@
     "babel-preset-stage-1": "^6.24.1",
     "mocha": "^3.5.0",
     "webpack": "^2.6.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/zaragozamartin91/taller2SharedServer.git"
   }
 }
