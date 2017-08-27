@@ -5,7 +5,8 @@
   "scripts": {
     "start": "node app.js",
     "build": "node_modules/.bin/webpack -p",
-    "test": "node_modules/.bin/mocha --timeout 5000"
+    "test": "node_modules/.bin/mocha --timeout 5000",
+    "coverage": "istanbul cover node_modules/mocha/bin/_mocha -- -R spec"
   },
   "dependencies": {
     "axios": "^0.16.2",
@@ -17,8 +18,8 @@
     "express-session": "^1.15.4",
     "formidable": "^1.1.1",
     "jquery": "^3.2.1",
+    "log4js": "^2.3.3",
     "material-ui": "^0.18.5",
-    "morgan": "~1.8.1",
     "pg": "^6.1.0",
     "react": "^15.5.4",
     "react-dom": "^15.5.4",

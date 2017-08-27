@@ -1,11 +1,11 @@
 const express = require('express');
 const path = require('path');
+const fs = require('fs')
 const favicon = require('serve-favicon');
-const logger = require('morgan');
+const log4js = require('log4js');
 const bodyParser = require('body-parser');
 
 const session = require('express-session');
-//const MySQLStore = require('express-mysql-session')(session);
 //const SessionManager = require('./model/SessionManager');
 const messages = require('./middleware/messages');
 
@@ -21,10 +21,20 @@ app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 
 app.use(favicon(path.join(__dirname, 'public', 'images', 'favicon.ico')));
-app.use(logger('dev'));
+
+/* CONFIGURACION DE LOGS ------------------------------------------------------------------------ */
+
+let logDirectory = path.join(__dirname, 'log')
+// Verificamos que el directorio log/ exista 
+fs.existsSync(logDirectory) || fs.mkdirSync(logDirectory)
+
+log4js.configure(path.join(__dirname, "config", "log4js.json"));
+app.use(log4js.connectLogger(log4js.getLogger("http"), { level: 'auto' }));
+
+/* CONFIGURACION DE MIDDLEWARE DE PARSEO DE BODY ------------------------------------------------------------------------ */
+
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
-
 
 /* CONFIGURACION DE SESION ------------------------------------------------------------------------ */
 /* PARA MAS INFORMACION SOBRE LA CONFIGURACION DE LA SESION, VISITAR:

@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const path = require('path');
 const GlobalConfig = require('../GlobalConfig');
+const logger = require('log4js').getLogger();
 
 router.get('/', (req, res) => {
   res.redirect(GlobalConfig.mainPath);
@@ -9,6 +10,7 @@ router.get('/', (req, res) => {
 
 /* GET home page. */
 router.get(GlobalConfig.mainPath, (req, res) => {
+  logger.debug("HEEEYYY");
   res.render('index', { title: 'Shared server' });
 });
 
