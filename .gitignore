@@ -3,4 +3,4 @@ public/lib/*
 songs/*
 log/*
 public/javascripts/*.bundle.js
-
+coverage/
