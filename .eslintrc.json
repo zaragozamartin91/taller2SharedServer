@@ -16,7 +16,6 @@
     "plugins": [
         "react"
     ],
-    
     "rules": {
         "indent": [
             "error",
@@ -35,6 +34,16 @@
             "always"
         ],
         "no-console": "off",
-        "no-unused-vars":"off"
-    }
+        "no-unused-vars": "off"
+    },
+    "overrides": [
+        {
+            "files": [
+                "test/*.js"
+            ],
+            "rules": {
+                "no-undef":"off"
+            }
+        }
+    ]
 }

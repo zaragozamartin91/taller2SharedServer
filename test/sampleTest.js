@@ -26,7 +26,7 @@ describe('Array', function () {
                 done();
             }, 1000);
         });
-    })
+    });
 });
 
 

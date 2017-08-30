@@ -5,8 +5,8 @@ console.log('DEFINIENDO GlobalConfig');
  * @class
  */
 function GlobalConfig() {
-    this.profile = "dev";
-    this.mainPath = "/main";
+    this.profile = 'dev';
+    this.mainPath = '/main';
 }
 
 /**

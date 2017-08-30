@@ -43,6 +43,6 @@ module.exports = function (req, res, next) {
     res.locals.removeMessages = () => req.session.messages = [];
     res.locals.message = res.locals.messages[0] ? res.locals.messages[0] : null;
 
-    console.log("res.locals.messages: " + res.locals.messages);
+    console.log('res.locals.messages: ' + res.locals.messages);
     next();
 };

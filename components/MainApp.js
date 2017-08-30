@@ -12,7 +12,7 @@ import Index from './Index';
 import FormExample from './FormExample';
 
 /* ESTE FRAGMENTO DE CODIGO ES REQUERIDO PARA LOS EVENTOS DE TIPO TOUCH O CLICK EN COMPONENTES MATERIAL-UI */
-var injectTapEventPlugin = require('react-tap-event-plugin');
+const injectTapEventPlugin = require('react-tap-event-plugin');
 injectTapEventPlugin();
 /* -------------------------------------------------------------------------------------------------------- */
 
