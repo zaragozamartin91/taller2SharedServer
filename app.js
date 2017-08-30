@@ -109,8 +109,9 @@ app.use(function (err, req, res, next) {
 
 module.exports = app;
 
-let port = 8080;
+/* La instruccion del puerto fue modificada para hacer un deploy correcto 
+de la app en heroku. https://stackoverflow.com/questions/15693192/heroku-node-js-error-web-process-failed-to-bind-to-port-within-60-seconds-of */
+let port = process.env.PORT || 5000;
 console.log(`ESCUCHANDO EN PUERTO ${port}`);
 app.listen(port);
-
 
