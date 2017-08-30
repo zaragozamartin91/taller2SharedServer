@@ -1,5 +1,5 @@
 function MyList() {
-    this.items = []
+    this.items = [];
 }
 
 MyList.prototype.add = function(item) {

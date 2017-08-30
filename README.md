@@ -20,5 +20,8 @@ Para iniciar el server, se debe:
 ## Reporte de cobertura
 El reporte de cobertura de código se generará en /coverage luego de correr el comando **npm run coverage**
 
+## Linter
+Para correr el linter de la aplicacion, correr el comando **npm run lint**
+
 ## Tests
 Para correr los tests de la aplicación, correr el comando **npm test**
