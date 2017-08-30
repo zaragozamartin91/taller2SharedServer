@@ -1,4 +1,4 @@
-const mc = require('./modelConfig');
+const mc = require('./model-config');
 const pg = require('pg');
 
 let dbUrl = `postgres://${mc.user}:${mc.password}@${mc.host}:${mc.port}/${mc.db}`;

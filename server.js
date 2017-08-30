@@ -9,8 +9,8 @@ const session = require('express-session');
 // const SessionManager = require('./model/SessionManager');
 const messages = require('./middleware/messages');
 
-const viewRoutes = require('./routes/viewRoutes');
-const apiRoutes = require('./routes/apiRoutes');
+const viewRoutes = require('./routes/view-routes');
+const apiRoutes = require('./routes/api-routes');
 
 /* ------------------------------------------------------------------------------------------- */
 
