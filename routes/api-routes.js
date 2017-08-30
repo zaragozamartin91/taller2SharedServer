@@ -1,15 +1,16 @@
 const express = require('express');
 const router = express.Router();
-const path = require('path');
+
+//const path = require('path');
 /* formidable se usa para el manejo de formularios con archivos */
-const formidable = require('formidable');
+//const formidable = require('formidable');
 
 /* este modulo sirve para manejar archivos */
-const filesystem = require("fs");
+//const filesystem = require("fs");
 
 /* este modulo parsea urls */
-const url = require('url');
-const GlobalConfig = require('../GlobalConfig');
+//const url = require('url');
+//const GlobalConfig = require('../config/GlobalConfig');
 
 /* TODAS LAS RUTAS DE TIPO API TIENEN EL PREFIJO /api INCORPORADO AUTOMATICAMENTE  */
 

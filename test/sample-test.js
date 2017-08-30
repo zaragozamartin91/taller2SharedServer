@@ -8,7 +8,7 @@ http://mochajs.org/#arrow-functions
 
 describe('Array', function () {
     beforeEach(function () {
-        console.log("before each!");
+        console.log('before each!');
     });
 
     describe('#indexOf()', function () {
