@@ -16,6 +16,6 @@ client.connect();
 //query.on('end', () => { client.end(); });
 
 client.query('SELECT $1::text as message', ['Hello world!'], (err, res) => {
-    console.log(err ? err.stack : res.rows[0].message) // Hello World!
-    client.end()
-  });
+    console.log(err ? err.stack : res.rows[0].message); // Hello World!
+    client.end();
+});

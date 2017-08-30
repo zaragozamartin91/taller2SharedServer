@@ -14,14 +14,14 @@ const FormExample = React.createClass({
     },
 
     submitForm: function () {
-        console.log("SUBIENDO FORMULARIO");
+        console.log('SUBIENDO FORMULARIO');
         /* La invocacion a this.setState provoca que el componente entero vuelva a renderizarse
         llamando a render() */
-        this.setState({ msg: "Formulario subido!" });
+        this.setState({ msg: 'Formulario subido!' });
     },
 
     render: function () {
-        let msgDiv = this.state.msg ? <p style={{ color: "green" }} >{this.state.msg}</p> : <div />;
+        let msgDiv = this.state.msg ? <p style={{ color: 'green' }} >{this.state.msg}</p> : <div />;
 
         return (
             <div>

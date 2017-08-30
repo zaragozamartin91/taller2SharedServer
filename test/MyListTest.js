@@ -1,9 +1,9 @@
-var MyList = require("../utils/MyList");
+var MyList = require('../utils/MyList');
 var assert = require('assert');
 
 describe('MyList', function () {
     beforeEach(function () {
-        console.log("before each!");
+        console.log('before each!');
     });
 
     describe('#add(item)', function () {
