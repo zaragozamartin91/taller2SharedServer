@@ -1,17 +1,21 @@
 const bcrypt = require('bcryptjs');
 const dbManager = require('./db-manager');
 
+const table = 'business_user';
+
 function BusinessUser(id, username, password) {
     this.id = id;
     this.username = username;
     this.password = password;
 }
 
-const table = 'business_user';
+function encryptPassword(password) {
+    return bcrypt.hashSync(password, 10);
+}
 
 BusinessUser.fromObj = function (usrObj) {
     const user = new BusinessUser();
-    Object.keys(usrObj).map((key, index) => user[key] = usrObj[key]);
+    Object.keys(usrObj).map(key => user[key] = usrObj[key]);
     return user.hidePassword();
 };
 
@@ -24,7 +28,7 @@ BusinessUser.createTable = function (callback) {
 };
 
 BusinessUser.insert = function (userObj, callback) {
-    const password = bcrypt.hashSync(userObj.password, 10);
+    const password = encryptPassword(userObj.password);
     const username = userObj.username;
     dbManager.query(`INSERT INTO ${table}(username,password) 
         VALUES ($1,$2) RETURNING *`,
@@ -42,6 +46,13 @@ BusinessUser.findById = function (id, callback) {
         });
 };
 
+BusinessUser.find = function (callback) {
+    dbManager.query(`SELECT * FROM ${table}`, [], (err, res) => {
+        if (err) return callback(err);
+        callback(null, res.rows.map(BusinessUser.fromObj));
+    })
+};
+
 BusinessUser.prototype.authenticate = function (password) {
     const hash = this.password;
     const isValid = bcrypt.compareSync(password, hash);
@@ -54,3 +65,9 @@ BusinessUser.prototype.hidePassword = function () {
 };
 
 module.exports = BusinessUser;
+
+BusinessUser.mockUsers = [
+    new BusinessUser(100, "martin", encryptPassword("pepe")),
+    new BusinessUser(101, "exequiel", encryptPassword("posting")),
+    new BusinessUser(100, "javier", encryptPassword("rules")),
+];

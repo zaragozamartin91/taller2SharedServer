@@ -4,13 +4,15 @@ const modelConfig = require('./model-config');
 const { Pool } = require('pg');
 
 function buildPool() {
-    let pool = new Pool({
-        user: process.env.PGUSER || modelConfig.user,
-        host: process.env.PGHOST || modelConfig.host,
-        database: process.env.PGDATABASE || modelConfig.db,
-        password: process.env.PGPASSWORD || modelConfig.password,
-        port: process.env.PGPORT || modelConfig.port,
-    });
+    let pool = process.env.DATABASE_URL ?
+        new Pool({ connectionString: connectionString, }) :
+        new Pool({
+            user: process.env.PGUSER || modelConfig.user,
+            host: process.env.PGHOST || modelConfig.host,
+            database: process.env.PGDATABASE || modelConfig.db,
+            password: process.env.PGPASSWORD || modelConfig.password,
+            port: process.env.PGPORT || modelConfig.port,
+        });
 
     // the pool with emit an error on behalf of any idle clients
     // it contains if a backend error or network partition happens
@@ -46,7 +48,7 @@ exports.query = function (sql, values, callback) {
     });
 };
 
-exports.end = function() {
+exports.end = function () {
     poolWrapper.pool.end();
 };
 
