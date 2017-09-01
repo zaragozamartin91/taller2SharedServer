@@ -14,15 +14,17 @@ function encryptPassword(password) {
 }
 
 BusinessUser.fromObj = function (usrObj) {
-    const user = new BusinessUser();
-    Object.keys(usrObj).map(key => user[key] = usrObj[key]);
-    return user.hidePassword();
+    if (usrObj) {
+        const user = new BusinessUser();
+        Object.keys(usrObj).map(key => user[key] = usrObj[key]);
+        return user.hidePassword();
+    } else return null;
 };
 
 BusinessUser.createTable = function (callback) {
     dbManager.query(`CREATE TABLE ${table} (
         id SERIAL PRIMARY KEY,
-        username VARCHAR(64),
+        username VARCHAR(64) UNIQUE,
         password VARCHAR(256)
     )`, [], callback);
 };
@@ -50,7 +52,14 @@ BusinessUser.find = function (callback) {
     dbManager.query(`SELECT * FROM ${table}`, [], (err, res) => {
         if (err) return callback(err);
         callback(null, res.rows.map(BusinessUser.fromObj));
-    })
+    });
+};
+
+BusinessUser.findByUsername = function (username, callback) {
+    dbManager.query(`SELECT * FROM ${table} WHERE username=$1`, [username], (err, res) => {
+        if (err) return callback(err);
+        callback(null, BusinessUser.fromObj(res.rows[0]));
+    });
 };
 
 BusinessUser.prototype.authenticate = function (password) {
@@ -67,7 +76,7 @@ BusinessUser.prototype.hidePassword = function () {
 module.exports = BusinessUser;
 
 BusinessUser.mockUsers = [
-    new BusinessUser(100, "martin", encryptPassword("pepe")),
-    new BusinessUser(101, "exequiel", encryptPassword("posting")),
-    new BusinessUser(100, "javier", encryptPassword("rules")),
+    new BusinessUser(100, 'martin', encryptPassword('pepe')),
+    new BusinessUser(101, 'exequiel', encryptPassword('posting')),
+    new BusinessUser(100, 'javier', encryptPassword('rules')),
 ];

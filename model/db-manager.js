@@ -5,7 +5,7 @@ const { Pool } = require('pg');
 
 function buildPool() {
     let pool = process.env.DATABASE_URL ?
-        new Pool({ connectionString: connectionString, }) :
+        new Pool({ connectionString: process.env.DATABASE_URL }) :
         new Pool({
             user: process.env.PGUSER || modelConfig.user,
             host: process.env.PGHOST || modelConfig.host,
