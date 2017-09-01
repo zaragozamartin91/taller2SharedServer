@@ -6,31 +6,39 @@ console.log(`db url: ${dbUrl}`);
 
 const connectionString = process.env.DATABASE_URL || dbUrl;
 
-//'postgres://root:root@192.168.99.100:5432/root';
-
 const client = new pg.Client(connectionString);
 client.connect();
-
-//const query = client.query(
-//    'CREATE TABLE person(id INT PRIMARY KEY NOT NULL, name VARCHAR(40) not null)');
-//query.on('end', () => { client.end(); });
 
 client.query('SELECT $1::text as message', ['Hello world!'], (err, res) => {
     console.log(err ? err.stack : res.rows[0].message); // Hello World!
     client.end();
 });
 
-//const dbManager = require('./db-manager');
-//dbManager.query('SELECT * from business_user');
-
 const BusinessUser = require('./BusinessUser');
+const dbManager = require('./db-manager');
 
-BusinessUser.findById(5, (err, res) => {
-    console.error(err);
-    console.log(res);
-});
+function createUserTable() {
+    BusinessUser.createTable(err => {
+        if (err) console.error(err);
+        else console.log('business_user table created!');
+        dbManager.end();
+    });
+}
 
-//BusinessUser.insert({ username: 'martin', password: 'pepe' }, (err, res) => {
-//    console.error(err);
-//    console.log(res.id);
-//});
+function insert() {
+    BusinessUser.insert({ username: 'mateo', password: 'posting' }, (err, res) => {
+        if (err) console.error(err);
+        else console.log(res);
+        dbManager.end();
+    });
+}
+
+function find() {
+    BusinessUser.find((err, res) => {
+        if (err) console.error(err);
+        else console.log(res);
+        dbManager.end();
+    });
+}
+
+insert();
