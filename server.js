@@ -5,12 +5,9 @@ const favicon = require('serve-favicon');
 const log4js = require('log4js');
 const bodyParser = require('body-parser');
 
-const session = require('express-session');
-// const SessionManager = require('./model/SessionManager');
-const messages = require('./middleware/messages');
-
 const viewRoutes = require('./routes/view-routes');
 const apiRoutes = require('./routes/api-routes');
+const GlobalConfig = require('./config/GlobalConfig');
 
 /* ------------------------------------------------------------------------------------------- */
 
@@ -24,7 +21,7 @@ app.use(favicon(path.join(__dirname, 'public', 'images', 'favicon.ico')));
 
 /* CONFIGURACION DE LOGS ------------------------------------------------------------------------ */
 
-let logDirectory = path.join(__dirname, 'log');
+const logDirectory = path.join(__dirname, 'log');
 
 // Verificamos que el directorio log/ exista
 if (!fs.existsSync(logDirectory)) {
@@ -39,42 +36,15 @@ app.use(log4js.connectLogger(log4js.getLogger('http'), { level: 'auto' }));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 
-/* CONFIGURACION DE SESION ------------------------------------------------------------------------ */
-/* PARA MAS INFORMACION SOBRE LA CONFIGURACION DE LA SESION, VISITAR:
-https://github.com/expressjs/session  */
-
-/* PARA MAS INFORMACION SOBRE SESSION STORES, VISITAR:
-https://github.com/expressjs/session#compatible-session-stores
-https://www.npmjs.com/package/express-mysql-session  
-https://www.npmjs.com/package/connect-mongo */
-/* Las cookies duraran una hora */
-const cookieMaxAge = 1000 * 60 * 60;
-const sess = {
-    secret: 'taller2 shared server',
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-        maxAge: cookieMaxAge
-    }
-};
-if (app.get('env') === 'production') {
-    app.set('trust proxy', 1); // trust first proxy
-    sess.cookie.secure = true; // serve secure cookies
-}
-app.use(session(sess));
-
 /* CONFIGURACION DE PATHS -------------------------------------------------------------------------- */
 
 /* LOS RECURSOS ESTATICOS DEBEN ACCEDERSE USANDO EL PATH APROPIADO. 
 NO ES POSIBLE NAVEGARLOS COMO ESTRUCTURA DE DIRECTORIO */
 app.use(express.static('public'));
 
-/* MIDDLEWARE PARA EL MANEJO DE MENSAJES */
-app.use(messages);
-
 /* RUTAS */
 app.use('/', viewRoutes);
-app.use('/api', apiRoutes);
+app.use(GlobalConfig.getApiRoutePrefix(), apiRoutes);
 
 /* MANEJO DE ERRORES ------------------------------------------------------------------------------ */
 
@@ -112,6 +82,6 @@ module.exports = app;
 
 /* La instruccion del puerto fue modificada para hacer un deploy correcto 
 de la app en heroku. https://stackoverflow.com/questions/15693192/heroku-node-js-error-web-process-failed-to-bind-to-port-within-60-seconds-of */
-let port = process.env.PORT || 5000;
+const port = process.env.PORT || 5000;
 console.log(`ESCUCHANDO EN PUERTO ${port}`);
 app.listen(port);

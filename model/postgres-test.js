@@ -19,3 +19,18 @@ client.query('SELECT $1::text as message', ['Hello world!'], (err, res) => {
     console.log(err ? err.stack : res.rows[0].message); // Hello World!
     client.end();
 });
+
+//const dbManager = require('./db-manager');
+//dbManager.query('SELECT * from business_user');
+
+const BusinessUser = require('./BusinessUser');
+
+BusinessUser.findById(5, (err, res) => {
+    console.error(err);
+    console.log(res);
+});
+
+//BusinessUser.insert({ username: 'martin', password: 'pepe' }, (err, res) => {
+//    console.error(err);
+//    console.log(res.id);
+//});
