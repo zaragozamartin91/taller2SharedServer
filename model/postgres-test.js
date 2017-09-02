@@ -52,9 +52,11 @@ function insertAppServer() {
     });
 }
 
-insertBusinessUser();
+ApplicationServer.find((err, res) => {
+    console.log(res);
+});
 
 //dbManager.query('SELECT * FROM magic', [], (err, res) => {
-//    console.log(res.rows[0]);
+//    console.log(new Date(res.rows[0].day));
 //    dbManager.end();
 //});

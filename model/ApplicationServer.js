@@ -11,34 +11,38 @@ const table = 'application_server';
 
 /* CODIGO -------------------------------------------------------------------------------------- */
 
-function ApplicationServer() {
-    this.id = ''; /* Idstring. 
+function ApplicationServer(id, _ref, createdBy, createdTime, name, lastConnection) {
+    this.id = id; /* Idstring. 
     Se guarda como un string, pero podría ser un número
     es dependiente de la implementación. */
 
-    this._ref = ''; /* Refstring.    
+    this._ref = _ref; /* Refstring.    
     Hash que es utilizado para prevenir colosiones.
     Cuando se crea un elemento, se debe pasar un valor de undefined (o no debe estar).
     Al actualizar, el servidor chequeará que este valor sea igual al guardado, de no coincidir,
     significa que otro actualizó el recurso, por ende, la actualización debe fallar. */
 
-    this.createdBy = ''; /*Idstring.    
+    this.createdBy = createdBy; /*Idstring.    
     Se guarda como un string, pero podría ser un número
     es dependiente de la implementación. */
 
-    this.createdTime = 0; /* Timestampnumber. Tiempo en epoch*/
+    this.createdTime = createdTime; /* Timestampnumber. Tiempo en epoch*/
 
-    this.name = ''; /*	string. Nombre del application server */
+    this.name = name; /*	string. Nombre del application server */
 
-    this.lastConnection = 0; /* Timestampnumber. Tiempo en epoch */
+    this.lastConnection = lastConnection; /* Timestampnumber. Tiempo en epoch */
 }
 
-ApplicationServer.fromObj = function (obj) {
+ApplicationServer.fromRow = function (obj) {
     if (obj) {
-        const appServer = new ApplicationServer();
-        Object.keys(obj).map(key => appServer[key] = obj[key]);
-        appServer.createdBy = new Date(appServer.createdBy);
-        appServer.lastConnection = new Date(appServer.lastConnection);
+        const appServer = new ApplicationServer(
+            obj.id,
+            obj._ref,
+            obj.created_by,
+            new Date(obj.created_time),
+            obj.name,
+            new Date(obj.last_conn)
+        );
         return appServer;
     } else return null;
 };
@@ -51,10 +55,18 @@ ApplicationServer.insert = function (obj, callback) {
     const id = idGenerator.generateId(name);
     const _ref = hasher.hash({ id, name });
     const createdBy = obj.createdBy;
+    const createdTime = new Date();
 
-    dbManager.query(`INSERT INTO ${table} (id,_ref,created_by,name)
-        VALUES ($1,$2,$3,$4) RETURNING *`,
-        [id, _ref, createdBy, name], callback);
+    dbManager.query(`INSERT INTO ${table} (id,_ref,created_by,name,created_time)
+        VALUES ($1,$2,$3,$4,$5) RETURNING *`,
+        [id, _ref, createdBy, name, createdTime], callback);
+};
+
+ApplicationServer.find = function (callback) {
+    dbManager.query(`SELECT * FROM ${table}`, [], (err, res) => {
+        if (err) return callback(err);
+        callback(null, res.rows.map(ApplicationServer.fromRow));
+    });
 };
 
 ApplicationServer.createTable = function (callback) {
