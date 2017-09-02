@@ -17,7 +17,7 @@ BusinessUser.fromObj = function (usrObj) {
     if (usrObj) {
         const user = new BusinessUser();
         Object.keys(usrObj).map(key => user[key] = usrObj[key]);
-        return user.hidePassword();
+        return user;
     } else return null;
 };
 
@@ -27,6 +27,10 @@ BusinessUser.createTable = function (callback) {
         username VARCHAR(64) UNIQUE,
         password VARCHAR(256)
     )`, [], callback);
+};
+
+BusinessUser.deleteTable = function (callback) {
+    dbManager.query(`DROP TABLE ${table}`, [], callback);
 };
 
 BusinessUser.insert = function (userObj, callback) {
