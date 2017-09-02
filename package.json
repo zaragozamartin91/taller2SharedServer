@@ -1,12 +1,18 @@
 {
   "name": "taller2_shared_server",
   "version": "1.0.0",
+  "description": "Shared server de taller2",
+  "engines": {
+    "node": "6.11.1"
+  },
   "private": true,
+  "main": "server.js",
   "scripts": {
-    "start": "node app.js",
+    "start": "node server.js",
     "build": "node_modules/.bin/webpack -p",
     "test": "node_modules/.bin/mocha --timeout 5000",
-    "coverage": "istanbul cover node_modules/mocha/bin/_mocha -- -R spec"
+    "coverage": "node_modules/.bin/istanbul cover node_modules/mocha/bin/_mocha -- -R spec",
+    "lint": "node_modules/.bin/eslint ./"
   },
   "dependencies": {
     "axios": "^0.16.2",
@@ -34,7 +40,19 @@
     "babel-preset-env": "^1.5.1",
     "babel-preset-react": "^6.24.1",
     "babel-preset-stage-1": "^6.24.1",
+    "eslint": "^4.5.0",
+    "eslint-config-standard": "^10.2.1",
+    "eslint-plugin-import": "^2.7.0",
+    "eslint-plugin-node": "^5.1.1",
+    "eslint-plugin-promise": "^3.5.0",
+    "eslint-plugin-react": "^7.3.0",
+    "eslint-plugin-standard": "^3.0.1",
+    "istanbul": "^0.4.5",
     "mocha": "^3.5.0",
     "webpack": "^2.6.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/zaragozamartin91/taller2SharedServer.git"
   }
 }

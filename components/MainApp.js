@@ -12,7 +12,7 @@ import Index from './Index';
 import FormExample from './FormExample';
 
 /* ESTE FRAGMENTO DE CODIGO ES REQUERIDO PARA LOS EVENTOS DE TIPO TOUCH O CLICK EN COMPONENTES MATERIAL-UI */
-var injectTapEventPlugin = require("react-tap-event-plugin");
+const injectTapEventPlugin = require('react-tap-event-plugin');
 injectTapEventPlugin();
 /* -------------------------------------------------------------------------------------------------------- */
 
@@ -29,7 +29,7 @@ const MainApp = React.createClass({
             drawerOpen: false,
             songIndex: 0,
             playlist: []
-        }
+        };
     },
 
     appBarLeftTap: function () {
@@ -43,17 +43,17 @@ const MainApp = React.createClass({
     },
 
     gotoPage: function (page) {
-        console.log("GOING TO PAGE: " + page);
+        console.log('GOING TO PAGE: ' + page);
         this.setState({ currPage: page, drawerOpen: false });
     },
 
     componentDidMount: function () {
         /* SE CARGAN LAS CANCIONES DESPUES QUE EL COMPONENTE HAYA SIDO MONTADO */
-        console.log("MainApp DID MOUNT!");
+        console.log('MainApp DID MOUNT!');
     },
 
     render: function () {
-        console.log("RENDERING MainApp!");
+        console.log('RENDERING MainApp!');
         let currentPage = PAGES[this.state.currPage];
 
         return (

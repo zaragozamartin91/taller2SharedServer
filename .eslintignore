@@ -1,0 +1,5 @@
+node_modules/**/*.js
+public/javascripts/*.bundle.js
+webpack.config.js
+coverage/**/*.js
+log/**/*.js
