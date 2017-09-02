@@ -4,8 +4,8 @@ const conf = require('../config/main-config');
 const secret = conf.tokenSecret;
 const defaultExp = 15;
 
-exports.signToken = function (user, expirationMins) {
-    return jwt.sign(user, secret, {
+exports.signToken = function (obj, expirationMins) {
+    return jwt.sign(obj, secret, {
         expiresIn: `${expirationMins || defaultExp}m`
     });
 };
