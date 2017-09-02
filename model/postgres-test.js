@@ -26,7 +26,7 @@ function createUserTable() {
 }
 
 function insert() {
-    BusinessUser.insert({ username: 'martin', password: 'pepe' }, (err, res) => {
+    BusinessUser.insert({ username: 'roberto', password: 'pepe' }, (err, res) => {
         if (err) console.error(err);
         else console.log(res);
         dbManager.end();
@@ -42,11 +42,11 @@ function find() {
 }
 
 function findByUsername() {
-    BusinessUser.findByUsername('martin', (err,usr) => {
+    BusinessUser.findByUsername('roberto', (err,usr) => {
         if (err) console.error(err);
         else console.log(usr);
         dbManager.end();
     });
 }
 
-findByUsername();
+insert();

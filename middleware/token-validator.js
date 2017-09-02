@@ -11,7 +11,7 @@ exports.verifyToken = function (req, res, next) {
     tokenManager.verifyToken(token, (err, decoded) => {
         if (err) {
             res.status(401);
-            return res.send({ message: "Token invalido" });
+            return res.send({ message: 'Token invalido' });
         }
 
         req.decoded = decoded;

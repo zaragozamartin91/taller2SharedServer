@@ -8,7 +8,7 @@ const username = user.username;
 // if user is found and password is right
 // create a token
 let token = jwt.sign({username}, conf.tokenSecret,{
-    expiresIn: "15m"
+    expiresIn: '15m'
 });
 
 console.log('signed token:');
