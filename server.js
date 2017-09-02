@@ -7,7 +7,7 @@ const bodyParser = require('body-parser');
 
 const viewRoutes = require('./routes/view-routes');
 const apiRoutes = require('./routes/api-routes');
-const GlobalConfig = require('./config/GlobalConfig');
+const mainConf = require('./config/main-config');
 
 /* ------------------------------------------------------------------------------------------- */
 
@@ -44,7 +44,7 @@ app.use(express.static('public'));
 
 /* RUTAS */
 app.use('/', viewRoutes);
-app.use(GlobalConfig.getApiRoutePrefix(), apiRoutes);
+app.use(mainConf.apiRoutesPrefix, apiRoutes);
 
 /* MANEJO DE ERRORES ------------------------------------------------------------------------------ */
 

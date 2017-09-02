@@ -1,7 +1,7 @@
 const express = require('express');
-const router = express.Router();
+const managerController = require('../controllers/manager-controller');
 
-/* TODAS LAS RUTAS DE TIPO API TIENEN EL PREFIJO ASIGNADO POR GlobalConfig#getApiRoutePrefix INCORPORADO AUTOMATICAMENTE */
+const router = express.Router();
 
 /** Api para obtener y reproducir el audio de una cancion */
 router.get('/test', function (req, res) {
@@ -12,7 +12,6 @@ router.get('/test', function (req, res) {
     });
 });
 
-
-
+router.post('/token', managerController.generateToken);
 
 module.exports = router;

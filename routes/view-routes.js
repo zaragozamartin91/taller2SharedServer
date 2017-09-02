@@ -1,15 +1,15 @@
 const express = require('express');
 const router = express.Router();
 const path = require('path');
-const GlobalConfig = require('../config/GlobalConfig');
+const config = require('../config/main-config');
 const logger = require('log4js').getLogger();
 
 router.get('/', (req, res) => {
-    res.redirect(GlobalConfig.mainPath);
+    res.redirect(config.mainPath);
 });
 
 /* GET home page. */
-router.get(GlobalConfig.mainPath, (req, res) => {
+router.get(config.mainPath, (req, res) => {
     logger.debug('HEEEYYY');
     res.render('index', { title: 'Shared server' });
 });
