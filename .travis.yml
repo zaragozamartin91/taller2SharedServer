@@ -3,3 +3,6 @@ node_js:
   - '6.11.2'
 after_success:
   - 'cat ./coverage/lcov.info | ./node_modules/.bin/coveralls'
+branches:
+  only:
+    - master
