@@ -35,18 +35,12 @@ const poolWrapper = {
  * @param {Function} callback Funcion a invocar al finalizar la query.
  */
 exports.query = function (sql, values, callback) {
-    poolWrapper.pool.connect().then(client => {
-        client.query(sql, values)
-            .then(res => {
-                client.release();
-                callback(null, res);
-            })
-            .catch(err => {
-                callback(err);
-                console.log('client.release');
-                console.log(client.release);
-                client.release();
-            });
+    poolWrapper.pool.connect((err, client, done) => {
+        if (err) return callback(err);
+        client.query(sql, values || [], (err, res) => {
+            done(); // done libera un cliente del pool
+            callback(err, res);
+        });
     });
 };
 

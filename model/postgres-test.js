@@ -62,7 +62,8 @@ function findApplicationServer() {
 BusinessUser.findByUsername('martin', (err, usr) => {
     if(err) return console.error(err);
     console.log(usr);
-    usr.authenticate();
+    const authOk = usr.authenticate('pepe');
+    console.log(`authOk: ${authOk}`);
     dbManager.end();
 });
 
