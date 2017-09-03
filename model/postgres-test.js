@@ -43,7 +43,7 @@ function createAppServerTable() {
 
 function insertAppServer() {
     ApplicationServer.insert({
-        name: 'anotherApp',
+        name: 'oneApp',
         createdBy: 'martin-86161'
     }, (err, res) => {
         if (err) console.error(err);
@@ -59,13 +59,7 @@ function findApplicationServer() {
     });
 }
 
-BusinessUser.findByUsername('martin', (err, usr) => {
-    if(err) return console.error(err);
-    console.log(usr);
-    const authOk = usr.authenticate('pepe');
-    console.log(`authOk: ${authOk}`);
-    dbManager.end();
-});
+insertAppServer();
 
 //dbManager.query('SELECT * FROM magic', [], (err, res) => {
 //    console.log(new Date(res.rows[0].day));

@@ -6,7 +6,12 @@ const secret = conf.tokenSecret;
 const defaultExpirationTime = 15;
 const defaultExpirationTimeUnits = 'm';
 
-exports.signToken = function (obj, expirationMins) {
+/**
+ * Crea y firma un token.
+ * @param {object} obj Objeto a usar para crear y firmar el token.
+ * @param {Number} expirationMins Tiempo de expiracion en minutos.
+ */
+function signToken(obj, expirationMins) {
     expirationMins = expirationMins || defaultExpirationTime;
     const token = jwt.sign(obj, secret, {
         expiresIn: `${expirationMins}${defaultExpirationTimeUnits}`
@@ -15,12 +20,21 @@ exports.signToken = function (obj, expirationMins) {
         .toDate().getTime();
 
     return { token, expiresAt };
-};
+}
 
-exports.verifyToken = function (token, callback) {
+exports.signToken = signToken;
+
+/**
+ * Verifica un token.
+ * @param {any} token String o objeto token firmado a verificar. 
+ * @param {Function} callback Funcion a invocar cuando se haya verificado el token.
+ */
+function verifyToken(token, callback) {
     token = token.token || token;
     jwt.verify(token, secret, callback);
-};
+}
+
+exports.verifyToken = verifyToken;
 
 exports.defaultExpirationTime = defaultExpirationTime;
 exports.defaultExpirationTimeUnits = defaultExpirationTimeUnits;
