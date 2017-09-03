@@ -65,7 +65,10 @@ ApplicationServer.insert = function (obj, callback) {
     dbManager.query(`INSERT INTO ${table} 
         (id,_ref,created_by,name,created_time)
         VALUES ($1,$2,$3,$4,$5) RETURNING *`,
-        [id, _ref, createdBy, name, createdTime], callback);
+        [id, _ref, createdBy, name, createdTime], (err, res) => {
+            if (err) return callback(err);
+            return callback(null, ApplicationServer.fromRow(res.rows[0]));
+        });
 };
 
 ApplicationServer.find = function (callback) {
