@@ -90,4 +90,14 @@ ApplicationServer.prototype.delete = function (callback) {
         [this.id], callback);
 };
 
+ApplicationServer.withTimestampFields = function (server) {
+    return server.withTimestampFields();
+};
+
+ApplicationServer.prototype.withTimestampFields = function () {
+    this.lastConnection = this.lastConnection.getTime();
+    this.createdTime = this.createdTime.getTime();
+    return this;
+};
+
 module.exports = ApplicationServer;

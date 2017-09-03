@@ -1,7 +1,6 @@
 const BusinessUser = require('../model/BusinessUser');
 const tokenManager = require('../utils/token-manager');
 const mainConf = require('../config/main-config');
-const moment = require('moment');
 const basicAuthParser = require('../utils/basic-auth-parser');
 const responseUtils = require('../utils/response-utils');
 
@@ -12,6 +11,9 @@ function signUser(user) {
     return tokenManager.signToken({ username });
 }
 
+/**
+ * Genera un token de usuarios de negocio
+ */
 exports.generateToken = function (req, res) {
     logger.debug('req.body:');
     logger.debug(req.body);
@@ -35,12 +37,4 @@ exports.generateToken = function (req, res) {
 
 
     responseUtils.sendErrResponse(res, 'Request incompleto', 400);
-};
-
-exports.getServers = function (req, res) {
-    res.send([1, 2, 3]);
-};
-
-exports.postServer = function (req, res, next) {
-
 };
