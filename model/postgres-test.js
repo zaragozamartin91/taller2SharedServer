@@ -44,7 +44,7 @@ function createAppServerTable() {
 function insertAppServer() {
     ApplicationServer.insert({
         name: 'anotherApp',
-        createdBy: 'roberto-54080'
+        createdBy: 'martin-86161'
     }, (err, res) => {
         if (err) console.error(err);
         else console.log(res);
@@ -52,9 +52,7 @@ function insertAppServer() {
     });
 }
 
-ApplicationServer.find((err, res) => {
-    console.log(res);
-});
+insertAppServer();
 
 //dbManager.query('SELECT * FROM magic', [], (err, res) => {
 //    console.log(new Date(res.rows[0].day));

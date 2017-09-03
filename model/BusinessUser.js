@@ -14,6 +14,19 @@ const defSurname = 'UNKNOWN';
 
 /* CODIGO -------------------------------------------------------------------------------------- */
 
+/**
+ * Crea una instancia de usuario de negocio.
+ * 
+ * @constructor
+ * @this {BusinessUser}
+ * @param {string} id 
+ * @param {string} _ref 
+ * @param {string} username 
+ * @param {string} password 
+ * @param {string} name 
+ * @param {string} surname 
+ * @param {Array<Role>} roles 
+ */
 function BusinessUser(id, _ref, username, password, name, surname, roles) {
     /* Idstring Se guarda como un string, pero podría ser un número.
     es dependiente de la implementación. */

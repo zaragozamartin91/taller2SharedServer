@@ -12,6 +12,7 @@
     "build": "node_modules/.bin/webpack -p",
     "test": "node_modules/.bin/mocha --timeout 5000",
     "coverage": "node_modules/.bin/istanbul cover node_modules/mocha/bin/_mocha -- -R spec",
+    "docs": "node_modules/.bin/jsdoc -c jsdoc_conf.json -d docs",
     "lint": "node_modules/.bin/eslint ./"
   },
   "dependencies": {
@@ -50,6 +51,7 @@
     "eslint-plugin-react": "^7.3.0",
     "eslint-plugin-standard": "^3.0.1",
     "istanbul": "^0.4.5",
+    "jsdoc": "^3.5.4",
     "mocha": "^3.5.0",
     "webpack": "^2.6.1"
   },

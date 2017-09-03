@@ -11,26 +11,25 @@ const table = 'application_server';
 
 /* CODIGO -------------------------------------------------------------------------------------- */
 
+/**
+ * Crea una instancia de app server.
+ * 
+ * @constructor
+ * @this {ApplicationServer}
+ * @param {string} id Id del server.
+ * @param {string} _ref Hash que es utilizado para prevenir colosiones.
+ * @param {string} createdBy Id del usuario de negocio que dio de alta el server.
+ * @param {Date} createdTime Momento de creacion del server.
+ * @param {string} name Nombre del server.
+ * @param {Date} lastConnection Momento de ultima conexion con el server.
+ */
 function ApplicationServer(id, _ref, createdBy, createdTime, name, lastConnection) {
-    this.id = id; /* Idstring. 
-    Se guarda como un string, pero podría ser un número
-    es dependiente de la implementación. */
-
-    this._ref = _ref; /* Refstring.    
-    Hash que es utilizado para prevenir colosiones.
-    Cuando se crea un elemento, se debe pasar un valor de undefined (o no debe estar).
-    Al actualizar, el servidor chequeará que este valor sea igual al guardado, de no coincidir,
-    significa que otro actualizó el recurso, por ende, la actualización debe fallar. */
-
-    this.createdBy = createdBy; /*Idstring.    
-    Se guarda como un string, pero podría ser un número
-    es dependiente de la implementación. */
-
-    this.createdTime = createdTime; /* Timestampnumber. Tiempo en epoch*/
-
-    this.name = name; /*	string. Nombre del application server */
-
-    this.lastConnection = lastConnection; /* Timestampnumber. Tiempo en epoch */
+    this.id = id; 
+    this._ref = _ref; 
+    this.createdBy = createdBy; 
+    this.createdTime = createdTime; 
+    this.name = name; 
+    this.lastConnection = lastConnection; 
 }
 
 ApplicationServer.fromRow = function (obj) {
