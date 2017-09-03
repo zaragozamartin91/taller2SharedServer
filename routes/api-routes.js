@@ -1,5 +1,6 @@
 const express = require('express');
 const managerController = require('../controllers/manager-controller');
+const tokenValidator = require('../middleware/token-validator');
 
 const router = express.Router();
 
@@ -13,5 +14,9 @@ router.get('/test', function (req, res) {
 });
 
 router.post('/token', managerController.generateToken);
+
+router.use('/servers', tokenValidator.verifyToken);
+router.get('/servers', managerController.getServers);
+router.post('/servers', managerController.postServer);
 
 module.exports = router;
