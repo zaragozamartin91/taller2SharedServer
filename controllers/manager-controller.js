@@ -2,6 +2,7 @@ const BusinessUser = require('../model/BusinessUser');
 const tokenManager = require('../utils/token-manager');
 const mainConf = require('../config/main-config');
 const moment = require('moment');
+const basicAuthParser = require('../utils/basic-auth-parser');
 
 const logger = require('log4js').getLogger('manager-controller');
 
@@ -11,14 +12,15 @@ function signUser(user) {
 }
 
 exports.generateToken = function (req, res) {
-    const username = req.body.username;
-    const password = req.body.password;
-
     logger.debug('req.body:');
     logger.debug(req.body);
+    
+    const basicAuth = basicAuthParser.parse(req);
+    const username = req.body.username || basicAuth.user;
+    const password = req.body.password || basicAuth.pass;
 
-    if (username && password) {
-        BusinessUser.findByUsername(username, (err, user) => {
+    if (username && password) return BusinessUser.findByUsername(
+        username, (err, user) => {
             if (err) {
                 res.status(401);
                 const message = 'No autorizado';
@@ -34,7 +36,7 @@ exports.generateToken = function (req, res) {
                 return res.send({ metadata, token });
             }
         });
-    }
+
 
     res.status(400);
     const message = 'Error en el request';
