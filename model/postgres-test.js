@@ -52,7 +52,20 @@ function insertAppServer() {
     });
 }
 
-insertAppServer();
+function findApplicationServer() {
+    ApplicationServer.find((err, res) => {
+        console.log(res);
+        dbManager.end();
+    });
+}
+
+BusinessUser.findByUsername('martin', (err, usr) => {
+    if(err) return console.error(err);
+    console.log(usr);
+    const authOk = usr.authenticate('pepe');
+    console.log(`authOk: ${authOk}`);
+    dbManager.end();
+});
 
 //dbManager.query('SELECT * FROM magic', [], (err, res) => {
 //    console.log(new Date(res.rows[0].day));

@@ -39,7 +39,7 @@ function BusinessUser(id, _ref, username, password, name, surname, roles) {
     this.password = password;
     this.name = name || defName;
     this.surname = surname || defSurname;
-    this.roles = [];
+    this.roles = roles || [];
 }
 
 BusinessUser.fromObj = function (usrObj) {
@@ -74,7 +74,6 @@ BusinessUser.insert = function (userObj, callback) {
     const _ref = hasher.hash({ id, username });
     const name = userObj.name || defName;
     const surname = userObj.surname || defSurname;
-    const roles = [];
 
     dbManager.query(`INSERT INTO ${table} 
         VALUES ($1,$2,$3,$4,$5,$6) RETURNING *`,
@@ -107,6 +106,7 @@ BusinessUser.findByUsername = function (username, callback) {
 };
 
 BusinessUser.prototype.authenticate = function (password) {
+    if (!password) throw new Error('No se indico un password para autenticar');
     const hash = this.password;
     return encryptor.verify(hash, password);
 };
