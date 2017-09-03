@@ -1,21 +1,6 @@
-const mc = require('./model-config');
-const pg = require('pg');
-
-let dbUrl = `postgres://${mc.user}:${mc.password}@${mc.host}:${mc.port}/${mc.db}`;
-console.log(`db url: ${dbUrl}`);
-
-const connectionString = process.env.DATABASE_URL || dbUrl;
-
-const client = new pg.Client(connectionString);
-client.connect();
-
-client.query('SELECT $1::text as message', ['Hello world!'], (err, res) => {
-    console.log(err ? err.stack : res.rows[0].message); // Hello World!
-    client.end();
-});
-
 const BusinessUser = require('./BusinessUser');
 const dbManager = require('./db-manager');
+const ApplicationServer = require('./ApplicationServer');
 
 function createUserTable() {
     BusinessUser.createTable(err => {
@@ -25,15 +10,15 @@ function createUserTable() {
     });
 }
 
-function insert() {
-    BusinessUser.insert({ username: 'mateo', password: 'posting' }, (err, res) => {
+function insertBusinessUser() {
+    BusinessUser.insert({ username: 'martin', password: 'pepe' }, (err, res) => {
         if (err) console.error(err);
         else console.log(res);
         dbManager.end();
     });
 }
 
-function find() {
+function findBusinessUser() {
     BusinessUser.find((err, res) => {
         if (err) console.error(err);
         else console.log(res);
@@ -41,4 +26,35 @@ function find() {
     });
 }
 
-find();
+function findBusinessUserByUsername() {
+    BusinessUser.findByUsername('martin', (err, usr) => {
+        if (err) console.error(err);
+        else console.log(usr);
+        dbManager.end();
+    });
+}
+
+function createAppServerTable() {
+    ApplicationServer.createTable(err => {
+        console.error(err);
+        dbManager.end();
+    });
+}
+
+function insertAppServer() {
+    ApplicationServer.insert({
+        name: 'anotherApp',
+        createdBy: 'martin-86161'
+    }, (err, res) => {
+        if (err) console.error(err);
+        else console.log(res);
+        dbManager.end();
+    });
+}
+
+insertAppServer();
+
+//dbManager.query('SELECT * FROM magic', [], (err, res) => {
+//    console.log(new Date(res.rows[0].day));
+//    dbManager.end();
+//});

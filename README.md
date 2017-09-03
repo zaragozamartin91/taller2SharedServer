@@ -1,4 +1,6 @@
 # Shared Server
+[![Build Status](https://travis-ci.org/zaragozamartin91/taller2SharedServer.svg?branch=confTravis)](https://travis-ci.org/zaragozamartin91/taller2SharedServer)
+<a href='https://coveralls.io/github/zaragozamartin91/taller2SharedServer?branch=confTravis'><img src='https://coveralls.io/repos/github/zaragozamartin91/taller2SharedServer/badge.svg?branch=confTravis' alt='Coverage Status' /></a>
 
 ## Prerequisitos
 Para poder correr la aplicación, es necesario contar con:
