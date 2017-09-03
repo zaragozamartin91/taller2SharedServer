@@ -36,14 +36,16 @@ const poolWrapper = {
  */
 exports.query = function (sql, values, callback) {
     poolWrapper.pool.connect().then(client => {
-        return client.query(sql, values)
+        client.query(sql, values)
             .then(res => {
                 client.release();
                 callback(null, res);
             })
             .catch(err => {
-                client.release();
                 callback(err);
+                console.log('client.release');
+                console.log(client.release);
+                client.release();
             });
     });
 };

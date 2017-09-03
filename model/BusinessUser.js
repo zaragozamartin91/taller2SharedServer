@@ -107,6 +107,7 @@ BusinessUser.findByUsername = function (username, callback) {
 };
 
 BusinessUser.prototype.authenticate = function (password) {
+    if (!password) throw new Error('No se indico un password para autenticar');
     const hash = this.password;
     return encryptor.verify(hash, password);
 };

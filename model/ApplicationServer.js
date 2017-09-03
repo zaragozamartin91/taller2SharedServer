@@ -24,23 +24,29 @@ const table = 'application_server';
  * @param {Date} lastConnection Momento de ultima conexion con el server.
  */
 function ApplicationServer(id, _ref, createdBy, createdTime, name, lastConnection) {
-    this.id = id; 
-    this._ref = _ref; 
-    this.createdBy = createdBy; 
-    this.createdTime = createdTime; 
-    this.name = name; 
-    this.lastConnection = lastConnection; 
+    this.id = id;
+    this._ref = _ref;
+    this.createdBy = createdBy;
+    this.createdTime = createdTime;
+    this.name = name;
+    this.lastConnection = lastConnection;
 }
 
+/**
+ * Crea una instancia de app server a partir de una fila de postgres.
+ * 
+ * @param {object} obj Propiedades / campos de la fila resultado de una query.
+ * @return {ApplicationServer} Nueva instancia de app server.
+ */
 ApplicationServer.fromRow = function (obj) {
     if (obj) {
         const appServer = new ApplicationServer(
             obj.id,
             obj._ref,
-            obj.created_by,
-            new Date(obj.created_time),
+            obj.createdBy || obj.created_by,
+            new Date(obj.createdTime || obj.created_time),
             obj.name,
-            new Date(obj.last_conn)
+            new Date(obj.lastConn || obj.last_conn)
         );
         return appServer;
     } else return null;
@@ -53,10 +59,11 @@ ApplicationServer.insert = function (obj, callback) {
     const name = obj.name;
     const id = idGenerator.generateId(name);
     const _ref = hasher.hash({ id, name });
-    const createdBy = obj.createdBy;
+    const createdBy = obj.createdBy || obj.created_by;
     const createdTime = new Date();
 
-    dbManager.query(`INSERT INTO ${table} (id,_ref,created_by,name,created_time)
+    dbManager.query(`INSERT INTO ${table} 
+        (id,_ref,created_by,name,created_time)
         VALUES ($1,$2,$3,$4,$5) RETURNING *`,
         [id, _ref, createdBy, name, createdTime], callback);
 };
@@ -76,6 +83,11 @@ ApplicationServer.createTable = function (callback) {
         created_time TIMESTAMP DEFAULT now(),
         name VARCHAR(64) UNIQUE NOT NULL,
         last_conn TIMESTAMP DEFAULT now())`, [], callback);
+};
+
+ApplicationServer.prototype.delete = function (callback) {
+    dbManager.query(`DELETE FROM ${table} WHERE id=$1`,
+        [this.id], callback);
 };
 
 module.exports = ApplicationServer;
