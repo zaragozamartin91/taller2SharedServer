@@ -44,7 +44,7 @@ function createAppServerTable() {
 function insertAppServer() {
     ApplicationServer.insert({
         name: 'oneApp',
-        createdBy: 'martin-86161'
+        createdBy: 'martin-9375'
     }, (err, res) => {
         if (err) console.error(err);
         else console.log(res);

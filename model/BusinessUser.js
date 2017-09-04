@@ -4,10 +4,12 @@ const dbManager = require('./db-manager');
 const encryptor = require('../utils/encryptor');
 const hasher = require('../utils/hasher');
 const idGenerator = require('../utils/id-generator');
+const Role = require('./Role');
 
 /* CONSTANTES -------------------------------------------------------------------------------------- */
 
 const table = 'business_user';
+const rolesTable = 'bu_role';
 const idType = 'VARCHAR(64)';
 const defName = 'UNKNOWN';
 const defSurname = 'UNKNOWN';
@@ -19,21 +21,17 @@ const defSurname = 'UNKNOWN';
  * 
  * @constructor
  * @this {BusinessUser}
- * @param {string} id 
- * @param {string} _ref 
+ * @param {string} id Idstring
+ * @param {string} _ref Hash que es utilizado para prevenir colosiones.
  * @param {string} username 
  * @param {string} password 
  * @param {string} name 
  * @param {string} surname 
  * @param {Array<Role>} roles 
+ * @return {BusinessUser}
  */
 function BusinessUser(id, _ref, username, password, name, surname, roles) {
-    /* Idstring Se guarda como un string, pero podría ser un número.
-    es dependiente de la implementación. */
     this.id = id;
-
-    /* Refstring Hash que es utilizado para prevenir colosiones.
-    Cuando se crea un elemento, se debe pasar un valor de undefined (o no debe estar).*/
     this._ref = _ref || '';
     this.username = username;
     this.password = password;
@@ -60,6 +58,14 @@ BusinessUser.createTable = function (callback) {
         password VARCHAR(256) NOT NULL,
         name VARCHAR(32) DEFAULT '${defName}',
         surname VARCHAR(32) DEFAULT '${defSurname}'
+    )`, [], callback);
+};
+
+BusinessUser.createRolesTable = function (callback) {
+    dbManager.query(`CREATE TABLE ${rolesTable} (
+        business_user ${idType} REFERENCES ${table}(id),
+        role ${Role.idType} REFERENCES ${Role.table}(type),
+        UNIQUE(business_user,role)
     )`, [], callback);
 };
 
