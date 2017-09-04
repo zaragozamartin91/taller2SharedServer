@@ -7,31 +7,34 @@ const Role = require('./Role');
 
 function buildAll() {
     BusinessUser.createTable(err => {
-        if (err) return console.error(err);
+        console.error(err);
+        console.log('Tabla de usuarios creada');
 
         Role.createTable(err => {
-            if (err) return console.error(err);
+            console.error(err);
+            console.log('Tabla de roles creada');
 
-            Role.createRoles(err => {
-                if (err) return console.error(err);
+            Role.insert('user', err => console.error(err));
+            Role.insert('manager', err => console.error(err));
+            Role.insert('admin', err => console.error(err));
 
-                BusinessUser.createRolesTable(err => {
-                    if (err) return console.error(err);
+            BusinessUser.createRolesTable(err => {
+                console.error(err);
+                console.log('Tabla de usuarios-roles creada');
 
-                    const userObj = { username: 'martin', password: 'pepe' };
-                    BusinessUser.insert(userObj, (err, user) => {
-                        if (err) return console.error(err);
-                        console.log(user);
+                const userObj = { username: 'martin', password: 'pepe' };
+                BusinessUser.insert(userObj, (err, user) => {
+                    console.error(err);
+                    console.log(user);
 
-                        ApplicationServer.createTable(err => {
-                            if (err) return console.error(err);
+                    ApplicationServer.createTable(err => {
+                        console.error(err);
 
-                            const servObj = { name: 'oneApp', createdBy: user.id };
-                            ApplicationServer.insert(servObj, (err, server) => {
-                                if (err) return console.error(err);
-                                else console.log(server);
-                                dbManager.end();
-                            });
+                        const servObj = { name: 'oneApp', createdBy: user.id };
+                        ApplicationServer.insert(servObj, (err, server) => {
+                            console.error(err);
+                            console.log(server);
+                            dbManager.end();
                         });
                     });
                 });

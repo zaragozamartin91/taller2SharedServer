@@ -17,9 +17,9 @@ Role.insert = function (type, callback) {
 };
 
 Role.createRoles = function (callback) {
-    Role.insert('admin',
-        () => Role.insert('user'),
-        () => Role.insert('manager'), callback);
+    Role.insert('user', err => console.error(err));
+    Role.insert('manager', err => console.error(err));
+    Role.insert('admin', err => console.error(err));
 };
 
 Role.table = table;
