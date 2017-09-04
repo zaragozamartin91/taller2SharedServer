@@ -34,7 +34,19 @@ Token.prototype.verify = function (callback) {
  * @return {Token} this.
  */
 Token.prototype.withDateExpiration = function () {
+    if (typeof this.expiresAt == 'object') return this;
     this.expiresAt = new Date(this.expiresAt);
+    return this;
+};
+
+/**
+ * Convierte la fecha de expiracion a timestamp (en milisegundos).
+ * @this {Token}
+ * @return {Token} this.
+ */
+Token.prototype.withTimestampExpiration = function () {
+    if (typeof this.expiresAt == 'number') return this;
+    this.expiresAt = this.expiresAt.getTime();
     return this;
 };
 
@@ -49,8 +61,7 @@ function signToken(obj, expirationMins) {
     const token = jwt.sign(obj, secret, {
         expiresIn: `${expirationMins}${defaultExpirationTimeUnits}`
     });
-    const expiresAt = moment().add(expirationMins, defaultExpirationTimeUnits)
-        .toDate().getTime();
+    const expiresAt = moment().add(expirationMins, defaultExpirationTimeUnits).toDate().getTime();
 
     return new Token(token, expiresAt);
 }
