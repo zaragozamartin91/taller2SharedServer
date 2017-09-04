@@ -11,10 +11,10 @@ exports.verifyToken = function (req, res, next) {
     const token = req.body.token || req.query.token || req.header('x-token');
     if (token) {
         tokenManager.verifyToken(token, (err, decoded) => {
-            if (err) return responseUtils.sendErrResponse(res, 'No autorizado', 401);
+            if (err) return responseUtils.sendMsgCodeResponse(res, 'No autorizado', 401);
 
             req.decoded = decoded;
             next();
         });
-    } else return responseUtils.sendErrResponse(res, 'Token no enviado', 400);
+    } else return responseUtils.sendMsgCodeResponse(res, 'Token no enviado', 400);
 };
