@@ -16,9 +16,11 @@ router.get('/test', function (req, res) {
 
 router.post('/token', tokenController.generateToken);
 
+/* /servers ROUTES ---------------------------------------------------------------------------------------------------- */
 router.use('/servers', tokenValidator.verifyToken);
 router.get('/servers', serverController.getServers);
 router.post('/servers', serverController.postServer);
 router.delete('/servers/:serverId?', serverController.deleteServer);
+router.put('/servers/:serverId?', serverController.updateServer);
 
 module.exports = router;
