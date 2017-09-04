@@ -97,8 +97,13 @@ ApplicationServer.createTable = function (callback) {
 };
 
 ApplicationServer.prototype.delete = function (callback) {
-    dbManager.query(`DELETE FROM ${table} WHERE id=$1`,
-        [this.id], callback);
+    dbManager.query(`DELETE FROM ${table} WHERE id=$1`, [this.id], callback);
+};
+
+// TODO : INVESTIGAR QUE ES LO QUE HAY QUE HACER CON EL PARAMETRO _ref
+ApplicationServer.prototype.update = function (callback) {
+    const name = this.name || '';
+    dbManager.query(`UPDATE ${table} SET name=$1`, [name], callback);
 };
 
 ApplicationServer.withTimestampFields = function (server) {
