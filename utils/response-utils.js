@@ -4,9 +4,9 @@
  * @param {string} message Mensaje a enviar.
  * @param {number} code Codigo de error.
  */
-function sendErrResponse(res, message, code) {
+function sendMsgCodeResponse(res, message, code) {
     res.status(code);
     res.send({ code, message });
 }
 
-exports.sendErrResponse = sendErrResponse;
+exports.sendMsgCodeResponse = sendMsgCodeResponse;

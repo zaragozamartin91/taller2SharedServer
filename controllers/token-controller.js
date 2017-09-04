@@ -24,7 +24,7 @@ exports.generateToken = function (req, res) {
 
     if (username && password) return BusinessUser.findByUsername(
         username, (err, user) => {
-            if (err) return responseUtils.sendErrResponse(res, 'Error al buscar el usuario', 500);
+            if (err) return responseUtils.sendMsgCodeResponse(res, 'Error al buscar el usuario', 500);
 
             const authOk = user.authenticate(password);
             if (authOk) {
@@ -32,9 +32,9 @@ exports.generateToken = function (req, res) {
                 const version = mainConf.apiVersion;
                 const metadata = { version };
                 return res.send({ metadata, token });
-            } else return responseUtils.sendErrResponse(res, 'No autorizado', 401);
+            } else return responseUtils.sendMsgCodeResponse(res, 'No autorizado', 401);
         });
 
 
-    responseUtils.sendErrResponse(res, 'Request incompleto', 400);
+    responseUtils.sendMsgCodeResponse(res, 'Request incompleto', 400);
 };

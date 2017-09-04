@@ -78,6 +78,14 @@ ApplicationServer.find = function (callback) {
     });
 };
 
+ApplicationServer.findById = function (serverId, callback) {
+    dbManager.query(`SELECT * FROM ${table} WHERE id=$1`, [serverId], (err, res) => {
+        if (err) return callback(err);
+        if (res.rows.length) return callback(null, res.rows.map(ApplicationServer.fromRow));
+        return callback(null, null);
+    });
+};
+
 ApplicationServer.createTable = function (callback) {
     dbManager.query(`CREATE TABLE ${table} (
         id VARCHAR(64) NOT NULL PRIMARY KEY,

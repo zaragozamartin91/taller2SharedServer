@@ -19,5 +19,6 @@ router.post('/token', tokenController.generateToken);
 router.use('/servers', tokenValidator.verifyToken);
 router.get('/servers', serverController.getServers);
 router.post('/servers', serverController.postServer);
+router.delete('/servers/:serverId?', serverController.deleteServer);
 
 module.exports = router;

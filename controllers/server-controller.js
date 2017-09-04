@@ -8,7 +8,7 @@ const logger = require('log4js').getLogger('manager-controller');
 
 exports.getServers = function (req, res) {
     ApplicationServer.find((err, srvs) => {
-        if (err) return responseUtils.sendErrResponse(res, 'Ocurrio un error al obtener los servers', 500);
+        if (err) return responseUtils.sendMsgCodeResponse(res, 'Ocurrio un error al obtener los servers', 500);
 
         const count = srvs.length;
         const total = count;
@@ -27,18 +27,32 @@ exports.getServers = function (req, res) {
     });
 };
 
-exports.postServer = function (req, res, next) {
+exports.postServer = function (req, res) {
     const servObj = req.body;
-    if (!servObj.name || !servObj.createdBy) return responseUtils.sendErrResponse(
+    if (!servObj.name || !servObj.createdBy) return responseUtils.sendMsgCodeResponse(
         res, 'Faltan campos', 400);
 
     ApplicationServer.insert(servObj, (err, result) => {
-        if (err) return responseUtils.sendErrResponse(
+        if (err) return responseUtils.sendMsgCodeResponse(
             res, 'Ocurrio un error al dar de alta el server', 500);
 
         const metadata = mainConf.apiVersion;
         const server = result.withTimestampFields();
         const token = tokenManager.signToken({ id: server.id });
         res.send({ metadata, server, token });
+    });
+};
+
+exports.deleteServer = function (req, res) {
+    const serverId = req.params.serverId;
+    if (!serverId) return responseUtils.sendMsgCodeResponse(res, 'No se indico un server a eliminar', 400);
+
+    ApplicationServer.findById(serverId, (err, server) => {
+        if (!server) return responseUtils.sendMsgCodeResponse(res, 'No existe el servidor buscado', 404);
+
+        server.delete(err => {
+            if (err) return responseUtils.sendMsgCodeResponse(res, 'Ocurrio un error al eliminar el server', 500);
+            res.sendMsgCodeResponse(res, 'Baja correcta', 204);
+        });
     });
 };
