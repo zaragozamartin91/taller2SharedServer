@@ -11,7 +11,7 @@ function createUserTable() {
 }
 
 function insertBusinessUser() {
-    BusinessUser.insert({ username: 'martin', password: 'pepe' }, (err, res) => {
+    BusinessUser.insert({ username: 'mateo', password: 'pepe' }, (err, res) => {
         if (err) console.error(err);
         else console.log(res);
         dbManager.end();
@@ -59,7 +59,17 @@ function findApplicationServer() {
     });
 }
 
-insertAppServer();
+function addRole() {
+    BusinessUser.findByUsername('martin', (err, user) => {
+        user.addRole('admin', (err, res) => {
+            if(err) return console.error(err);
+            console.log(res);
+            dbManager.end();
+        });
+    });
+}
+
+insertBusinessUser();
 
 //dbManager.query('SELECT * FROM magic', [], (err, res) => {
 //    console.log(new Date(res.rows[0].day));

@@ -41,11 +41,10 @@ function BusinessUser(id, _ref, username, password, name, surname, roles) {
 }
 
 BusinessUser.fromObj = function (usrObj) {
-    if (usrObj) {
-        const user = new BusinessUser();
-        Object.keys(usrObj).map(key => user[key] = usrObj[key]);
-        return user;
-    } else return null;
+    if (usrObj) return new BusinessUser(
+        usrObj.id, usrObj._ref, usrObj.username, usrObj.password,
+        usrObj.name, usrObj.surname, usrObj.roles);
+    else return null;
 };
 
 /* TODO: POR EL MOMENTO, NO SE GUARDARAN LOS ROLES */
@@ -111,6 +110,13 @@ BusinessUser.findByUsername = function (username, callback) {
     });
 };
 
+BusinessUser.addRole = function (user, role, callback) {
+    const userId = user.id || user;
+    const roleId = role.type || role;
+    dbManager.query(`INSERT INTO ${rolesTable} VALUES($1,$2)`,
+        [userId, roleId], callback);
+};
+
 BusinessUser.prototype.authenticate = function (password) {
     if (!password) throw new Error('No se indico un password para autenticar');
     const hash = this.password;
@@ -120,6 +126,10 @@ BusinessUser.prototype.authenticate = function (password) {
 BusinessUser.prototype.hidePassword = function () {
     this.password = '****';
     return this;
+};
+
+BusinessUser.prototype.addRole = function (role, callback) {
+    BusinessUser.addRole(this.id, role, callback);
 };
 
 BusinessUser.table = table;
