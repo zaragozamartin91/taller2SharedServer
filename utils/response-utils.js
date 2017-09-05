@@ -5,6 +5,7 @@
  * @param {number} code Codigo de error.
  */
 function sendMsgCodeResponse(res, message, code) {
+    code = code || 200;
     res.status(code);
     res.send({ code, message });
 }

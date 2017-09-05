@@ -17,10 +17,23 @@ router.get('/test', function (req, res) {
 router.post('/token', tokenController.generateToken);
 
 /* /servers ROUTES ---------------------------------------------------------------------------------------------------- */
+// Agrego el middleware para parsear y deocdificar el token
 router.use('/servers', tokenValidator.verifyToken);
+
 router.get('/servers', serverController.getServers);
+
+/* RUTAS DE MANAGER---------------------------------------------------------------- */
+
+// Agrego el middleware para validar que el usuario sea manager
+router.post('/servers', tokenValidator.verifyManagerToken);
 router.post('/servers', serverController.postServer);
+// Agrego el middleware para validar que el usuario sea manager
+router.delete('/servers/:serverId?', tokenValidator.verifyManagerToken);
 router.delete('/servers/:serverId?', serverController.deleteServer);
+// Agrego el middleware para validar que el usuario sea manager
+router.put('/servers/:serverId?', tokenValidator.verifyManagerToken);
 router.put('/servers/:serverId?', serverController.updateServer);
+
+/* FIN servers ROUTES ---------------------------------------------------------------------------------------------------- */
 
 module.exports = router;

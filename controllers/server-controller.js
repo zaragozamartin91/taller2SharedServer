@@ -3,10 +3,15 @@ const responseUtils = require('../utils/response-utils');
 const ApplicationServer = require('../model/ApplicationServer');
 const CollectionMetadata = require('../model/CollectionMetadata');
 const tokenManager = require('../utils/token-manager');
+const BusinessUser = require('../model/BusinessUser');
 
 const logger = require('log4js').getLogger('manager-controller');
 
 exports.getServers = function (req, res) {
+    const decodedToken = req.decodedToken;
+    console.log('decodedToken: ');
+    console.log(decodedToken);
+
     ApplicationServer.find((err, srvs) => {
         if (err) return responseUtils.sendMsgCodeResponse(res, 'Ocurrio un error al obtener los servers', 500);
 
@@ -54,7 +59,7 @@ exports.deleteServer = function (req, res) {
 
         server.delete(err => {
             if (err) return responseUtils.sendMsgCodeResponse(res, 'Ocurrio un error al eliminar el server', 500);
-            return responseUtils.sendMsgCodeResponse(res, 'Baja correcta', 204);
+            return responseUtils.sendMsgCodeResponse(res, 'Baja correcta', 200);
         });
     });
 };
@@ -70,7 +75,10 @@ exports.updateServer = function (req, res) {
         entonces la actualizacion no tendra efecto */
         server.name = req.body.name || server.name;
         server.update(err => {
-            if (err) return responseUtils.sendMsgCodeResponse(res, 'Ocurrio un error al actualizar el server', 500);
+            if (err) {
+                logger.error(err);
+                return responseUtils.sendMsgCodeResponse(res, 'Ocurrio un error al actualizar el server', 500);
+            }
             responseUtils.sendMsgCodeResponse(res, 'Modificacion correcta', 200);
         });
     });

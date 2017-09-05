@@ -117,6 +117,16 @@ BusinessUser.addRole = function (user, role, callback) {
         [userId, roleId], callback);
 };
 
+BusinessUser.hasRole = function (user, role, callback) {
+    const userId = user.id || user;
+    const roleId = role.type || role.role || role;
+    dbManager.query(`SELECT role FROM ${rolesTable} WHERE business_user=$1 AND role=$2`,
+        [userId, roleId], (err, res) => {
+            if (err) return callback(err);
+            callback(null, res.rows.length > 0);
+        });
+};
+
 BusinessUser.prototype.authenticate = function (password) {
     if (!password) throw new Error('No se indico un password para autenticar');
     const hash = this.password;

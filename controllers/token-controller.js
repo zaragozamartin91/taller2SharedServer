@@ -7,8 +7,9 @@ const responseUtils = require('../utils/response-utils');
 const logger = require('log4js').getLogger('manager-controller');
 
 function signUser(user) {
+    const id = user.id;
     const username = user.username;
-    return tokenManager.signToken({ username });
+    return tokenManager.signToken({ id, username });
 }
 
 /**
