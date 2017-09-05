@@ -38,8 +38,10 @@ exports.postServer = function (req, res) {
         res, 'Faltan campos', 400);
 
     ApplicationServer.insert(servObj, (err, result) => {
-        if (err) return responseUtils.sendMsgCodeResponse(
-            res, 'Ocurrio un error al dar de alta el server', 500);
+        if (err) {
+            logger.error(err);
+            return responseUtils.sendMsgCodeResponse(res, 'Ocurrio un error al dar de alta el server', 500);
+        }
 
         const metadata = mainConf.apiVersion;
         const server = result.withTimestampFields();
@@ -75,10 +77,7 @@ exports.updateServer = function (req, res) {
         entonces la actualizacion no tendra efecto */
         server.name = req.body.name || server.name;
         server.update(err => {
-            if (err) {
-                logger.error(err);
-                return responseUtils.sendMsgCodeResponse(res, 'Ocurrio un error al actualizar el server', 500);
-            }
+            if (err) return responseUtils.sendMsgCodeResponse(res, 'Ocurrio un error al actualizar el server', 500);
             responseUtils.sendMsgCodeResponse(res, 'Modificacion correcta', 200);
         });
     });
