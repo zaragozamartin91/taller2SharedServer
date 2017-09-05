@@ -31,12 +31,17 @@ const poolWrapper = {
 /**
  * Realiza una query en la BBDD.
  * @param {string} sql Query en sql usando placeholders (ej: SELECT FROM USER WHERE ID=$1).
- * @param {Array} values Valores a reemplazar en los placeholders.
+ * @param {Array} values [OPCIONAL] Valores a reemplazar en los placeholders.
  * @param {Function} callback Funcion a invocar al finalizar la query.
  */
 exports.query = function (sql, values, callback) {
     poolWrapper.pool.connect((err, client, done) => {
         if (err) return callback(err);
+
+        if (typeof values == 'function') {
+            callback = values;
+            values = [];
+        }
         client.query(sql, values || [], (err, res) => {
             done(); // done libera un cliente del pool
             callback(err, res);
