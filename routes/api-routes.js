@@ -20,6 +20,8 @@ router.post('/token', tokenController.generateToken);
 // Agrego el middleware para parsear y deocdificar el token
 router.use('/servers', tokenValidator.verifyToken);
 
+// Agrego el middleware para validar que el usuario sea user
+router.get('/servers', tokenValidator.verifyUserToken);
 router.get('/servers', serverController.getServers);
 
 /* RUTAS DE MANAGER---------------------------------------------------------------- */

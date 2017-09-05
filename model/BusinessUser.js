@@ -5,6 +5,7 @@ const encryptor = require('../utils/encryptor');
 const hasher = require('../utils/hasher');
 const idGenerator = require('../utils/id-generator');
 const Role = require('./Role');
+const logger = require('log4js').getLogger('BusinessUser');
 
 /* CONSTANTES -------------------------------------------------------------------------------------- */
 
@@ -113,8 +114,28 @@ BusinessUser.findByUsername = function (username, callback) {
 BusinessUser.addRole = function (user, role, callback) {
     const userId = user.id || user;
     const roleId = role.type || role.role || role;
-    dbManager.query(`INSERT INTO ${rolesTable} VALUES($1,$2)`,
-        [userId, roleId], callback);
+    logger.debug(`Agregando rol ${roleId} al usuario ${userId}`);
+
+    dbManager.query(`INSERT INTO ${rolesTable} VALUES($1,$2)`, [userId, roleId], callback);
+};
+
+BusinessUser.addRoles = function (user, roles, callback) {
+    roles = roles || [];
+    const functions = [];
+
+    for (let index = 0; index < roles.length; index++) {
+        const role = roles[index].type || roles[index];
+        const prevFunction = functions[index - 1];
+        /* Encadeno las funciones a llamar. La funcion en [0] sera la ultima en invocarse y
+        eventualmente llamara al callback pasado por parametro. Cada funcion llamara eventualmente
+        a la anterior. */
+        if (index == 0) functions.push(() => BusinessUser.addRole(user, role, callback));
+        else functions.push(() => BusinessUser.addRole(user, role, prevFunction));
+    }
+
+    const lastFunc = functions[functions.length - 1];
+    if (lastFunc) lastFunc();
+    else callback(null, user);
 };
 
 BusinessUser.hasRole = function (user, role, callback) {
@@ -153,12 +174,7 @@ BusinessUser.prototype.addRole = function (role, callback) {
 };
 
 BusinessUser.prototype.hasRole = function (role, callback) {
-    role = role.type || role.role || role;
-    dbManager.query(`SELECT role FROM ${rolesTable} WHERE business_user=$1 AND role=$2`,
-        [this.id, role], (err, res) => {
-            if (err) return callback(err);
-            callback(null, res.rows.length > 0);
-        });
+    return BusinessUser.hasRole(this, role);
 };
 
 BusinessUser.table = table;

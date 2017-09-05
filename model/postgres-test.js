@@ -70,10 +70,14 @@ function addRole() {
     });
 }
 
-BusinessUser.hasRole('martin-44215', Role.manager(), (err, hasRole) => {
-    console.log(hasRole);
-    dbManager.end();
-});
+function addRoles() {
+    BusinessUser.addRoles('hector-70306', ['admin', 'manager', 'user'], (err, res) => {
+        if (err) console.error(err);
+        else console.log(res);
+    });
+}
+
+addRoles();
 
 //dbManager.query('SELECT * FROM magic', [], (err, res) => {
 //    console.log(new Date(res.rows[0].day));
