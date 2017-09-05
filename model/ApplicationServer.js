@@ -104,7 +104,7 @@ ApplicationServer.prototype.delete = function (callback) {
 // TODO : INVESTIGAR QUE ES LO QUE HAY QUE HACER CON EL PARAMETRO _ref
 ApplicationServer.prototype.update = function (callback) {
     const name = this.name || '';
-    dbManager.query(`UPDATE ${table} SET name=$1`, [name], callback);
+    dbManager.query(`UPDATE ${table} SET name=$1 WHERE id=$2`, [name, this.id], callback);
 };
 
 ApplicationServer.withTimestampFields = function (server) {

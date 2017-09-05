@@ -1,6 +1,7 @@
 const BusinessUser = require('./BusinessUser');
 const dbManager = require('./db-manager');
 const ApplicationServer = require('./ApplicationServer');
+const Role = require('./Role');
 
 function createUserTable() {
     BusinessUser.createTable(err => {
@@ -69,8 +70,8 @@ function addRole() {
     });
 }
 
-dbManager.query('SELECT * FROM role WHERE type=$1', ['admin'], (err, res) => {
-    console.log(res);
+BusinessUser.hasRole('martin-44215', Role.manager(), (err, hasRole) => {
+    console.log(hasRole);
     dbManager.end();
 });
 

@@ -26,6 +26,18 @@ Role.fromObj = function (roleObj) {
     return new Role(roleObj.type || roleObj.role || roleObj);
 };
 
+Role.manager = function() {
+    return new Role('manager');
+};
+
+Role.user = function() {
+    return new Role('user');
+};
+
+Role.admin = function() {
+    return new Role('admin');
+};
+
 Role.prototype.isManager = function() {
     return this.type.valueOf() == 'manager';
 };
