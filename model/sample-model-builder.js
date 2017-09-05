@@ -23,15 +23,15 @@ flow.series([
     },
     callback => {
         console.log('Insertando usuario');
-        BusinessUser.insert({ username: 'martin', password: 'pepe' }, callback);
+        BusinessUser.insert({ username: 'martin', password: 'pepe', name: 'martin', surname: 'zaragoza' }, callback);
     },
     callback => {
         console.log('Insertando usuario');
-        BusinessUser.insert({ username: 'mateo', password: 'posting' }, callback);
+        BusinessUser.insert({ username: 'mateo', password: 'posting', name: 'mateo', surname: 'zaragoza' }, callback);
     },
     callback => {
         console.log('Insertando usuario');
-        BusinessUser.insert({ username: 'hector', password: 'rules' }, callback);
+        BusinessUser.insert({ username: 'hector', password: 'rules', name: 'hector', surname: 'zaragoza' }, callback);
     },
     callback => {
         console.log('Insertando rol');

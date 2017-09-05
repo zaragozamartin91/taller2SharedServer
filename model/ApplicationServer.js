@@ -79,9 +79,10 @@ ApplicationServer.find = function (callback) {
 };
 
 ApplicationServer.findById = function (serverId, callback) {
+    console.log('BUSCANDO SERVER CON ID: ' + serverId);
     dbManager.query(`SELECT * FROM ${table} WHERE id=$1`, [serverId], (err, res) => {
         if (err) return callback(err);
-        if (res.rows.length) return callback(null, res.rows.map(ApplicationServer.fromRow));
+        if (res.rows.length) return callback(null, ApplicationServer.fromRow(res.rows[0]));
         return callback(null, null);
     });
 };

@@ -28,7 +28,6 @@ const EMPTY_FUNC = function () { };
  * @param {string} password 
  * @param {string} name 
  * @param {string} surname 
- * @param {Array<Role>} roles 
  * @return {BusinessUser}
  */
 function BusinessUser(id, _ref, username, password, name, surname, roles) {
@@ -38,7 +37,6 @@ function BusinessUser(id, _ref, username, password, name, surname, roles) {
     this.password = password;
     this.name = name || defName;
     this.surname = surname || defSurname;
-    this.roles = roles || [];
 }
 
 BusinessUser.fromObj = function (usrObj) {
@@ -93,7 +91,8 @@ BusinessUser.findById = function (id, callback) {
     dbManager.query(`SELECT * FROM ${table} WHERE id=$1`,
         [id], (err, res) => {
             if (err) return callback(err);
-            callback(null, BusinessUser.fromObj(res.rows[0]));
+            if (res.rows.length) return callback(null, BusinessUser.fromObj(res.rows[0]));
+            callback(null, null);
         });
 };
 
@@ -113,7 +112,7 @@ BusinessUser.findByUsername = function (username, callback) {
 
 BusinessUser.addRole = function (user, role, callback) {
     const userId = user.id || user;
-    const roleId = role.type || role;
+    const roleId = role.type || role.role || role;
     dbManager.query(`INSERT INTO ${rolesTable} VALUES($1,$2)`,
         [userId, roleId], callback);
 };
@@ -129,8 +128,27 @@ BusinessUser.prototype.hidePassword = function () {
     return this;
 };
 
+BusinessUser.prototype.getRoles = function (callback) {
+    dbManager.query(`SELECT role FROM ${rolesTable} WHERE business_user=$1`,
+        [this.id], (err, res) => {
+            if (err) return callback(err);
+            const roles = res.rows.map(Role.fromObj);
+            callback(null, roles);
+        });
+};
+
 BusinessUser.prototype.addRole = function (role, callback) {
+    role = role.type || role.role || role;
     BusinessUser.addRole(this.id, role, callback || EMPTY_FUNC);
+};
+
+BusinessUser.prototype.hasRole = function (role, callback) {
+    role = role.type || role.role || role;
+    dbManager.query(`SELECT role FROM ${rolesTable} WHERE business_user=$1 AND role=$2`,
+        [this.id, role], (err, res) => {
+            if (err) return callback(err);
+            callback(null, res.rows.length > 0);
+        });
 };
 
 BusinessUser.table = table;

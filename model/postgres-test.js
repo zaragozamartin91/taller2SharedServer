@@ -62,14 +62,22 @@ function findApplicationServer() {
 function addRole() {
     BusinessUser.findByUsername('martin', (err, user) => {
         user.addRole('admin', (err, res) => {
-            if(err) return console.error(err);
+            if (err) return console.error(err);
             console.log(res);
             dbManager.end();
         });
     });
 }
 
-insertBusinessUser();
+BusinessUser.findByUsername('martin', (err, user) => {
+    user.getRoles((err, roles) => {
+        console.log(roles);
+        dbManager.end();
+    });
+    user.hasRole('admin', (err, hasRole) => {
+        console.log(hasRole);
+    });
+});
 
 //dbManager.query('SELECT * FROM magic', [], (err, res) => {
 //    console.log(new Date(res.rows[0].day));

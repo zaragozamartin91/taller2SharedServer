@@ -49,10 +49,12 @@ exports.deleteServer = function (req, res) {
 
     ApplicationServer.findById(serverId, (err, server) => {
         if (!server) return responseUtils.sendMsgCodeResponse(res, 'No existe el servidor buscado', 404);
+        console.log('Server encontrado:');
+        console.log(server);
 
         server.delete(err => {
             if (err) return responseUtils.sendMsgCodeResponse(res, 'Ocurrio un error al eliminar el server', 500);
-            responseUtils.sendMsgCodeResponse(res, 'Baja correcta', 204);
+            return responseUtils.sendMsgCodeResponse(res, 'Baja correcta', 204);
         });
     });
 };

@@ -22,6 +22,22 @@ Role.createRoles = function (callback) {
     Role.insert('admin', err => console.error(err));
 };
 
+Role.fromObj = function (roleObj) {
+    return new Role(roleObj.type || roleObj.role || roleObj);
+};
+
+Role.prototype.isManager = function() {
+    return this.type.valueOf() == 'manager';
+};
+
+Role.prototype.isUser = function() {
+    return this.type.valueOf() == 'user';
+};
+
+Role.prototype.isAdmin = function() {
+    return this.type.valueOf() == 'admin';
+};
+
 Role.table = table;
 Role.idType = idType;
 
