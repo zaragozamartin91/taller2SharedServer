@@ -13,6 +13,7 @@ const rolesTable = 'bu_role';
 const idType = 'VARCHAR(64)';
 const defName = 'UNKNOWN';
 const defSurname = 'UNKNOWN';
+const EMPTY_FUNC = function () { };
 
 /* CODIGO -------------------------------------------------------------------------------------- */
 
@@ -129,7 +130,7 @@ BusinessUser.prototype.hidePassword = function () {
 };
 
 BusinessUser.prototype.addRole = function (role, callback) {
-    BusinessUser.addRole(this.id, role, callback);
+    BusinessUser.addRole(this.id, role, callback || EMPTY_FUNC);
 };
 
 BusinessUser.table = table;
