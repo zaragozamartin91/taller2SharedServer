@@ -69,14 +69,9 @@ function addRole() {
     });
 }
 
-BusinessUser.findByUsername('martin', (err, user) => {
-    user.getRoles((err, roles) => {
-        console.log(roles);
-        dbManager.end();
-    });
-    user.hasRole('admin', (err, hasRole) => {
-        console.log(hasRole);
-    });
+dbManager.query('SELECT * FROM role WHERE type=$1', ['admin'], (err, res) => {
+    console.log(res);
+    dbManager.end();
 });
 
 //dbManager.query('SELECT * FROM magic', [], (err, res) => {
