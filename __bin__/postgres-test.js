@@ -1,7 +1,7 @@
-const BusinessUser = require('./BusinessUser');
-const dbManager = require('./db-manager');
-const ApplicationServer = require('./ApplicationServer');
-const Role = require('./Role');
+const BusinessUser = require('../model/BusinessUser');
+const dbManager = require('../model/db-manager');
+const ApplicationServer = require('../model/ApplicationServer');
+const Role = require('../model/Role');
 
 function createUserTable() {
     BusinessUser.createTable(err => {

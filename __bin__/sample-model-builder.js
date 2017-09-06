@@ -1,7 +1,7 @@
-const dbManager = require('./db-manager');
-const BusinessUser = require('./BusinessUser');
-const ApplicationServer = require('./ApplicationServer');
-const Role = require('./Role');
+const dbManager = require('../model/db-manager');
+const BusinessUser = require('../model/BusinessUser');
+const ApplicationServer = require('../model/ApplicationServer');
+const Role = require('../model/Role');
 const flow = require('nimble');
 
 flow.series([
