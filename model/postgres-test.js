@@ -77,7 +77,9 @@ function addRoles() {
     });
 }
 
-addRoles();
+dbManager.query('INSERT INTO role VALUES($1) RETURNING *', ['pepe'], (err, res) => {
+    console.log(res);
+});
 
 //dbManager.query('SELECT * FROM magic', [], (err, res) => {
 //    console.log(new Date(res.rows[0].day));

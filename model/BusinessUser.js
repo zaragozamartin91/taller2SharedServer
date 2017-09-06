@@ -40,6 +40,11 @@ function BusinessUser(id, _ref, username, password, name, surname, roles) {
     this.surname = surname || defSurname;
 }
 
+/**
+ * Crea un usuario de negocio a partir de un objeto.
+ * @param {object} usrObj Objeto a partir del cual crear el usuario.
+ * @return {BusinessUser} Nuevo usuario de negocio.
+ */
 BusinessUser.fromObj = function (usrObj) {
     if (usrObj) return new BusinessUser(
         usrObj.id, usrObj._ref, usrObj.username, usrObj.password,
@@ -47,7 +52,6 @@ BusinessUser.fromObj = function (usrObj) {
     else return null;
 };
 
-/* TODO: POR EL MOMENTO, NO SE GUARDARAN LOS ROLES */
 
 BusinessUser.createTable = function (callback) {
     dbManager.query(`CREATE TABLE ${table} (
@@ -72,6 +76,11 @@ BusinessUser.deleteTable = function (callback) {
     dbManager.query(`DROP TABLE ${table}`, [], callback);
 };
 
+/**
+ * Inserta un usuario de negocio en la BBDD.
+ * @param {object} userObj Objeto a partir del cual crear el usuario.
+ * @param {Function} callback Funcion a llamar luego de insertar el usuario.
+ */
 BusinessUser.insert = function (userObj, callback) {
     const username = userObj.username;
     const id = idGenerator.generateId(username);
@@ -88,15 +97,25 @@ BusinessUser.insert = function (userObj, callback) {
         });
 };
 
+/**
+ * Obtiene un usuario de negocio a partir de su id.
+ * @param {string} id Id del usuario de negocio buscado.
+ * @param {Function} callback Funcion a invocar al obtener el usuario.
+ */
 BusinessUser.findById = function (id, callback) {
     dbManager.query(`SELECT * FROM ${table} WHERE id=$1`,
         [id], (err, res) => {
             if (err) return callback(err);
-            if (res.rows.length) return callback(null, BusinessUser.fromObj(res.rows[0]));
+            const rows = res.rows;
+            if (rows.length) return callback(null, BusinessUser.fromObj(rows[0]));
             callback(null, null);
         });
 };
 
+/**
+ * Obtiene todos los usuarios de negocio de la BBDD.
+ * @param {Function} callback Funcion a invocar luego de obtener los usuarios.
+ */
 BusinessUser.find = function (callback) {
     dbManager.query(`SELECT * FROM ${table}`, [], (err, res) => {
         if (err) return callback(err);
@@ -104,12 +123,18 @@ BusinessUser.find = function (callback) {
     });
 };
 
+/**
+ * Obtiene un usuario de negocio a partir de su username.
+ * @param {string} username username del usuario de negocio buscado.
+ * @param {Function} callback Funcion a invocar al obtener el usuario.
+ */
 BusinessUser.findByUsername = function (username, callback) {
     dbManager.query(`SELECT * FROM ${table} WHERE username=$1`, [username], (err, res) => {
         if (err) return callback(err);
         callback(null, BusinessUser.fromObj(res.rows[0]));
     });
 };
+
 
 BusinessUser.addRole = function (user, role, callback) {
     const userId = user.id || user;

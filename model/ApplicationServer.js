@@ -4,12 +4,17 @@ const dbManager = require('./db-manager');
 const BusinessUser = require('./BusinessUser');
 const hasher = require('../utils/hasher');
 const idGenerator = require('../utils/id-generator');
+const logger = require('log4js').getLogger('ApplicationServer');
 
 /* CONSTANTES -------------------------------------------------------------------------------------- */
 
 const table = 'application_server';
 
 /* CODIGO -------------------------------------------------------------------------------------- */
+
+function hashServer(id, name) {
+    return hasher.hash({ id, name });
+}
 
 /**
  * Crea una instancia de app server.
@@ -58,7 +63,7 @@ created_time / last_conn, TIENEN QUE SER DE TIPO Date EN POSTGRES? */
 ApplicationServer.insert = function (obj, callback) {
     const name = obj.name;
     const id = idGenerator.generateId(name);
-    const _ref = hasher.hash({ id, name });
+    const _ref = hashServer(id, name);
     const createdBy = obj.createdBy || obj.created_by;
     const createdTime = new Date();
 
@@ -82,7 +87,8 @@ ApplicationServer.findById = function (serverId, callback) {
     console.log('BUSCANDO SERVER CON ID: ' + serverId);
     dbManager.query(`SELECT * FROM ${table} WHERE id=$1`, [serverId], (err, res) => {
         if (err) return callback(err);
-        if (res.rows.length) return callback(null, ApplicationServer.fromRow(res.rows[0]));
+        const rows = res.rows;
+        if (rows.length) return callback(null, ApplicationServer.fromRow(rows[0]));
         return callback(null, null);
     });
 };
@@ -103,8 +109,20 @@ ApplicationServer.prototype.delete = function (callback) {
 
 // TODO : INVESTIGAR QUE ES LO QUE HAY QUE HACER CON EL PARAMETRO _ref
 ApplicationServer.prototype.update = function (callback) {
+    const id = this.id;
     const name = this.name || '';
-    dbManager.query(`UPDATE ${table} SET name=$1 WHERE id=$2`, [name, this.id], callback);
+    const _ref = this._ref;
+    const newRef = hashServer(id, name);
+
+    dbManager.query(`UPDATE ${table} SET name=$1,_ref=$2 WHERE id=$3 AND _ref=$4 RETURNING *`,
+        [name, newRef, id, _ref], (err, res) => {
+            if (err) return callback(err);
+            const rows = res.rows;
+            if (rows.length) return callback(null, ApplicationServer.fromRow(rows[0]));
+            
+            logger.debug(`El server ${id} NO FUE actualizado`);
+            callback(null, null);
+        });
 };
 
 ApplicationServer.withTimestampFields = function (server) {
