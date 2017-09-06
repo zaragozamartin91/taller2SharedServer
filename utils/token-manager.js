@@ -3,7 +3,7 @@ const conf = require('../config/main-config');
 const moment = require('moment');
 
 const secret = conf.tokenSecret;
-const defaultExpirationTime = 15;
+const defaultExpirationTime = 60*180;
 const defaultExpirationTimeUnits = 'm';
 
 /**

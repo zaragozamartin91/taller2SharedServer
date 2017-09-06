@@ -77,8 +77,15 @@ function addRoles() {
     });
 }
 
-dbManager.query('INSERT INTO role VALUES($1) RETURNING *', ['pepe'], (err, res) => {
-    console.log(res);
+BusinessUser.findById('hector-53304', (err, user) => {
+    user.setPassword('zaragoza');
+    user.name = 'HECTORR';
+    user.surname = 'ZARAGOZAA';
+    user.username = 'hector__';
+    user.update((err, user) => {
+        console.log(user);
+        dbManager.end();
+    });
 });
 
 //dbManager.query('SELECT * FROM magic', [], (err, res) => {
