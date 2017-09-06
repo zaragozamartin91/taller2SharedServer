@@ -77,18 +77,8 @@ function addRoles() {
     });
 }
 
-BusinessUser.findById('hector-53304', (err, user) => {
-    user.setPassword('zaragoza');
-    user.name = 'HECTORR';
-    user.surname = 'ZARAGOZAA';
-    user.username = 'hector__';
-    user.update((err, user) => {
-        console.log(user);
-        dbManager.end();
-    });
+BusinessUser.removeRoles('mateo-23011', ['user'], (err, res) => {
+    console.log(err);
+    console.log(res);
+    dbManager.end();
 });
-
-//dbManager.query('SELECT * FROM magic', [], (err, res) => {
-//    console.log(new Date(res.rows[0].day));
-//    dbManager.end();
-//});

@@ -32,7 +32,8 @@ function hashUser(id, username, name, surname, password) {
  * @param {string} username 
  * @param {string} password 
  * @param {string} name 
- * @param {string} surname 
+ * @param {string} surname
+ * @param {Array<Role>} roles 
  * @return {BusinessUser}
  */
 function BusinessUser(id, _ref, username, password, name, surname, roles) {
@@ -42,6 +43,7 @@ function BusinessUser(id, _ref, username, password, name, surname, roles) {
     this.password = password;
     this.name = name || defName;
     this.surname = surname || defSurname;
+    this.roles = roles || [];
 }
 
 /**
@@ -50,13 +52,34 @@ function BusinessUser(id, _ref, username, password, name, surname, roles) {
  * @return {BusinessUser} Nuevo usuario de negocio.
  */
 BusinessUser.fromObj = function (usrObj) {
-    if (usrObj) return new BusinessUser(
-        usrObj.id, usrObj._ref, usrObj.username, usrObj.password,
-        usrObj.name, usrObj.surname, usrObj.roles);
-    else return null;
+    if (!usrObj) return null;
+    return new BusinessUser(usrObj.id, usrObj._ref, usrObj.username,
+        usrObj.password, usrObj.name, usrObj.surname, usrObj.roles);
 };
 
+/**
+ * Construye un conjunto de usuarios a partir de un resultado de query.
+ * @param {Array} rows Filas resultado de una query en la BBDD.
+ * @return {Array<User>} Usuarios.
+ */
+function buildUsersFromRows(rows) {
+    const users = {};
+    rows.forEach(row => {
+        const userId = row.id;
+        const role = row.role;
+        const user = users[userId] || BusinessUser.fromObj(row);
 
+        if (role) user.roles.push(Role.fromObj(role));
+        users[userId] = user;
+    });
+
+    return Object.keys(users).map(userId => users[userId]);
+}
+
+/**
+ * Crea la tabla de usuarios de negocio.
+ * @param {Function} callback Funcion a invocar luego de crear la tabla.
+ */
 BusinessUser.createTable = function (callback) {
     dbManager.query(`CREATE TABLE ${table} (
         id ${idType} PRIMARY KEY,
@@ -68,16 +91,16 @@ BusinessUser.createTable = function (callback) {
     )`, [], callback);
 };
 
+/**
+ * Crea la tabla de roles de usuario de negocio.
+ * @param {Function} callback Funcion a invocar luego que la tabla fue creada.
+ */
 BusinessUser.createRolesTable = function (callback) {
     dbManager.query(`CREATE TABLE ${rolesTable} (
         business_user ${idType} REFERENCES ${table}(id),
         role ${Role.idType} REFERENCES ${Role.table}(type),
         UNIQUE(business_user,role)
     )`, [], callback);
-};
-
-BusinessUser.deleteTable = function (callback) {
-    dbManager.query(`DROP TABLE ${table}`, [], callback);
 };
 
 /**
@@ -92,12 +115,19 @@ BusinessUser.insert = function (userObj, callback) {
     const name = userObj.name || defName;
     const surname = userObj.surname || defSurname;
     const _ref = hashUser(id, username, name, surname, password);
+    const roles = userObj.roles;
 
     dbManager.query(`INSERT INTO ${table} 
         VALUES ($1,$2,$3,$4,$5,$6) RETURNING *`,
         [id, _ref, username, password, name, surname], (err, res) => {
             if (err) return callback(err);
-            callback(null, BusinessUser.fromObj(res.rows[0]));
+
+            const rows = res.rows;
+            if (!rows.length) return callback(null, null);
+
+            logger.debug(`Usuario ${id} insertado`);
+            const user = rows[0];
+            BusinessUser.addRoles(user, roles, callback);
         });
 };
 
@@ -107,25 +137,27 @@ BusinessUser.insert = function (userObj, callback) {
  * @param {Function} callback Funcion a invocar al obtener el usuario.
  */
 BusinessUser.findById = function (id, callback) {
-    dbManager.query(`SELECT * FROM ${table} WHERE id=$1`,
+    dbManager.query(
+        `SELECT u.*,${rolesTable}.role FROM ${table} u LEFT OUTER JOIN ${rolesTable} ON (u.id=${rolesTable}.${table}) WHERE u.id=$1`,
         [id], (err, res) => {
             if (err) return callback(err);
             const rows = res.rows;
-            if (rows.length) return callback(null, BusinessUser.fromObj(rows[0]));
+            if (rows.length) return callback(null, buildUsersFromRows(rows)[0]);
             callback(null, null);
         });
 };
 
-/**
- * Obtiene todos los usuarios de negocio de la BBDD.
- * @param {Function} callback Funcion a invocar luego de obtener los usuarios.
- */
 BusinessUser.find = function (callback) {
-    dbManager.query(`SELECT * FROM ${table}`, [], (err, res) => {
-        if (err) return callback(err);
-        callback(null, res.rows.map(BusinessUser.fromObj));
-    });
+    dbManager.query(
+        `SELECT u.*,${rolesTable}.role FROM ${table} u LEFT OUTER JOIN ${rolesTable} ON (u.id=${rolesTable}.${table})`,
+        (err, res) => {
+            if (err) return callback(err);
+            const rows = res.rows;
+            if (rows.length) return callback(null, buildUsersFromRows(rows));
+            callback(null, []);
+        });
 };
+
 
 /**
  * Obtiene un usuario de negocio a partir de su username.
@@ -133,12 +165,16 @@ BusinessUser.find = function (callback) {
  * @param {Function} callback Funcion a invocar al obtener el usuario.
  */
 BusinessUser.findByUsername = function (username, callback) {
-    dbManager.query(`SELECT * FROM ${table} WHERE username=$1`, [username], (err, res) => {
+    const sql = `SELECT u.*,${rolesTable}.role 
+        FROM ${table} u LEFT OUTER JOIN ${rolesTable} ON (u.id=${rolesTable}.${table}) WHERE u.username=$1`;
+
+    dbManager.query(sql, [username], (err, res) => {
         if (err) return callback(err);
-        callback(null, BusinessUser.fromObj(res.rows[0]));
+        const rows = res.rows;
+        if (rows.length) return callback(null, buildUsersFromRows(rows)[0]);
+        callback(null, null);
     });
 };
-
 
 BusinessUser.addRole = function (user, role, callback) {
     const userId = user.id || user;
@@ -148,9 +184,34 @@ BusinessUser.addRole = function (user, role, callback) {
     dbManager.query(`INSERT INTO ${rolesTable} VALUES($1,$2)`, [userId, roleId], callback);
 };
 
+BusinessUser.removeRoles = function (user, roles, callback) {
+    roles = Role.asStrings(roles);
+    if (roles.length == 0) return callback(null, user);
+
+    const userId = user.id || user;
+    logger.debug(`Quitando roles ${roles} al usuario ${userId}`);
+
+    let roleConstraints = `role='${roles[0]}'`;
+    for (let index = 1; index < roles.length; index++) {
+        roleConstraints += ` OR role='${roles[index]}'`;
+    }
+
+    const sql = `DELETE FROM ${rolesTable} WHERE ${table}=$1 AND (${roleConstraints})`;
+    dbManager.query(sql, [userId], callback);
+};
+
+/**
+ * Agrega un conjunto de roles a un usuario.
+ * @param {BusinessUser} user Usuario al cual agregarle roles.
+ * @param {Array<string>} roles Roles a agregar.
+ * @param {Function} callback Funcion a invocar al finalizar (err,user) => {}.
+ */
 BusinessUser.addRoles = function (user, roles, callback) {
-    roles = roles || [];
+    roles = Role.asStrings(roles);
     const functions = [];
+
+    const userId = user.id || user;
+    logger.debug(`Agregando roles ${roles} al usuario ${userId}`);
 
     for (let index = 0; index < roles.length; index++) {
         const role = roles[index].type || roles[index];
@@ -167,6 +228,7 @@ BusinessUser.addRoles = function (user, roles, callback) {
     else callback(null, user);
 };
 
+
 BusinessUser.hasRole = function (user, role, callback) {
     const userId = user.id || user;
     const roleId = role.type || role.role || role;
@@ -174,6 +236,17 @@ BusinessUser.hasRole = function (user, role, callback) {
         [userId, roleId], (err, res) => {
             if (err) return callback(err);
             callback(null, res.rows.length > 0);
+        });
+};
+
+BusinessUser.getRoles = function (user, callback) {
+    const userId = user.id || user;
+    dbManager.query(`SELECT role FROM ${rolesTable} WHERE business_user=$1`,
+
+        [userId], (err, res) => {
+            if (err) return callback(err);
+            const roles = res.rows.map(Role.fromObj);
+            callback(null, roles);
         });
 };
 
@@ -186,20 +259,6 @@ BusinessUser.prototype.authenticate = function (password) {
 BusinessUser.prototype.hidePassword = function () {
     this.password = '****';
     return this;
-};
-
-BusinessUser.prototype.getRoles = function (callback) {
-    dbManager.query(`SELECT role FROM ${rolesTable} WHERE business_user=$1`,
-        [this.id], (err, res) => {
-            if (err) return callback(err);
-            const roles = res.rows.map(Role.fromObj);
-            callback(null, roles);
-        });
-};
-
-BusinessUser.prototype.addRole = function (role, callback) {
-    role = role.type || role.role || role;
-    BusinessUser.addRole(this.id, role, callback || EMPTY_FUNC);
 };
 
 BusinessUser.prototype.hasRole = function (role, callback) {
@@ -218,21 +277,25 @@ BusinessUser.prototype.setPassword = function (password) {
     return this;
 };
 
+
 BusinessUser.prototype.update = function (callback) {
     logger.debug(`Actualizando usuario ${this.id}`);
     const newRef = hashUser(this.id, this.username, this.name, this.surname, this.password);
 
-    dbManager.query(`UPDATE ${table} 
-        SET username=$1, name=$2, password=$3, _ref=$4, surname=$5
-        WHERE id=$6 AND _ref=$7 RETURNING *`,
-        [this.username, this.name, this.password, newRef, this.surname, this.id, this._ref],
-
-        (err, res) => {
+    dbManager.query(`SELECT * FROM ${table} WHERE id=$1 AND _ref=$2`,
+        [this.id, newRef], (err, res) => {
             if (err) return callback(err);
-            const rows = res.rows;
-            if (rows.length) return callback(null, BusinessUser.fromObj(rows[0]));
-            logger.debug(`Usuario ${this.id} NO FUE actualizado`);
-            callback(null, null);
+
+            const user = res.rows[0];
+            if (!user) return callback(new Error('Ocurrio una colision al actualizar!'));
+
+            const newRoles = this.roles;
+            const dbRoles = user.roles;
+            const diffRoles = Role.diff(newRoles, dbRoles);
+            BusinessUser.addRoles(user, diffRoles.add, err => {
+                if (err) return callback(err);
+                BusinessUser.removeRoles(user, diffRoles.remove, callback);
+            });
         });
 };
 
