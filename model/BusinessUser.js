@@ -18,6 +18,10 @@ const EMPTY_FUNC = function () { };
 
 /* CODIGO -------------------------------------------------------------------------------------- */
 
+function hashUser(id, username, name, surname, password) {
+    return hasher.hash({ id, username, name, surname, password });
+}
+
 /**
  * Crea una instancia de usuario de negocio.
  * 
@@ -85,9 +89,9 @@ BusinessUser.insert = function (userObj, callback) {
     const username = userObj.username;
     const id = idGenerator.generateId(username);
     const password = encryptor.encrypt(userObj.password);
-    const _ref = hasher.hash({ id, username });
     const name = userObj.name || defName;
     const surname = userObj.surname || defSurname;
+    const _ref = hashUser(id, username, name, surname, password);
 
     dbManager.query(`INSERT INTO ${table} 
         VALUES ($1,$2,$3,$4,$5,$6) RETURNING *`,
@@ -154,8 +158,8 @@ BusinessUser.addRoles = function (user, roles, callback) {
         /* Encadeno las funciones a llamar. La funcion en [0] sera la ultima en invocarse y
         eventualmente llamara al callback pasado por parametro. Cada funcion llamara eventualmente
         a la anterior. */
-        if (index == 0) functions.push(() => BusinessUser.addRole(user, role, callback));
-        else functions.push(() => BusinessUser.addRole(user, role, prevFunction));
+        if (index == 0) functions.push(e => BusinessUser.addRole(user, role, callback));
+        else functions.push(e => BusinessUser.addRole(user, role, prevFunction));
     }
 
     const lastFunc = functions[functions.length - 1];
@@ -200,6 +204,36 @@ BusinessUser.prototype.addRole = function (role, callback) {
 
 BusinessUser.prototype.hasRole = function (role, callback) {
     return BusinessUser.hasRole(this, role);
+};
+
+/**
+ * Establece el password y lo encripta. Se debe llamar a este metodo para actualizar
+ * el password de manera correcta.
+ * @this {BusinessUser}
+ * @param {string} password El password a encriptar y establecer.
+ * @return {BusinessUser} this.
+ */
+BusinessUser.prototype.setPassword = function (password) {
+    this.password = encryptor.encrypt(password);
+    return this;
+};
+
+BusinessUser.prototype.update = function (callback) {
+    logger.debug(`Actualizando usuario ${this.id}`);
+    const newRef = hashUser(this.id, this.username, this.name, this.surname, this.password);
+
+    dbManager.query(`UPDATE ${table} 
+        SET username=$1, name=$2, password=$3, _ref=$4, surname=$5
+        WHERE id=$6 AND _ref=$7 RETURNING *`,
+        [this.username, this.name, this.password, newRef, this.surname, this.id, this._ref],
+
+        (err, res) => {
+            if (err) return callback(err);
+            const rows = res.rows;
+            if (rows.length) return callback(null, BusinessUser.fromObj(rows[0]));
+            logger.debug(`Usuario ${this.id} NO FUE actualizado`);
+            callback(null, null);
+        });
 };
 
 BusinessUser.table = table;
