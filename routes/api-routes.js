@@ -44,8 +44,11 @@ router.put('/servers/:serverId?', serverController.updateServer);
 
 router.use('/business-users', tokenValidator.verifyToken);
 
-router.use('/business-users', tokenValidator.verifyAdminToken);
+router.post('/business-users', tokenValidator.verifyAdminToken);
 router.post('/business-users', businessUsersController.postUser);
+
+router.put('/business-users/:userId', tokenValidator.verifyAdminToken);
+router.put('/business-users/:userId', businessUsersController.updateUser);
 
 /* FIN /business-users ROUTES ---------------------------------------------------------------------------------------------------- */
 

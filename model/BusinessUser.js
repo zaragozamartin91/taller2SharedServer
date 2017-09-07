@@ -309,7 +309,7 @@ BusinessUser.prototype.update = function (callback) {
     dbManager.query(findUserSql, [this.id, this._ref], (err, res) => {
         if (err) return callback(err);
 
-        if (!res.rows[0]) return callback(new Error('Ocurrio una colision al actualizar!'));
+        if (!res.rows[0]) return callback(new Error('COLISION'));
 
         const user = buildUsersFromRows(res.rows)[0];
 
@@ -333,6 +333,10 @@ BusinessUser.prototype.update = function (callback) {
     });
 };
 
+/**
+ * Pasa los roles del usuario a strings.
+ * @return {BusinessUser} this.
+ */
 BusinessUser.prototype.withStringRoles = function () {
     this.roles = Role.asStrings(this.roles);
     return this;
