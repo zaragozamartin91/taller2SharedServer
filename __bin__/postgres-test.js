@@ -77,18 +77,14 @@ function addRoles() {
     });
 }
 
-BusinessUser.findById('hector-53304', (err, user) => {
-    user.setPassword('zaragoza');
-    user.name = 'HECTORR';
-    user.surname = 'ZARAGOZAA';
-    user.username = 'hector__';
-    user.update((err, user) => {
-        console.log(user);
+BusinessUser.findById('sonia-18663', (err, user) => {
+    console.log(err);
+    user.roles = [];
+    user.name = 'Sonia';
+    user.surname = 'Esposito de Zaragoza';
+    user.update((err, res) => {
+        console.log(err);
+        console.log(res);
         dbManager.end();
     });
 });
-
-//dbManager.query('SELECT * FROM magic', [], (err, res) => {
-//    console.log(new Date(res.rows[0].day));
-//    dbManager.end();
-//});

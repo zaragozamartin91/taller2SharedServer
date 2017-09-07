@@ -1,31 +1,74 @@
 const BusinessUser = require('../model/BusinessUser');
 const responseUtils = require('../utils/response-utils');
 const mainConf = require('../config/main-config');
+const CollectionMetadata = require('../model/CollectionMetadata');
 
 const apiVersion = mainConf.apiVersion;
 
+function insertFieldsOk(user) {
+    if (user.username && user.password && user.name && user.surname) return true;
+    else return false;
+}
+
+function invalidInsertFields(user) {
+    return !insertFieldsOk(user);
+}
 
 exports.postUser = function (req, res) {
     const username = req.body.username;
     const password = req.body.password;
     const name = req.body.name;
     const surname = req.body.surname;
-    const roles = req.body.roles || [];
+    const roles = req.body.roles;
 
-    if (!username || !password || !name || !surname)
-        return responseUtils.sendMsgCodeResponse(res, 'Faltan parametros', 400);
+    const userObj = { username, password, name, surname, roles };
 
-    const userObj = { username, password, name, surname };
+    if (invalidInsertFields(userObj)) return responseUtils.sendMsgCodeResponse(res, 'Faltan parametros', 400);
+
     BusinessUser.insert(userObj, (err, usr) => {
         if (err) return responseUtils.sendMsgCodeResponse(res, 'Error al insertar usuario', 500);
 
-        BusinessUser.addRoles(usr, roles, (err, res) => {
-            if (err) responseUtils.sendMsgCodeResponse(res, 'Ocurrio un error al agregar los roles al usuario', 500);
+        const metadata = { version: apiVersion };
+        res.send({ metadata, businessUser: usr.withStringRoles() });
+    });
+};
 
-            /* Construyo el json de salida. Al user object obtenido de la query, le agrego el arreglo de roles. */
-            usr.roles = roles;
+exports.updateUser = function (req, res) {
+    const userId = req.params.userId;
+
+    const username = req.body.username;
+    const password = req.body.password;
+    const name = req.body.name;
+    const surname = req.body.surname;
+    const roles = req.body.roles;
+
+    BusinessUser.findById(userId, (err, user) => {
+        if (err) return responseUtils.sendMsgCodeResponse(res, 'Error al buscar el usuario', 500);
+        if (!user) return responseUtils.sendMsgCodeResponse(res, 'No existe el usuario solicitado', 404);
+
+        user.username = username || user.username;
+        if (password) user.setPassword(password);
+        else user.password;
+        user.name = name || user.name;
+        user.surname = surname || user.surname;
+        user.roles = roles || user.roles;
+
+        user.update(err => {
+            if (err && err.message == 'COLISION') return responseUtils.sendMsgCodeResponse(res, 'Conflicto en el update', 409);
+            if (err) return responseUtils.sendMsgCodeResponse(res, 'Error al actualizar el usuario', 500);
+
             const metadata = { version: apiVersion };
-            res.send({ metadata, businessUser: usr });
+            res.send({ metadata, businessUser: user.withStringRoles() });
         });
+    });
+};
+
+exports.getUsers = function (req, res) {
+    BusinessUser.find((err, users) => {
+        if (err) return responseUtils.sendMsgCodeResponse(res, 'Ocurrio un error al obtener los usuarios', 500);
+
+        const metadata = new CollectionMetadata(users.length, users.length, '', '', '', '', apiVersion);
+        const resUsers = users.map(u => u.withStringRoles());
+        res.send({ metadata, businessUser: resUsers });
     });
 };

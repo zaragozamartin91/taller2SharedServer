@@ -22,18 +22,6 @@ flow.series([
         ApplicationServer.createTable(callback);
     },
     callback => {
-        console.log('Insertando usuario');
-        BusinessUser.insert({ username: 'martin', password: 'pepe', name: 'martin', surname: 'zaragoza' }, callback);
-    },
-    callback => {
-        console.log('Insertando usuario');
-        BusinessUser.insert({ username: 'mateo', password: 'posting', name: 'mateo', surname: 'zaragoza' }, callback);
-    },
-    callback => {
-        console.log('Insertando usuario');
-        BusinessUser.insert({ username: 'hector', password: 'rules', name: 'hector', surname: 'zaragoza' }, callback);
-    },
-    callback => {
         console.log('Insertando rol');
         Role.insert('manager', callback);
     },
@@ -46,22 +34,22 @@ flow.series([
         Role.insert('user', callback);
     },
     callback => {
-        console.log('Agregando rol a usuario');
-        BusinessUser.findByUsername('martin', (err, user) => {
-            user.addRole('admin', callback);
-        });
+        console.log('Insertando usuario');
+        BusinessUser.insert({
+            username: 'martin', password: 'pepe', name: 'martin',
+            surname: 'zaragoza', roles: ['manager', 'admin']
+        }, callback);
     },
     callback => {
-        console.log('Agregando rol a usuario');
-        BusinessUser.findByUsername('martin', (err, user) => {
-            user.addRole('manager', callback);
-        });
+        console.log('Insertando usuario');
+        BusinessUser.insert({
+            username: 'mateo', password: 'posting', name: 'mateo',
+            surname: 'zaragoza', roles: ['user']
+        }, callback);
     },
     callback => {
-        console.log('Agregando rol a usuario');
-        BusinessUser.findByUsername('mateo', (err, user) => {
-            user.addRole('user', callback);
-        });
+        console.log('Insertando usuario');
+        BusinessUser.insert({ username: 'hector', password: 'rules', name: 'hector', surname: 'zaragoza' }, callback);
     },
     callback => {
         console.log('Agregando app server');
