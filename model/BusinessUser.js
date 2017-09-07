@@ -154,7 +154,7 @@ BusinessUser.findById = function (id, callback) {
 BusinessUser.find = function (callback) {
     const sql = `SELECT u.*,${rolesTable}.role FROM ${table} AS u 
         LEFT OUTER JOIN ${rolesTable} ON (u.id=${rolesTable}.${table})`;
-        
+
     dbManager.query(sql, (err, res) => {
         if (err) return callback(err);
         const rows = res.rows;
@@ -181,12 +181,23 @@ BusinessUser.findByUsername = function (username, callback) {
     });
 };
 
+/**
+ * Agrega un rol a un usuario de negocio.
+ * @param {BusinessUser} user Usuario al cual agregar el rol.
+ * @param {Role} role Rol a agregar.
+ * @param {function} callback Funcion a invocar luego de agregar el rol.
+ */
 BusinessUser.addRole = function (user, role, callback) {
     const userId = user.id || user;
-    const roleId = role.type || role.role || role;
-    logger.debug(`Agregando rol ${roleId} al usuario ${userId}`);
+    const roleId = Role.fromObj(role).type;
 
-    dbManager.query(`INSERT INTO ${rolesTable} VALUES($1,$2)`, [userId, roleId], callback);
+    if (Role.isValid(roleId)) {
+        logger.debug(`Agregando rol ${roleId} al usuario ${userId}`);
+        dbManager.query(`INSERT INTO ${rolesTable} VALUES($1,$2)`, [userId, roleId], callback);
+    } else {
+        logger.debug(`El rol ${roleId} es invalido!`);
+        callback(new Error(`Rol ${roleId} invalido!`));
+    }
 };
 
 /**

@@ -2,24 +2,37 @@ const dbManager = require('./db-manager');
 const table = 'role';
 const idType = 'VARCHAR(16)';
 
+const validRoles = ['admin', 'manager', 'user'];
+
+/**
+ * Crea una nueva instancia de rol de usuario de negocio.
+ * @constructor
+ * @this {Role}
+ * @param {string} type Tipo de rol [admin||user||manager].
+ * @return {Role} nuevo rol.
+ */
 function Role(type) {
     this.type = type;
 }
 
+/**
+ * Crea la tabla de roles de usuario de negocio.
+ * @param {function} callback Funcion a invocar luego de crear la tabla.
+ */
 Role.createTable = function (callback) {
     dbManager.query(`CREATE TABLE ${table} (
         type ${idType} PRIMARY KEY
     )`, [], callback);
 };
 
-Role.insert = function (type, callback) {
-    dbManager.query(`INSERT INTO ${table} VALUES($1)`, [type], callback);
-};
-
-Role.createRoles = function (callback) {
-    Role.insert('user', err => console.error(err));
-    Role.insert('manager', err => console.error(err));
-    Role.insert('admin', err => console.error(err));
+/**
+ * Inserta un rol de usuario de negocio.
+ * @param {string} rol a insertar.
+ * @param {function} callback Funcion a invocar luego de insertar el rol.
+ */
+Role.insert = function (role, callback) {
+    role = Role.fromObj(role).type;
+    dbManager.query(`INSERT INTO ${table} VALUES($1)`, [role], callback);
 };
 
 Role.fromObj = function (roleObj) {
@@ -94,6 +107,11 @@ Role.diff = function (roles1, roles2) {
     return diff;
 };
 
+Role.isValid = function (role) {
+    const type = Role.fromObj(role).type;
+    return validRoles.indexOf(type) >= 0;
+};
+
 Role.prototype.isManager = function () {
     return this.type.valueOf() == 'manager';
 };
@@ -104,6 +122,10 @@ Role.prototype.isUser = function () {
 
 Role.prototype.isAdmin = function () {
     return this.type.valueOf() == 'admin';
+};
+
+Role.prototype.isValid = function () {
+    return Role.isValid(this.type);
 };
 
 Role.table = table;
