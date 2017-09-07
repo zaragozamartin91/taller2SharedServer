@@ -123,7 +123,7 @@ BusinessUser.insert = function (userObj, callback) {
             if (err) return callback(err);
 
             const rows = res.rows;
-            if (!rows.length) return callback(null, null);
+            if (!rows.length) return callback(new Error('Usuario no insertado'), null);
 
             logger.debug(`Usuario ${id} insertado`);
             const user = rows[0];
@@ -137,9 +137,10 @@ BusinessUser.insert = function (userObj, callback) {
  * @param {Function} callback Funcion a invocar al obtener el usuario.
  */
 BusinessUser.findById = function (id, callback) {
+    const sql = `SELECT u.*,${rolesTable}.role FROM ${table} u 
+        LEFT OUTER JOIN ${rolesTable} ON (u.id=${rolesTable}.${table}) WHERE u.id=$1`;
     dbManager.query(
-        `SELECT u.*,${rolesTable}.role FROM ${table} u LEFT OUTER JOIN ${rolesTable} ON (u.id=${rolesTable}.${table}) WHERE u.id=$1`,
-        [id], (err, res) => {
+        sql, [id], (err, res) => {
             if (err) return callback(err);
             const rows = res.rows;
             if (rows.length) return callback(null, buildUsersFromRows(rows)[0]);
@@ -208,6 +209,8 @@ BusinessUser.removeRoles = function (user, roles, callback) {
  */
 BusinessUser.addRoles = function (user, roles, callback) {
     roles = Role.asStrings(roles);
+    if (roles.length == 0) return callback(null, user);
+
     const functions = [];
 
     const userId = user.id || user;
@@ -281,22 +284,47 @@ BusinessUser.prototype.setPassword = function (password) {
 BusinessUser.prototype.update = function (callback) {
     logger.debug(`Actualizando usuario ${this.id}`);
     const newRef = hashUser(this.id, this.username, this.name, this.surname, this.password);
+    const self = this;
 
-    dbManager.query(`SELECT * FROM ${table} WHERE id=$1 AND _ref=$2`,
-        [this.id, newRef], (err, res) => {
+    const sql = `SELECT u.*,${rolesTable}.role FROM ${table} AS u 
+        LEFT OUTER JOIN ${rolesTable} ON (u.id=${rolesTable}.${table}) WHERE u.id=$1 AND u._ref=$2`;
+
+    //const sql = `SELECT * FROM ${table} WHERE id=$1 AND _ref=$2`;
+
+    /* Primero verificamos que otro no haya cambiado el usuario */
+    dbManager.query(sql, [this.id, this._ref], (err, res) => {
+        if (err) return callback(err);
+
+        if (!res.rows[0]) return callback(new Error('Ocurrio una colision al actualizar!'));
+
+        const user = buildUsersFromRows(res.rows)[0];
+
+        /* Luego actualizamos los campos del usuario */
+        const sql = `UPDATE ${table} SET username=$1, password=$2, _ref=$3,
+                name=$4, surname=$5 WHERE id=$6`;
+        const values = [this.username, this.password, newRef, this.name, this.surname, this.id];
+        dbManager.query(sql, values, (err, res) => {
             if (err) return callback(err);
 
-            const user = res.rows[0];
-            if (!user) return callback(new Error('Ocurrio una colision al actualizar!'));
+            /* Finalmente agregamos/quitamos roles */
+            const newRoles = self.roles;
 
-            const newRoles = this.roles;
-            const dbRoles = user.roles;
-            const diffRoles = Role.diff(newRoles, dbRoles);
-            BusinessUser.addRoles(user, diffRoles.add, err => {
+            BusinessUser.getRoles(self.id, (err, dbRoles) => {
                 if (err) return callback(err);
-                BusinessUser.removeRoles(user, diffRoles.remove, callback);
+
+                const diffRoles = Role.diff(dbRoles, newRoles);
+                BusinessUser.addRoles(user, diffRoles.add, err => {
+                    if (err) return callback(err);
+                    BusinessUser.removeRoles(user, diffRoles.remove, callback);
+                });
             });
         });
+    });
+};
+
+BusinessUser.prototype.withStringRoles = function () {
+    this.roles = Role.asStrings(this.roles);
+    return this;
 };
 
 BusinessUser.table = table;

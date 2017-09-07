@@ -77,8 +77,14 @@ function addRoles() {
     });
 }
 
-BusinessUser.removeRoles('mateo-23011', ['user'], (err, res) => {
+BusinessUser.findById('sonia-18663', (err, user) => {
     console.log(err);
-    console.log(res);
-    dbManager.end();
+    user.roles = ['admin'];
+    user.name = 'Sonia Patricia';
+    user.surname = 'Esposito';
+    user.update((err, res) => {
+        console.log(err);
+        console.log(res);
+        dbManager.end();
+    });
 });

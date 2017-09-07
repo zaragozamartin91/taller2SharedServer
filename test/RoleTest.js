@@ -34,7 +34,6 @@ describe('Role', function () {
             const roles1 = [Role.manager().type, Role.user()];
             const roles2 = [];
             const diff = Role.diff(roles1, roles2);
-            console.log(diff);
             assert.ok(diff.keep.length == 0);
             assert.ok(diff.remove.indexOf('user') >= 0);
             assert.ok(diff.add.length == 0);

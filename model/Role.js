@@ -52,16 +52,16 @@ Role.asStrings = function (roles) {
 
 /**
  * Determina la diferencia de roles.
- * @param {Array} roles1 Primer grupo de roles.
- * @param {Array} roles2 Segundo grupo de roles.
+ * @param {Array} roles1 Roles en BBDD.
+ * @param {Array} roles2 Roles nuevos.
  * @return {object} {keep:'Roles a guardar', add:'roles a agregar', remove:'roles a eliminar'}
  */
 Role.diff = function (roles1, roles2) {
     roles1 = Role.asStrings(roles1);
     roles2 = Role.asStrings(roles2);
 
-    console.log(roles1);
-    console.log(roles2);
+    console.log(`roles1: ${roles1}`);
+    console.log(`roles2: ${roles2}`);
 
     const keep = [];
     const remove = [];
@@ -76,7 +76,10 @@ Role.diff = function (roles1, roles2) {
         if (roles1.indexOf(role2) < 0) add.push(role2);
     });
 
-    return { keep, add, remove };
+    const diff = { keep, add, remove };
+    console.log('diff:');
+    console.log(diff);
+    return diff;
 };
 
 Role.prototype.isManager = function () {
