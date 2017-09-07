@@ -97,8 +97,8 @@ BusinessUser.createTable = function (callback) {
  */
 BusinessUser.createRolesTable = function (callback) {
     dbManager.query(`CREATE TABLE ${rolesTable} (
-        business_user ${idType} REFERENCES ${table}(id),
-        role ${Role.idType} REFERENCES ${Role.table}(type),
+        business_user ${idType} REFERENCES ${table}(id) ON DELETE CASCADE,
+        role ${Role.idType} REFERENCES ${Role.table}(type) ON DELETE CASCADE,
         UNIQUE(business_user,role)
     )`, [], callback);
 };
@@ -115,20 +115,23 @@ BusinessUser.insert = function (userObj, callback) {
     const name = userObj.name || defName;
     const surname = userObj.surname || defSurname;
     const _ref = hashUser(id, username, name, surname, password);
-    const roles = userObj.roles;
+    const roles = userObj.roles || [];
 
-    dbManager.query(`INSERT INTO ${table} 
-        VALUES ($1,$2,$3,$4,$5,$6) RETURNING *`,
-        [id, _ref, username, password, name, surname], (err, res) => {
-            if (err) return callback(err);
+    const sql = `INSERT INTO ${table} VALUES ($1,$2,$3,$4,$5,$6) RETURNING *`;
 
-            const rows = res.rows;
-            if (!rows.length) return callback(new Error('Usuario no insertado'), null);
+    dbManager.query(sql, [id, _ref, username, password, name, surname], (err, res) => {
+        if (err) return callback(err);
 
-            logger.debug(`Usuario ${id} insertado`);
-            const user = rows[0];
-            BusinessUser.addRoles(user, roles, callback);
+        const rows = res.rows;
+        if (!rows.length) return callback(new Error('Usuario no insertado'), null);
+
+        logger.debug(`Usuario ${id} insertado`);
+        const user = rows[0];
+        BusinessUser.addRoles(user, roles, () => {
+            user.roles = Role.fromStrings(roles);
+            callback(null, BusinessUser.fromObj(user));
         });
+    });
 };
 
 /**
@@ -185,6 +188,12 @@ BusinessUser.addRole = function (user, role, callback) {
     dbManager.query(`INSERT INTO ${rolesTable} VALUES($1,$2)`, [userId, roleId], callback);
 };
 
+/**
+ * Elimina roles de un usuario.
+ * @param {BusinessUser} user Usuario al cual remover roles.
+ * @param {Array<string>} roles Roles a remover.
+ * @param {Function} callback Funcion a ejecutar luego de remover los roles.
+ */
 BusinessUser.removeRoles = function (user, roles, callback) {
     roles = Role.asStrings(roles);
     if (roles.length == 0) return callback(null, user);
@@ -198,7 +207,7 @@ BusinessUser.removeRoles = function (user, roles, callback) {
     }
 
     const sql = `DELETE FROM ${rolesTable} WHERE ${table}=$1 AND (${roleConstraints})`;
-    dbManager.query(sql, [userId], callback);
+    dbManager.query(sql, [userId], err => callback(err, user));
 };
 
 /**
@@ -231,26 +240,30 @@ BusinessUser.addRoles = function (user, roles, callback) {
     else callback(null, user);
 };
 
-
+/**
+ * Determina si un usuario tiene un rol.
+ * @param {BusinessUser} user Usuario a verificar sus roles.
+ * @param {Role} role Rol a verificar.
+ * @param {Function} callback Funcion a llamar luego de verificar el rol. 
+ */
 BusinessUser.hasRole = function (user, role, callback) {
     const userId = user.id || user;
     const roleId = role.type || role.role || role;
-    dbManager.query(`SELECT role FROM ${rolesTable} WHERE business_user=$1 AND role=$2`,
-        [userId, roleId], (err, res) => {
-            if (err) return callback(err);
-            callback(null, res.rows.length > 0);
-        });
+    const sql = `SELECT role FROM ${rolesTable} WHERE business_user=$1 AND role=$2`;
+    dbManager.query(sql, [userId, roleId], (err, res) => {
+        if (err) return callback(err);
+        callback(null, res.rows.length > 0);
+    });
 };
 
 BusinessUser.getRoles = function (user, callback) {
     const userId = user.id || user;
-    dbManager.query(`SELECT role FROM ${rolesTable} WHERE business_user=$1`,
-
-        [userId], (err, res) => {
-            if (err) return callback(err);
-            const roles = res.rows.map(Role.fromObj);
-            callback(null, roles);
-        });
+    const sql = `SELECT role FROM ${rolesTable} WHERE business_user=$1`;
+    dbManager.query(sql, [userId], (err, res) => {
+        if (err) return callback(err);
+        const roles = res.rows.map(Role.fromObj);
+        callback(null, roles);
+    });
 };
 
 BusinessUser.prototype.authenticate = function (password) {
@@ -280,19 +293,20 @@ BusinessUser.prototype.setPassword = function (password) {
     return this;
 };
 
-
+/**
+ * Actualiza un usuario en la BBDD.
+ * @param {Function} callback Funcion a ejecutar luego de actualizar el usuario.
+ */
 BusinessUser.prototype.update = function (callback) {
     logger.debug(`Actualizando usuario ${this.id}`);
     const newRef = hashUser(this.id, this.username, this.name, this.surname, this.password);
     const self = this;
 
-    const sql = `SELECT u.*,${rolesTable}.role FROM ${table} AS u 
+    const findUserSql = `SELECT u.*,${rolesTable}.role FROM ${table} AS u 
         LEFT OUTER JOIN ${rolesTable} ON (u.id=${rolesTable}.${table}) WHERE u.id=$1 AND u._ref=$2`;
 
-    //const sql = `SELECT * FROM ${table} WHERE id=$1 AND _ref=$2`;
-
     /* Primero verificamos que otro no haya cambiado el usuario */
-    dbManager.query(sql, [this.id, this._ref], (err, res) => {
+    dbManager.query(findUserSql, [this.id, this._ref], (err, res) => {
         if (err) return callback(err);
 
         if (!res.rows[0]) return callback(new Error('Ocurrio una colision al actualizar!'));
@@ -300,23 +314,20 @@ BusinessUser.prototype.update = function (callback) {
         const user = buildUsersFromRows(res.rows)[0];
 
         /* Luego actualizamos los campos del usuario */
-        const sql = `UPDATE ${table} SET username=$1, password=$2, _ref=$3,
+        const updateSql = `UPDATE ${table} SET username=$1, password=$2, _ref=$3,
                 name=$4, surname=$5 WHERE id=$6`;
-        const values = [this.username, this.password, newRef, this.name, this.surname, this.id];
-        dbManager.query(sql, values, (err, res) => {
+        const updateValues = [this.username, this.password, newRef, this.name, this.surname, this.id];
+
+        dbManager.query(updateSql, updateValues, (err, res) => {
             if (err) return callback(err);
 
             /* Finalmente agregamos/quitamos roles */
             const newRoles = self.roles;
-
-            BusinessUser.getRoles(self.id, (err, dbRoles) => {
-                if (err) return callback(err);
-
-                const diffRoles = Role.diff(dbRoles, newRoles);
-                BusinessUser.addRoles(user, diffRoles.add, err => {
-                    if (err) return callback(err);
-                    BusinessUser.removeRoles(user, diffRoles.remove, callback);
-                });
+            const dbRoles = user.roles;
+            const diffRoles = Role.diff(dbRoles, newRoles);
+            BusinessUser.addRoles(user, diffRoles.add, err => {
+                if (err) return logger.error(err);
+                BusinessUser.removeRoles(user, diffRoles.remove, callback);
             });
         });
     });

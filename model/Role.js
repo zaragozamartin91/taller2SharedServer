@@ -51,6 +51,18 @@ Role.asStrings = function (roles) {
 };
 
 /**
+ * Crea un arrelgo de objetos de tipo Role a partir de un arreglo de strings con nombres de roles.
+ * @param {Array<string>} roleStrings Nombres de roles.
+ * @return {Array<Role>} Arreglo de roles.
+ */
+Role.fromStrings = function (roleStrings) {
+    roleStrings = Role.asStrings(roleStrings);
+    const roles = [];
+    roleStrings.forEach(s => roles.push(new Role(s)));
+    return roles;
+};
+
+/**
  * Determina la diferencia de roles.
  * @param {Array} roles1 Roles en BBDD.
  * @param {Array} roles2 Roles nuevos.

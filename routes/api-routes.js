@@ -2,6 +2,7 @@ const express = require('express');
 const serverController = require('../controllers/server-controller');
 const tokenController = require('../controllers/token-controller');
 const tokenValidator = require('../middleware/token-validator');
+const businessUsersController = require('../controllers/business-user-controller');
 
 const router = express.Router();
 
@@ -37,5 +38,15 @@ router.put('/servers/:serverId?', tokenValidator.verifyManagerToken);
 router.put('/servers/:serverId?', serverController.updateServer);
 
 /* FIN servers ROUTES ---------------------------------------------------------------------------------------------------- */
+
+
+/* /business-users ROUTES ---------------------------------------------------------------------------------------------------- */
+
+router.use('/business-users', tokenValidator.verifyToken);
+
+router.use('/business-users', tokenValidator.verifyAdminToken);
+router.post('/business-users', businessUsersController.postUser);
+
+/* FIN /business-users ROUTES ---------------------------------------------------------------------------------------------------- */
 
 module.exports = router;

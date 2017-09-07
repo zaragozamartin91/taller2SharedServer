@@ -40,6 +40,16 @@ describe('Role', function () {
         });
     });
 
+    describe('#fromStrings()', function () {
+        it('crea roles a partir de strings', function () {
+            const strings = ['admin', 'manager', 'user'];
+            const roles = Role.fromStrings(strings);
+            assert.ok(roles[0].isAdmin());
+            assert.ok(roles[1].isManager());
+            assert.ok(roles[2].isUser());
+        });
+    });
+
     afterEach(function () {
     });
 });

@@ -26,6 +26,7 @@ exports.generateToken = function (req, res) {
     if (username && password) return BusinessUser.findByUsername(
         username, (err, user) => {
             if (err) return responseUtils.sendMsgCodeResponse(res, 'Error al buscar el usuario', 500);
+            if (!user) return responseUtils.sendMsgCodeResponse(res, `El usuario ${username} no existe`, 400);
 
             const authOk = user.authenticate(password);
             if (authOk) {

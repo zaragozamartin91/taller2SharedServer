@@ -79,9 +79,9 @@ function addRoles() {
 
 BusinessUser.findById('sonia-18663', (err, user) => {
     console.log(err);
-    user.roles = ['admin'];
-    user.name = 'Sonia Patricia';
-    user.surname = 'Esposito';
+    user.roles = [];
+    user.name = 'Sonia';
+    user.surname = 'Esposito de Zaragoza';
     user.update((err, res) => {
         console.log(err);
         console.log(res);
