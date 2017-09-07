@@ -17,41 +17,29 @@ router.get('/test', function (req, res) {
 
 router.post('/token', tokenController.generateToken);
 
-/* /servers ROUTES ---------------------------------------------------------------------------------------------------- */
+/* /servers ROUTES -------------------------------------------------------------------------------------------------------------- */
 // Agrego el middleware para parsear y deocdificar el token
 router.use('/servers', tokenValidator.verifyToken);
 
 // Agrego el middleware para validar que el usuario sea user
-router.get('/servers', tokenValidator.verifyUserToken);
-router.get('/servers', serverController.getServers);
-
-/* RUTAS DE MANAGER---------------------------------------------------------------- */
+router.get('/servers', tokenValidator.verifyUserToken, serverController.getServers);
 
 // Agrego el middleware para validar que el usuario sea manager
-router.post('/servers', tokenValidator.verifyManagerToken);
-router.post('/servers', serverController.postServer);
-// Agrego el middleware para validar que el usuario sea manager
-router.delete('/servers/:serverId?', tokenValidator.verifyManagerToken);
-router.delete('/servers/:serverId?', serverController.deleteServer);
-// Agrego el middleware para validar que el usuario sea manager
-router.put('/servers/:serverId?', tokenValidator.verifyManagerToken);
-router.put('/servers/:serverId?', serverController.updateServer);
+router.post('/servers', tokenValidator.verifyManagerToken, serverController.postServer);
+router.delete('/servers/:serverId?', tokenValidator.verifyManagerToken, serverController.deleteServer);
+router.put('/servers/:serverId?', tokenValidator.verifyManagerToken, serverController.updateServer);
 
-/* FIN servers ROUTES ---------------------------------------------------------------------------------------------------- */
+/* FIN servers ROUTES ----------------------------------------------------------------------------------------------------------- */
 
 
-/* /business-users ROUTES ---------------------------------------------------------------------------------------------------- */
+/* /business-users ROUTES ------------------------------------------------------------------------------------------------------- */
 
 router.use('/business-users', tokenValidator.verifyToken);
 
-router.post('/business-users', tokenValidator.verifyAdminToken);
-router.post('/business-users', businessUsersController.postUser);
-
-router.put('/business-users/:userId', tokenValidator.verifyAdminToken);
-router.put('/business-users/:userId', businessUsersController.updateUser);
-
-router.get('/business-users', tokenValidator.verifyAdminToken);
-router.get('/business-users', businessUsersController.getUsers);
+// Agrego el middleware para validar que el usuario sea admin
+router.post('/business-users', tokenValidator.verifyAdminToken, businessUsersController.postUser);
+router.put('/business-users/:userId', tokenValidator.verifyAdminToken, businessUsersController.updateUser);
+router.get('/business-users', tokenValidator.verifyAdminToken, businessUsersController.getUsers);
 
 /* FIN /business-users ROUTES ---------------------------------------------------------------------------------------------------- */
 
