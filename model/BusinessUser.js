@@ -152,14 +152,15 @@ BusinessUser.findById = function (id, callback) {
 };
 
 BusinessUser.find = function (callback) {
-    dbManager.query(
-        `SELECT u.*,${rolesTable}.role FROM ${table} u LEFT OUTER JOIN ${rolesTable} ON (u.id=${rolesTable}.${table})`,
-        (err, res) => {
-            if (err) return callback(err);
-            const rows = res.rows;
-            if (rows.length) return callback(null, buildUsersFromRows(rows));
-            callback(null, []);
-        });
+    const sql = `SELECT u.*,${rolesTable}.role FROM ${table} AS u 
+        LEFT OUTER JOIN ${rolesTable} ON (u.id=${rolesTable}.${table})`;
+        
+    dbManager.query(sql, (err, res) => {
+        if (err) return callback(err);
+        const rows = res.rows;
+        if (rows.length) return callback(null, buildUsersFromRows(rows));
+        callback(null, []);
+    });
 };
 
 

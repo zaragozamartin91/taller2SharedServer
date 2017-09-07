@@ -50,6 +50,9 @@ router.post('/business-users', businessUsersController.postUser);
 router.put('/business-users/:userId', tokenValidator.verifyAdminToken);
 router.put('/business-users/:userId', businessUsersController.updateUser);
 
+router.get('/business-users', tokenValidator.verifyAdminToken);
+router.get('/business-users', businessUsersController.getUsers);
+
 /* FIN /business-users ROUTES ---------------------------------------------------------------------------------------------------- */
 
 module.exports = router;

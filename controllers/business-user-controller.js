@@ -1,6 +1,7 @@
 const BusinessUser = require('../model/BusinessUser');
 const responseUtils = require('../utils/response-utils');
 const mainConf = require('../config/main-config');
+const CollectionMetadata = require('../model/CollectionMetadata');
 
 const apiVersion = mainConf.apiVersion;
 
@@ -59,5 +60,15 @@ exports.updateUser = function (req, res) {
             const metadata = { version: apiVersion };
             res.send({ metadata, businessUser: user.withStringRoles() });
         });
+    });
+};
+
+exports.getUsers = function (req, res) {
+    BusinessUser.find((err, users) => {
+        if (err) return responseUtils.sendMsgCodeResponse(res, 'Ocurrio un error al obtener los usuarios', 500);
+
+        const metadata = new CollectionMetadata(users.length, users.length, '', '', '', '', apiVersion);
+        const resUsers = users.map(u => u.withStringRoles());
+        res.send({ metadata, businessUser: resUsers });
     });
 };
