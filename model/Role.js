@@ -85,9 +85,6 @@ Role.diff = function (roles1, roles2) {
     roles1 = Role.asStrings(roles1);
     roles2 = Role.asStrings(roles2);
 
-    console.log(`roles1: ${roles1}`);
-    console.log(`roles2: ${roles2}`);
-
     const keep = [];
     const remove = [];
     const add = [];
@@ -102,7 +99,7 @@ Role.diff = function (roles1, roles2) {
     });
 
     const diff = { keep, add, remove };
-    console.log('diff:');
+    console.log(`diff ${roles1} vs ${roles2}:`);
     console.log(diff);
     return diff;
 };

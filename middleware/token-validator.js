@@ -11,7 +11,7 @@ const logger = require('log4js').getLogger('token-validator');
  * 
  */
 exports.verifyToken = function (req, res, next) {
-    logger.debug('Validando token de query');
+    logger.debug('Verificando token de query');
     const token = req.body.token || req.query.token || req.header('x-token');
     if (!token) return responseUtils.sendMsgCodeResponse(res, 'Token no enviado', 400);
 

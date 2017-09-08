@@ -5,7 +5,7 @@ const CollectionMetadata = require('../model/CollectionMetadata');
 const tokenManager = require('../utils/token-manager');
 const BusinessUser = require('../model/BusinessUser');
 
-const logger = require('log4js').getLogger('manager-controller');
+const logger = require('log4js').getLogger('server-controller');
 
 exports.getServers = function (req, res) {
     const decodedToken = req.decodedToken;

@@ -3,6 +3,8 @@ const responseUtils = require('../utils/response-utils');
 const mainConf = require('../config/main-config');
 const CollectionMetadata = require('../model/CollectionMetadata');
 
+const logger = require('log4js').getLogger('business-user-controller');
+
 const apiVersion = mainConf.apiVersion;
 
 function insertFieldsOk(user) {
@@ -50,7 +52,10 @@ exports.updateUser = function (req, res) {
 
         const oldPassword = user.password;
         /* si se envio un password en el request y es distinto al actual entonces se quiere cambiar el password */
-        if (newPassword && oldPassword.valueOf() != newPassword) user.setPassword(newPassword);
+        if (newPassword && oldPassword.valueOf() != newPassword) {
+            logger.debug(`Se modificara el password de ${userId}`);
+            user.setPassword(newPassword);
+        }
 
         user.name = name || user.name;
         user.surname = surname || user.surname;
