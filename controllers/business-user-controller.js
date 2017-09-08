@@ -37,7 +37,7 @@ exports.updateUser = function (req, res) {
     const userId = req.params.userId;
 
     const username = req.body.username;
-    const password = req.body.password;
+    const newPassword = req.body.password;
     const name = req.body.name;
     const surname = req.body.surname;
     const roles = req.body.roles;
@@ -47,8 +47,11 @@ exports.updateUser = function (req, res) {
         if (!user) return responseUtils.sendMsgCodeResponse(res, 'No existe el usuario solicitado', 404);
 
         user.username = username || user.username;
-        if (password) user.setPassword(password);
-        else user.password;
+
+        const oldPassword = user.password;
+        /* si se envio un password en el request y es distinto al actual entonces se quiere cambiar el password */
+        if (newPassword && oldPassword.valueOf() != newPassword) user.setPassword(newPassword);
+
         user.name = name || user.name;
         user.surname = surname || user.surname;
         user.roles = roles || user.roles;
