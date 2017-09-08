@@ -268,16 +268,6 @@ BusinessUser.hasRole = function (user, role, callback) {
     });
 };
 
-BusinessUser.getRoles = function (user, callback) {
-    const userId = user.id || user;
-    const sql = `SELECT role FROM ${rolesTable} WHERE business_user=$1`;
-    dbManager.query(sql, [userId], (err, res) => {
-        if (err) return callback(err);
-        const roles = res.rows.map(Role.fromObj);
-        callback(null, roles);
-    });
-};
-
 BusinessUser.prototype.authenticate = function (password) {
     if (!password) throw new Error('No se indico un password para autenticar');
     const hash = this.password;
