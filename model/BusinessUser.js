@@ -151,6 +151,10 @@ BusinessUser.findById = function (id, callback) {
         });
 };
 
+/**
+ * Obtiene todos los usuarios de negocio de la BBDD.
+ * @param {Function} callback Funcion a invocar luego de buscar a los usuarios.
+ */
 BusinessUser.find = function (callback) {
     const sql = `SELECT u.*,${rolesTable}.role FROM ${table} AS u 
         LEFT OUTER JOIN ${rolesTable} ON (u.id=${rolesTable}.${table})`;
@@ -268,12 +272,66 @@ BusinessUser.hasRole = function (user, role, callback) {
     });
 };
 
-BusinessUser.deleteUser = function (user, callback) {
+/**
+ * Elimina un usuario de la BBDD.
+ * @param {BusinessUser} user Usuario a eliminar.
+ */
+BusinessUser.delete = function (user, callback) {
     const userId = user.id || user;
     const sql = `DELETE FROM ${table} WHERE id=$1 RETURNING *`;
     dbManager.query(sql, [userId], (err, res) => {
         if (err) return callback(err);
         callback(null, buildUsersFromRows(res.rows)[0]);
+    });
+};
+
+/**
+ * Actualiza un usuario en la BBDD.
+ * @param {BusinessUser} user Usuario a actualizar en la BBDD.
+ * @param {Function} callback Funcion a ejecutar luego de actualizar el usuario.
+ */
+BusinessUser.update = function (user, callback) {
+    logger.debug(`Actualizando usuario ${user.id}`);
+    const oldRef = user._ref;
+
+    const findUserSql = `SELECT u.*,${rolesTable}.role FROM ${table} AS u 
+    LEFT OUTER JOIN ${rolesTable} ON (u.id=${rolesTable}.${table}) WHERE u.id=$1 AND u._ref=$2`;
+
+    /* Primero verificamos que otro no haya cambiado el usuario */
+    dbManager.query(findUserSql, [user.id, oldRef], (err, res) => {
+        if (err) return callback(err);
+
+        if (!res.rows[0]) {
+            /* Si el usuario no es hayado, es muy probable que alguien mas lo haya actualizado y que se haya producido
+            una colision */
+            const error = new Error(`Ocurrio una colision al actualizar el usuario ${user.id}`);
+            error.type = 'COLLISION';
+            return callback(error);
+        }
+
+        const dbUser = buildUsersFromRows(res.rows)[0];
+
+        /* Luego actualizamos los campos del usuario */
+        const updateSql = `UPDATE ${table} SET username=$1, password=$2, _ref=$3, name=$4, surname=$5 WHERE id=$6`;
+        const newRef = hashUser(user.id, user.username, user.name, user.surname, user.password);
+        const updateValues = [user.username, user.password, newRef, user.name, user.surname, user.id];
+
+        dbManager.query(updateSql, updateValues, (err, res) => {
+            if (err) return callback(err);
+
+            /* Actualizo el valor de _ref si la actualizacion fue exitosa */
+            user._ref = newRef;
+
+            /* Finalmente agregamos/quitamos roles */
+            const newRoles = user.roles;
+            const oldRoles = dbUser.roles;
+            const diffRoles = Role.diff(oldRoles, newRoles);
+            BusinessUser.addRoles(user, diffRoles.add, err => {
+                if (err) return logger.error(err);
+                const rolesToRemove = diffRoles.remove;
+                BusinessUser.removeRoles(user, diffRoles.remove, callback);
+            });
+        });
     });
 };
 
@@ -304,55 +362,6 @@ BusinessUser.prototype.setPassword = function (password) {
     return this;
 };
 
-/**
- * Actualiza un usuario en la BBDD.
- * @param {Function} callback Funcion a ejecutar luego de actualizar el usuario.
- */
-BusinessUser.prototype.update = function (callback) {
-    logger.debug(`Actualizando usuario ${this.id}`);
-    const oldRef = this._ref;
-    const self = this;
-
-    const findUserSql = `SELECT u.*,${rolesTable}.role FROM ${table} AS u 
-    LEFT OUTER JOIN ${rolesTable} ON (u.id=${rolesTable}.${table}) WHERE u.id=$1 AND u._ref=$2`;
-
-    /* Primero verificamos que otro no haya cambiado el usuario */
-    dbManager.query(findUserSql, [this.id, oldRef], (err, res) => {
-        if (err) return callback(err);
-
-        if (!res.rows[0]) {
-            /* Si el usuario no es hayado, es muy probable que alguien mas lo haya actualizado y que se haya producido
-            una colision */
-            const error = new Error(`Ocurrio una colision al actualizar el usuario ${self.id}`);
-            error.type = 'COLLISION';
-            return callback(error);
-        }
-
-        const dbUser = buildUsersFromRows(res.rows)[0];
-
-        /* Luego actualizamos los campos del usuario */
-        const updateSql = `UPDATE ${table} SET username=$1, password=$2, _ref=$3, name=$4, surname=$5 WHERE id=$6`;
-        const newRef = hashUser(this.id, this.username, this.name, this.surname, this.password);
-        const updateValues = [this.username, this.password, newRef, this.name, this.surname, this.id];
-
-        dbManager.query(updateSql, updateValues, (err, res) => {
-            if (err) return callback(err);
-
-            /* Actualizo el valor de _ref si la actualizacion fue exitosa */
-            self._ref = newRef;
-
-            /* Finalmente agregamos/quitamos roles */
-            const newRoles = self.roles;
-            const oldRoles = dbUser.roles;
-            const diffRoles = Role.diff(oldRoles, newRoles);
-            BusinessUser.addRoles(self, diffRoles.add, err => {
-                if (err) return logger.error(err);
-                const rolesToRemove = diffRoles.remove;
-                BusinessUser.removeRoles(self, diffRoles.remove, callback);
-            });
-        });
-    });
-};
 
 /**
  * Pasa los roles del usuario a strings.

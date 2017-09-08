@@ -61,7 +61,7 @@ exports.updateUser = function (req, res) {
         user.surname = surname || user.surname;
         user.roles = roles || user.roles;
 
-        user.update(err => {
+        BusinessUser.update(user, err => {
             if (err && err.type == 'COLLISION') return responseUtils.sendMsgCodeResponse(res, 'Conflicto en el update', 409);
             if (err) return responseUtils.sendMsgCodeResponse(res, 'Error al actualizar el usuario', 500);
 
@@ -83,7 +83,7 @@ exports.getUsers = function (req, res) {
 
 exports.deleteUser = function (req, res) {
     const userId = req.params.userId;
-    BusinessUser.deleteUser(userId, (err, user) => {
+    BusinessUser.delete(userId, (err, user) => {
         if (err) {
             logger.debug(err);
             return responseUtils.sendMsgCodeResponse(res, 'Ocurrio un error al eliminar el usuario', 500);
