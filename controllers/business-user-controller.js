@@ -80,3 +80,16 @@ exports.getUsers = function (req, res) {
         res.send({ metadata, businessUser: resUsers });
     });
 };
+
+exports.deleteUser = function (req, res) {
+    const userId = req.params.userId;
+    BusinessUser.deleteUser(userId, (err, user) => {
+        if (err) {
+            logger.debug(err);
+            return responseUtils.sendMsgCodeResponse(res, 'Ocurrio un error al eliminar el usuario', 500);
+        }
+        if (!user) return responseUtils.sendMsgCodeResponse(res, 'No existe el recurso solicitado', 404);
+
+        responseUtils.sendMsgCodeResponse(res, 'Baja correcta', 204);
+    });
+};

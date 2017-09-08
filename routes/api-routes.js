@@ -40,6 +40,7 @@ router.use('/business-users', tokenValidator.verifyToken);
 router.post('/business-users', tokenValidator.verifyAdminToken, businessUsersController.postUser);
 router.put('/business-users/:userId', tokenValidator.verifyAdminToken, businessUsersController.updateUser);
 router.get('/business-users', tokenValidator.verifyAdminToken, businessUsersController.getUsers);
+router.delete('/business-users/:userId', tokenValidator.verifyAdminToken, businessUsersController.deleteUser);
 
 /* FIN /business-users ROUTES ---------------------------------------------------------------------------------------------------- */
 

@@ -60,7 +60,7 @@ BusinessUser.fromObj = function (usrObj) {
 /**
  * Construye un conjunto de usuarios a partir de un resultado de query.
  * @param {Array} rows Filas resultado de una query en la BBDD.
- * @return {Array<User>} Usuarios.
+ * @return {Array<BusinessUser>} Usuarios.
  */
 function buildUsersFromRows(rows) {
     const users = {};
@@ -265,6 +265,15 @@ BusinessUser.hasRole = function (user, role, callback) {
     dbManager.query(sql, [userId, roleId], (err, res) => {
         if (err) return callback(err);
         callback(null, res.rows.length > 0);
+    });
+};
+
+BusinessUser.deleteUser = function (user, callback) {
+    const userId = user.id || user;
+    const sql = `DELETE FROM ${table} WHERE id=$1 RETURNING *`;
+    dbManager.query(sql, [userId], (err, res) => {
+        if (err) return callback(err);
+        callback(null, buildUsersFromRows(res.rows)[0]);
     });
 };
 
