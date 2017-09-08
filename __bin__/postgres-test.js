@@ -77,14 +77,16 @@ function addRoles() {
     });
 }
 
-BusinessUser.findById('sonia-18663', (err, user) => {
-    console.log(err);
-    user.roles = [];
-    user.name = 'Sonia';
-    user.surname = 'Esposito de Zaragoza';
-    user.update((err, res) => {
-        console.log(err);
-        console.log(res);
+BusinessUser.findByUsername('martin', (err, user) => {
+    console.log('Antes de actualizar:');
+    console.log(user);
+    user.roles = ['admin', 'manager', 'user'];
+    user.name = 'MARTIN';
+    user.surname = 'ZARAGOZOOO';
+    user.update((err, user) => {
+        console.log('Luego de actualizar:');
+        console.log(user);
+        console.log('new ref:' + user._ref);
         dbManager.end();
     });
 });

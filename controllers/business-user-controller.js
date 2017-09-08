@@ -54,7 +54,7 @@ exports.updateUser = function (req, res) {
         user.roles = roles || user.roles;
 
         user.update(err => {
-            if (err && err.message == 'COLISION') return responseUtils.sendMsgCodeResponse(res, 'Conflicto en el update', 409);
+            if (err && err.type == 'COLLISION') return responseUtils.sendMsgCodeResponse(res, 'Conflicto en el update', 409);
             if (err) return responseUtils.sendMsgCodeResponse(res, 'Error al actualizar el usuario', 500);
 
             const metadata = { version: apiVersion };
