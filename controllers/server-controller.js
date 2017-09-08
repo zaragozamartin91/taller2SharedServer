@@ -54,15 +54,11 @@ exports.deleteServer = function (req, res) {
     const serverId = req.params.serverId;
     if (!serverId) return responseUtils.sendMsgCodeResponse(res, 'No se indico un server a eliminar', 400);
 
-    ApplicationServer.findById(serverId, (err, server) => {
+    ApplicationServer.delete(serverId, (err, server) => {
+        if (err) return responseUtils.sendMsgCodeResponse(res, 'Ocurrio un error al eliminar el server', 500);
+        logger.debug(server);
         if (!server) return responseUtils.sendMsgCodeResponse(res, 'No existe el servidor buscado', 404);
-        console.log('Server encontrado:');
-        console.log(server);
-
-        server.delete(err => {
-            if (err) return responseUtils.sendMsgCodeResponse(res, 'Ocurrio un error al eliminar el server', 500);
-            return responseUtils.sendMsgCodeResponse(res, 'Baja correcta', 200);
-        });
+        return responseUtils.sendMsgCodeResponse(res, 'Baja correcta', 200);
     });
 };
 
@@ -76,7 +72,7 @@ exports.updateServer = function (req, res) {
         /* La actualizacion implica modificar el nombre del server. Si no se asigno un nombre nuevo en el body del request,
         entonces la actualizacion no tendra efecto */
         server.name = req.body.name || server.name;
-        server.update(err => {
+        ApplicationServer.update(server, err => {
             if (err) return responseUtils.sendMsgCodeResponse(res, 'Ocurrio un error al actualizar el server', 500);
             responseUtils.sendMsgCodeResponse(res, 'Modificacion correcta', 200);
         });

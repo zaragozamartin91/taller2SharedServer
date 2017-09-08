@@ -103,26 +103,32 @@ ApplicationServer.createTable = function (callback) {
         last_conn TIMESTAMP DEFAULT now())`, [], callback);
 };
 
-ApplicationServer.prototype.delete = function (callback) {
-    dbManager.query(`DELETE FROM ${table} WHERE id=$1`, [this.id], callback);
+ApplicationServer.delete = function (server, callback) {
+    const id = server.id || server;
+    const sql = `DELETE FROM ${table} WHERE id=$1 RETURNING *`;
+    dbManager.query(sql, [id], (err, res) => {
+        if (err) return callback(err);
+        callback(null, ApplicationServer.fromRow(res.rows[0]));
+    });
 };
 
-// TODO : INVESTIGAR QUE ES LO QUE HAY QUE HACER CON EL PARAMETRO _ref
-ApplicationServer.prototype.update = function (callback) {
-    const id = this.id;
-    const name = this.name || '';
-    const _ref = this._ref;
+// FALTA APLICAR EL PARAMETRO _ref PARA CHEQUEAR LA COLISION DE ACTUALIZACIONES.
+ApplicationServer.update = function (server, callback) {
+    const id = server.id;
+    const name = server.name || '';
+    const _ref = server._ref;
     const newRef = hashServer(id, name);
 
-    dbManager.query(`UPDATE ${table} SET name=$1,_ref=$2 WHERE id=$3 AND _ref=$4 RETURNING *`,
-        [name, newRef, id, _ref], (err, res) => {
-            if (err) return callback(err);
-            const rows = res.rows;
-            if (rows.length) return callback(null, ApplicationServer.fromRow(rows[0]));
-            
-            logger.debug(`El server ${id} NO FUE actualizado`);
-            callback(null, null);
-        });
+    const sql = `UPDATE ${table} SET name=$1,_ref=$2 WHERE id=$3 AND _ref=$4 RETURNING *`;
+    dbManager.query(sql, [name, newRef, id, _ref], (err, res) => {
+        if (err) return callback(err);
+        const rows = res.rows;
+        if (rows.length) return callback(null, ApplicationServer.fromRow(rows[0]));
+
+        logger.debug(`El server ${id} NO FUE actualizado`);
+        callback(null, null);
+    });
+
 };
 
 ApplicationServer.withTimestampFields = function (server) {
