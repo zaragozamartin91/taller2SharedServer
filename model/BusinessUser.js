@@ -81,14 +81,25 @@ function buildUsersFromRows(rows) {
  * @param {Function} callback Funcion a invocar luego de crear la tabla.
  */
 BusinessUser.createTable = function (callback) {
-    dbManager.query(`CREATE TABLE ${table} (
+    const sql = `CREATE TABLE ${table} (
         id ${idType} PRIMARY KEY,
         _ref VARCHAR(128) NOT NULL,
         username VARCHAR(64) UNIQUE NOT NULL,
         password VARCHAR(256) NOT NULL,
         name VARCHAR(32) DEFAULT '${defName}',
         surname VARCHAR(32) DEFAULT '${defSurname}'
-    )`, [], callback);
+    )`;
+    dbManager.query(sql, [], err => {
+        if (err) logger.error(err);
+        callback();
+    });
+};
+
+BusinessUser.dropTable = function (callback) {
+    dbManager.query(`DROP TABLE ${table}`, [], err => {
+        if (err) logger.error(err);
+        callback();
+    });
 };
 
 /**
@@ -101,6 +112,13 @@ BusinessUser.createRolesTable = function (callback) {
         role ${Role.idType} REFERENCES ${Role.table}(type) ON DELETE CASCADE,
         UNIQUE(business_user,role)
     )`, [], callback);
+};
+
+BusinessUser.dropRolesTable = function (callback) {
+    dbManager.query(`DROP TABLE ${rolesTable}`, [], err => {
+        logger.error(err);
+        callback();
+    });
 };
 
 /**

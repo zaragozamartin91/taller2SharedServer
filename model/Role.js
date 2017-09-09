@@ -1,6 +1,9 @@
 const dbManager = require('./db-manager');
+const logger = require('log4js').getLogger('Role');
+
 const table = 'role';
 const idType = 'VARCHAR(16)';
+
 
 const validRoles = ['admin', 'manager', 'user'];
 
@@ -23,6 +26,13 @@ Role.createTable = function (callback) {
     dbManager.query(`CREATE TABLE ${table} (
         type ${idType} PRIMARY KEY
     )`, [], callback);
+};
+
+Role.dropTable = function (callback) {
+    dbManager.query(`DROP TABLE ${table}`, [], err => {
+        if (err) logger.error(err);
+        callback();
+    });
 };
 
 /**

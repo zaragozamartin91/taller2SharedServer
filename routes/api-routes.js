@@ -4,6 +4,8 @@ const tokenController = require('../controllers/token-controller');
 const tokenValidator = require('../middleware/token-validator');
 const businessUsersController = require('../controllers/business-user-controller');
 
+const testDataController = require('../controllers/test-data-controller');
+
 const router = express.Router();
 
 /** Api para obtener y reproducir el audio de una cancion */
@@ -45,3 +47,9 @@ router.delete('/business-users/:userId', tokenValidator.verifyAdminToken, busine
 /* FIN /business-users ROUTES ---------------------------------------------------------------------------------------------------- */
 
 module.exports = router;
+
+// -------------------------------------------------------------------------------------------------------------------------------
+
+/* CREA LOS DATOS DE PRUEBA DE LA APP */
+router.post('/test-data', testDataController.createTestData);
+router.delete('/test-data', testDataController.deleteTestData);

@@ -103,6 +103,13 @@ ApplicationServer.createTable = function (callback) {
         last_conn TIMESTAMP DEFAULT now())`, [], callback);
 };
 
+ApplicationServer.dropTable = function (callback) {
+    dbManager.query(`DROP TABLE ${table}`, [], err => {
+        if (err) logger.error(err);
+        callback();
+    });
+};
+
 ApplicationServer.delete = function (server, callback) {
     const id = server.id || server;
     const sql = `DELETE FROM ${table} WHERE id=$1 RETURNING *`;
