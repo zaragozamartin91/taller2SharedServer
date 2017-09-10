@@ -40,14 +40,14 @@ exports.createTestData = function (req, res) {
             logger.debug('Insertando usuario');
             BusinessUser.insert({
                 username: 'martin', password: 'pepe', name: 'martin',
-                surname: 'zaragoza', roles: ['manager', 'admin']
+                surname: 'zaragoza', roles: ['manager', 'admin', 'user']
             }, callback);
         },
         callback => {
             logger.debug('Insertando usuario');
             BusinessUser.insert({
                 username: 'mateo', password: 'posting', name: 'mateo',
-                surname: 'zaragoza', roles: ['user']
+                surname: 'zaragoza', roles: ['user','admin']
             }, callback);
         },
         callback => {

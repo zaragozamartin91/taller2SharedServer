@@ -119,23 +119,35 @@ ApplicationServer.delete = function (server, callback) {
     });
 };
 
-// FALTA APLICAR EL PARAMETRO _ref PARA CHEQUEAR LA COLISION DE ACTUALIZACIONES.
+
 ApplicationServer.update = function (server, callback) {
     const id = server.id;
     const name = server.name || '';
-    const _ref = server._ref;
-    const newRef = hashServer(id, name);
+    const oldRef = server._ref;
 
-    const sql = `UPDATE ${table} SET name=$1,_ref=$2 WHERE id=$3 AND _ref=$4 RETURNING *`;
-    dbManager.query(sql, [name, newRef, id, _ref], (err, res) => {
+    const findSql = `SELECT * FROM ${table} WHERE id=$1 AND _ref=$2`;
+    dbManager.query(findSql, [id, oldRef], (err, res) => {
         if (err) return callback(err);
-        const rows = res.rows;
-        if (rows.length) return callback(null, ApplicationServer.fromRow(rows[0]));
 
-        logger.debug(`El server ${id} NO FUE actualizado`);
-        callback(null, null);
+        const dbServer = res.rows[0];
+        if (!dbServer) {
+            err = new Error(`Ocurrio una colision al actualizar el servidor ${id}`);
+            err.type = 'COLLISION';
+            return callback(err);
+        }
+
+        const newRef = hashServer(id, name);
+        const updateSql = `UPDATE ${table} SET name=$1,_ref=$2 WHERE id=$3 RETURNING *`;
+        dbManager.query(updateSql, [name, newRef, id], (err, res) => {
+            if (err) return callback(err);
+
+            const dbServer = res.rows[0];
+            if (!dbServer) return callback(null, null);
+
+            server._ref = newRef;
+            callback(null, server);
+        });
     });
-
 };
 
 ApplicationServer.withTimestampFields = function (server) {

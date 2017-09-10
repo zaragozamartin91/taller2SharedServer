@@ -308,7 +308,7 @@ BusinessUser.delete = function (user, callback) {
 /**
  * Actualiza un usuario en la BBDD.
  * @param {BusinessUser} user Usuario a actualizar en la BBDD.
- * @param {Function} callback Funcion a ejecutar luego de actualizar el usuario.
+ * @param {Function} callback Funcion a ejecutar luego de actualizar el usuario: (err,user) => {}.
  */
 BusinessUser.update = function (user, callback) {
     logger.debug(`Actualizando usuario ${user.id}`);
