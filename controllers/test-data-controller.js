@@ -2,12 +2,17 @@ const dbManager = require('../model/db-manager');
 const BusinessUser = require('../model/BusinessUser');
 const ApplicationServer = require('../model/ApplicationServer');
 const Role = require('../model/Role');
+const TokenModel = require('../model/Token');
 const flow = require('nimble');
 
 const logger = require('log4js').getLogger('test-data-controller');
 
 exports.createTestData = function (req, res) {
     flow.series([
+        callback => {
+            logger.debug('Creando tabla de tokens');
+            TokenModel.createTable(callback);
+        },
         callback => {
             logger.debug('Creando tabla de usuarios');
             BusinessUser.createTable(callback);
@@ -47,7 +52,7 @@ exports.createTestData = function (req, res) {
             logger.debug('Insertando usuario');
             BusinessUser.insert({
                 username: 'mateo', password: 'posting', name: 'mateo',
-                surname: 'zaragoza', roles: ['user','admin']
+                surname: 'zaragoza', roles: ['user', 'admin']
             }, callback);
         },
         callback => {
@@ -69,6 +74,10 @@ exports.createTestData = function (req, res) {
 
 exports.deleteTestData = function (req, res) {
     flow.series([
+        callback => {
+            logger.debug('Eliminando tabla de tokens');
+            TokenModel.dropTable(callback);
+        },
         callback => {
             logger.debug('Eliminando tabla de servers');
             ApplicationServer.dropTable(callback);

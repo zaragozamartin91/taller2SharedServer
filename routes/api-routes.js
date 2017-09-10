@@ -29,8 +29,10 @@ router.get('/servers/:serverId', tokenValidator.verifyUserToken, serverControlle
 
 // Agrego el middleware para validar que el usuario sea manager
 router.post('/servers', tokenValidator.verifyManagerToken, serverController.postServer);
-router.delete('/servers/:serverId?', tokenValidator.verifyManagerToken, serverController.deleteServer);
-router.put('/servers/:serverId?', tokenValidator.verifyManagerToken, serverController.updateServer);
+router.delete('/servers/:serverId', tokenValidator.verifyManagerToken, serverController.deleteServer);
+router.put('/servers/:serverId', tokenValidator.verifyManagerToken, serverController.updateServer);
+
+router.post('/servers/:serverId', tokenValidator.verifyManagerToken, serverController.resetToken);
 
 /* FIN servers ROUTES ----------------------------------------------------------------------------------------------------------- */
 

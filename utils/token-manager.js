@@ -3,7 +3,7 @@ const conf = require('../config/main-config');
 const moment = require('moment');
 
 const secret = conf.tokenSecret;
-const defaultExpirationTime = 60*180;
+const defaultExpirationTime = 60 * 180;
 const defaultExpirationTimeUnits = 'm';
 
 /**
@@ -18,6 +18,12 @@ function Token(token, expiresAt) {
     this.token = token;
     this.expiresAt = expiresAt;
 }
+
+Token.fromObj = function (tok) {
+    if (!tok) return null;
+    const expiresAt = tok.expiresAt || tok.expiresat;
+    return new Token(tok.token, expiresAt);
+};
 
 /**
  * Verifica la validez del token.

@@ -4,21 +4,36 @@ const ApplicationServer = require('../model/ApplicationServer');
 const CollectionMetadata = require('../model/CollectionMetadata');
 const tokenManager = require('../utils/token-manager');
 const BusinessUser = require('../model/BusinessUser');
+const TokenModel = require('../model/Token');
 
 const logger = require('log4js').getLogger('server-controller');
 
 const apiVersion = mainConf.apiVersion;
 
+/**
+ * Genera un token firmado a partir de un objeto de tipo servidor de aplicaciones.
+ * @param {ApplicationServer} server servidor de aplicaciones a partir del cual generar el token.
+ */
+function signServer(server) {
+    return tokenManager.signToken({ id: server.id });
+}
+
 exports.getServer = function (req, res) {
+    getServer(req, res, server => {
+        const metadata = apiVersion;
+        res.send({ metadata, server: server.withTimestampFields() });
+    });
+};
+
+function getServer(req, res, callback) {
     const serverId = req.params.serverId;
     ApplicationServer.findById(serverId, (err, server) => {
         if (err) return responseUtils.sendMsgCodeResponse(res, `Error al obtener el server ${serverId}`, 500);
         if (!server) return responseUtils.sendMsgCodeResponse(res, `Server ${serverId} no encontrado`, 404);
 
-        const metadata = apiVersion;
-        res.send({ metadata, server: server.withTimestampFields() });
+        callback(server);
     });
-};
+}
 
 exports.getServers = function (req, res) {
     ApplicationServer.find((err, srvs) => {
@@ -53,8 +68,11 @@ exports.postServer = function (req, res) {
 
         const metadata = mainConf.apiVersion;
         const server = result.withTimestampFields();
-        const token = tokenManager.signToken({ id: server.id });
-        res.send({ metadata, server, token });
+        const token = signServer(server);
+        TokenModel.insert(token, server.id, (err, dbtoken) => {
+            if (err) return responseUtils.sendMsgCodeResponse(res, 'Error al insertar el token del nuevo server', 500);
+            res.send({ metadata, server, token });
+        });
     });
 };
 
@@ -82,7 +100,31 @@ exports.updateServer = function (req, res) {
         server.name = req.body.name || server.name;
         ApplicationServer.update(server, err => {
             if (err) return responseUtils.sendMsgCodeResponse(res, 'Ocurrio un error al actualizar el server', 500);
-            responseUtils.sendMsgCodeResponse(res, 'Modificacion correcta', 200);
+
+            const metadata = { version: apiVersion };
+            res.send({ metadata, server: server.withTimestampFields() });
+        });
+    });
+};
+
+exports.resetToken = function (req, res) {
+    getServer(req, res, server => {
+        const serverId = server.id;
+        TokenModel.invalidateBelongingTokens(serverId, (err, tokens) => {
+            if (err) return responseUtils.sendMsgCodeResponse(res, 'Error al invalidar tokens del servidor', 500);
+
+            logger.debug('Tokens invalidados:');
+            logger.debug(tokens);
+
+            const newToken = signServer(server);
+            TokenModel.insert(newToken, serverId, (err, dbToken) => {
+                if (err) return responseUtils.sendMsgCodeResponse(res, 'Error al insertar nuevo token en server', 500);
+
+                logger.debug(`Token asignado a ${serverId}:`);
+                logger.debug(dbToken);
+                const metadata = { version: apiVersion };
+                res.send({ metadata, server: server.withTimestampFields(), token: dbToken.withTimestampExpiration() });
+            });
         });
     });
 };
