@@ -47,6 +47,9 @@ describe('Role', function () {
             assert.ok(roles[0].isAdmin());
             assert.ok(roles[1].isManager());
             assert.ok(roles[2].isUser());
+            assert.ok(roles[0].isValid());
+            assert.ok(roles[1].isValid());
+            assert.ok(roles[2].isValid());
         });
     });
 

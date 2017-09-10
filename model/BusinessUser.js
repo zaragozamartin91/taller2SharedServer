@@ -14,7 +14,6 @@ const rolesTable = 'bu_role';
 const idType = 'VARCHAR(64)';
 const defName = 'UNKNOWN';
 const defSurname = 'UNKNOWN';
-const EMPTY_FUNC = function () { };
 
 /* CODIGO -------------------------------------------------------------------------------------- */
 
@@ -75,6 +74,8 @@ function buildUsersFromRows(rows) {
 
     return Object.keys(users).map(userId => users[userId]);
 }
+
+BusinessUser.buildUsersFromRows = buildUsersFromRows;
 
 /**
  * Crea la tabla de usuarios de negocio.
@@ -145,6 +146,7 @@ BusinessUser.insert = function (userObj, callback) {
 
         logger.debug(`Usuario ${id} insertado`);
         const user = rows[0];
+
         BusinessUser.addRoles(user, roles, () => {
             user.roles = Role.fromStrings(roles);
             callback(null, BusinessUser.fromObj(user));
@@ -160,13 +162,13 @@ BusinessUser.insert = function (userObj, callback) {
 BusinessUser.findById = function (id, callback) {
     const sql = `SELECT u.*,${rolesTable}.role FROM ${table} u 
         LEFT OUTER JOIN ${rolesTable} ON (u.id=${rolesTable}.${table}) WHERE u.id=$1`;
-    dbManager.query(
-        sql, [id], (err, res) => {
-            if (err) return callback(err);
-            const rows = res.rows;
-            if (rows.length) return callback(null, buildUsersFromRows(rows)[0]);
-            callback(null, null);
-        });
+
+    dbManager.query(sql, [id], (err, res) => {
+        if (err) return callback(err);
+        const rows = res.rows;
+        if (rows.length) return callback(null, buildUsersFromRows(rows)[0]);
+        callback(null, null);
+    });
 };
 
 /**
