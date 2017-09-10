@@ -7,11 +7,20 @@ const BusinessUser = require('../model/BusinessUser');
 
 const logger = require('log4js').getLogger('server-controller');
 
-exports.getServers = function (req, res) {
-    const decodedToken = req.decodedToken;
-    console.log('decodedToken: ');
-    console.log(decodedToken);
+const apiVersion = mainConf.apiVersion;
 
+exports.getServer = function (req, res) {
+    const serverId = req.params.serverId;
+    ApplicationServer.findById(serverId, (err, server) => {
+        if (err) return responseUtils.sendMsgCodeResponse(res, `Error al obtener el server ${serverId}`, 500);
+        if (!server) return responseUtils.sendMsgCodeResponse(res, `Server ${serverId} no encontrado`, 404);
+
+        const metadata = apiVersion;
+        res.send({ metadata, server: server.withTimestampFields() });
+    });
+};
+
+exports.getServers = function (req, res) {
     ApplicationServer.find((err, srvs) => {
         if (err) return responseUtils.sendMsgCodeResponse(res, 'Ocurrio un error al obtener los servers', 500);
 
@@ -34,8 +43,7 @@ exports.getServers = function (req, res) {
 
 exports.postServer = function (req, res) {
     const servObj = req.body;
-    if (!servObj.name || !servObj.createdBy) return responseUtils.sendMsgCodeResponse(
-        res, 'Faltan campos', 400);
+    if (!servObj.name || !servObj.createdBy) return responseUtils.sendMsgCodeResponse(res, 'Faltan campos', 400);
 
     ApplicationServer.insert(servObj, (err, result) => {
         if (err) {

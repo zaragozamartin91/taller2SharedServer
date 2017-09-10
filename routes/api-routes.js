@@ -25,6 +25,7 @@ router.use('/servers', tokenValidator.verifyToken);
 
 // Agrego el middleware para validar que el usuario sea user
 router.get('/servers', tokenValidator.verifyUserToken, serverController.getServers);
+router.get('/servers/:serverId', tokenValidator.verifyUserToken, serverController.getServer);
 
 // Agrego el middleware para validar que el usuario sea manager
 router.post('/servers', tokenValidator.verifyManagerToken, serverController.postServer);
@@ -40,15 +41,21 @@ router.use('/business-users', tokenValidator.verifyToken);
 
 // Agrego el middleware para validar que el usuario sea admin
 router.post('/business-users', tokenValidator.verifyAdminToken, businessUsersController.postUser);
+
+// EL ORDEN DE ESTOS ENDPOINTS ES FUNDAMENTAL
+router.put('/business-users/me', tokenValidator.verifyUserToken, businessUsersController.updateMyUser);
 router.put('/business-users/:userId', tokenValidator.verifyAdminToken, businessUsersController.updateUser);
+
 router.get('/business-users', tokenValidator.verifyAdminToken, businessUsersController.getUsers);
 router.delete('/business-users/:userId', tokenValidator.verifyAdminToken, businessUsersController.deleteUser);
+
+// EL ORDEN DE ESTOS ENDPOINTS ES FUNDAMENTAL
+router.get('/business-users/me', tokenValidator.verifyUserToken, businessUsersController.getMyUser);
+router.get('/business-users/:userId', tokenValidator.verifyUserToken, businessUsersController.getUser);
 
 /* FIN /business-users ROUTES ---------------------------------------------------------------------------------------------------- */
 
 module.exports = router;
-
-// -------------------------------------------------------------------------------------------------------------------------------
 
 /* CREA LOS DATOS DE PRUEBA DE LA APP */
 router.post('/test-data', testDataController.createTestData);
