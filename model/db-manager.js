@@ -4,15 +4,23 @@ const modelConfig = require('./model-config');
 const { Pool } = require('pg');
 
 function buildPool() {
-    let pool = process.env.DATABASE_URL ?
-        new Pool({ connectionString: process.env.DATABASE_URL }) :
-        new Pool({
+    console.log('CONSTRUYENDO POOL DE CONEXIONES DE BBDD');
+
+    let pool = null;
+    if (process.env.DATABASE_URL) {
+        console.log(`CONFIGURANDO POOL CON URL ${process.env.DATABASE_URL}`);
+        pool = new Pool({ connectionString: process.env.DATABASE_URL });
+    } else {
+        const host = process.env.PGHOST || modelConfig.host;
+        console.log(`CONFIGURANDO POOL CON HOST ${host}`);
+        pool = new Pool({
             user: process.env.PGUSER || modelConfig.user,
-            host: process.env.PGHOST || modelConfig.host,
+            host: host,
             database: process.env.PGDATABASE || modelConfig.db,
             password: process.env.PGPASSWORD || modelConfig.password,
             port: process.env.PGPORT || modelConfig.port,
         });
+    }
 
     // the pool with emit an error on behalf of any idle clients
     // it contains if a backend error or network partition happens
@@ -31,20 +39,21 @@ const poolWrapper = {
 /**
  * Realiza una query en la BBDD.
  * @param {string} sql Query en sql usando placeholders (ej: SELECT FROM USER WHERE ID=$1).
- * @param {Array} values Valores a reemplazar en los placeholders.
+ * @param {Array} values [OPCIONAL] Valores a reemplazar en los placeholders.
  * @param {Function} callback Funcion a invocar al finalizar la query.
  */
 exports.query = function (sql, values, callback) {
-    poolWrapper.pool.connect().then(client => {
-        return client.query(sql, values)
-            .then(res => {
-                client.release();
-                callback(null, res);
-            })
-            .catch(err => {
-                client.release();
-                callback(err);
-            });
+    poolWrapper.pool.connect((err, client, done) => {
+        if (err) return callback(err);
+
+        if (typeof values == 'function') {
+            callback = values;
+            values = [];
+        }
+        client.query(sql, values || [], (err, res) => {
+            done(); // done libera un cliente del pool
+            callback(err, res);
+        });
     });
 };
 

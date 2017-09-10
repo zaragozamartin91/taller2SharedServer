@@ -9,8 +9,7 @@
         "main": {
             "type": "file",
             "filename": "log/app.log",
-            "maxLogSize": 10485760,
-            "numBackups": 3
+            "pattern": "-yyyy-MM-dd"
         },
         "out": {
             "type": "stdout"

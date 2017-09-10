@@ -8,7 +8,8 @@
             "controllers/",
             "config/",
             "middleware/",
-            "routes/"
+            "routes/",
+            "utils/"
         ],
         "exclude": [
             "node_modules/"

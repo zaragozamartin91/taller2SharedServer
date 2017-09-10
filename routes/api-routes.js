@@ -1,5 +1,10 @@
 const express = require('express');
-const managerController = require('../controllers/manager-controller');
+const serverController = require('../controllers/server-controller');
+const tokenController = require('../controllers/token-controller');
+const tokenValidator = require('../middleware/token-validator');
+const businessUsersController = require('../controllers/business-user-controller');
+
+const testDataController = require('../controllers/test-data-controller');
 
 const router = express.Router();
 
@@ -12,6 +17,39 @@ router.get('/test', function (req, res) {
     });
 });
 
-router.post('/token', managerController.generateToken);
+router.post('/token', tokenController.generateToken);
+
+/* /servers ROUTES -------------------------------------------------------------------------------------------------------------- */
+// Agrego el middleware para parsear y deocdificar el token
+router.use('/servers', tokenValidator.verifyToken);
+
+// Agrego el middleware para validar que el usuario sea user
+router.get('/servers', tokenValidator.verifyUserToken, serverController.getServers);
+
+// Agrego el middleware para validar que el usuario sea manager
+router.post('/servers', tokenValidator.verifyManagerToken, serverController.postServer);
+router.delete('/servers/:serverId?', tokenValidator.verifyManagerToken, serverController.deleteServer);
+router.put('/servers/:serverId?', tokenValidator.verifyManagerToken, serverController.updateServer);
+
+/* FIN servers ROUTES ----------------------------------------------------------------------------------------------------------- */
+
+
+/* /business-users ROUTES ------------------------------------------------------------------------------------------------------- */
+
+router.use('/business-users', tokenValidator.verifyToken);
+
+// Agrego el middleware para validar que el usuario sea admin
+router.post('/business-users', tokenValidator.verifyAdminToken, businessUsersController.postUser);
+router.put('/business-users/:userId', tokenValidator.verifyAdminToken, businessUsersController.updateUser);
+router.get('/business-users', tokenValidator.verifyAdminToken, businessUsersController.getUsers);
+router.delete('/business-users/:userId', tokenValidator.verifyAdminToken, businessUsersController.deleteUser);
+
+/* FIN /business-users ROUTES ---------------------------------------------------------------------------------------------------- */
 
 module.exports = router;
+
+// -------------------------------------------------------------------------------------------------------------------------------
+
+/* CREA LOS DATOS DE PRUEBA DE LA APP */
+router.post('/test-data', testDataController.createTestData);
+router.delete('/test-data', testDataController.deleteTestData);

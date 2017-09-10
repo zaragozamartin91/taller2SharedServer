@@ -1,0 +1,23 @@
+version: '3'
+
+# docker-compose maneja una red interna donde mapea cada modulo a una url
+services:
+  sserv:
+    # el modulo product-service se construye a partir del Dockerfile y los archivos de product/
+    build: ./
+    volumes:
+      # product-service esta basado en la image python:3 la cual requiere que los source files se depositen en /usr/src/app
+      - ./:/usr/src/app
+    ports:
+      - 5000:5000
+    environment: 
+      - PGHOST=postgres
+
+  postgres:
+    image: postgres
+    ports:
+      - 5432:5432
+    environment:
+      - POSTGRES_PASSWORD=root
+      - POSTGRES_USER=root
+      - POSTGRES_DB=sharedserv

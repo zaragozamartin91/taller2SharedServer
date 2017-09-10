@@ -10,23 +10,50 @@ describe('token-manager', function () {
         it('firmar un api token', function (done) {
             const username = 'martinzaragoza';
             const token = tokenManager.signToken({ username });
-            
-            tokenManager.verifyToken(token, (err, decoded) => {
+
+            token.verify((err, decoded) => {
                 assert.ok(decoded.username.valueOf() == username);
                 done();
             });
         });
 
-        it('fallar al verificar un token invalido', function(done){            
+        it('fallar al verificar un token invalido', function (done) {
             tokenManager.verifyToken('INVALID TOKEN VALUE', (err, decoded) => {
-                if(err) done();
+                if (err) done();
                 else done(new Error('No deberia validar el token'));
             });
 
         });
     });
 
-    afterEach(function(){
+    describe('#withDateExpiration()', function () {
+        it('Convertir la expiracion en Date', function () {
+            const username = 'martinzaragoza';
+            let token = tokenManager.signToken({ username });
+            const timestamp = token.expiresAt;
+
+            // no debe explotar al llamarlo dos veces.
+            token = token.withDateExpiration().withDateExpiration();
+
+            assert.ok(token.expiresAt.getTime);
+            assert.equal(timestamp, token.expiresAt.getTime());
+        });
+    });
+
+    describe('#withTimestampExpiration()', function () {
+        it('Convertir la expiracion en milisegundos', function () {
+            const username = 'martinzaragoza';
+            let token = tokenManager.signToken({ username });
+            const timestamp = token.expiresAt;
+
+            // la vuelta a timestamp desde Date ser posible. No debe explotar si se lo invoca dos veces seguidas
+            token = token.withDateExpiration().withTimestampExpiration().withTimestampExpiration();
+
+            assert.equal(timestamp, token.expiresAt);
+        });
+    });
+
+    afterEach(function () {
     });
 });
 

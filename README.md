@@ -13,11 +13,21 @@ Previo a iniciar el server, es necesario correr los siguientes comandos:
 * npm install
 * npm run build
 
+## Variables de entorno
+Las variables de entorno soportadas son:
+* PORT: puerto en el cual correra la app (por defecto es 5000)
+* DATABASE_URL: url de la BBDD de postgres
+* PGHOST: host de postgres (en caso de no usar DATABASE_URL)
+* PGUSER: usuario de postgres (en caso de no usar DATABASE_URL)
+* PGPASSWORD: password del usuario de postgres (en caso de no usar DATABASE_URL)
+* PGDATABASE: base de datos de postgres a la cual conectarse (en caso de no usar DATABASE_URL)
+* PGPORT: puerto del servidor de postgres (en caso de no usar DATABASE_URL)
+* DEBUG: asignarle cualquier valor para poder debuguear los componentes de react desde un browser
+
 ## Inicio
 Para iniciar el server, se debe:
-* establecer la variable de entorno PORT en caso de querer modificar el puerto de ejecucion por defecto (defecto: 5000)
-* establecer la variable de entorno DEBUG en caso de querer debuguear los componentes de React utilizados desde el browser (asignar cualquier valor)
 * correr el comando **npm start**
+* visitar la app en http://localhost:PORT/
 
 ## Reporte de cobertura
 El reporte de cobertura de código se generará en /coverage luego de correr el comando **npm run coverage**
