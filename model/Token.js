@@ -10,20 +10,21 @@ const table = 'token';
  * @this {Token}
  * @param {string} token Token firmado.
  * @param {number} expiresAt Tiempo de expiracion en milisegundos.
- * @param {string} belongsTo A que entidad pertenece el token (ej: servidor de aplicaciones)
+ * @param {string} owner A que entidad pertenece el token (ej: servidor de aplicaciones)
  * @return {TokenModel} Nuevo token.
  */
-function TokenModel(token, expiresAt, belongsTo) {
+function TokenModel(token, expiresAt, owner) {
     this.token = token;
     this.expiresAt = expiresAt;
-    this.belongsTo = belongsTo || '';
+    this.owner = owner || '';
 }
 
 TokenModel.createTable = function (callback) {
     const sql = `CREATE TABLE ${table} (
         token VARCHAR(256) NOT NULL,
         expiresAt TIMESTAMP NOT NULL,
-        belongsTo VARCHAR(64) DEFAULT ''
+        owner VARCHAR(64) DEFAULT '',
+        counter SERIAL
     )`;
     dbManager.query(sql, [], callback);
 };
@@ -33,15 +34,15 @@ TokenModel.dropTable = function (callback) {
     dbManager.query(sql, [], callback);
 };
 
-TokenModel.insert = function (token, belongsTo, callback) {
+TokenModel.insert = function (token, owner, callback) {
     token = Token.fromObj(token).withDateExpiration();
-    if (typeof belongsTo == 'function') {
-        callback = belongsTo;
-        belongsTo = '';
+    if (typeof owner == 'function') {
+        callback = owner;
+        owner = '';
     }
-    const sql = `INSERT INTO ${table} VALUES($1,$2,$3) RETURNING *`;
+    const sql = `INSERT INTO ${table}(token,expiresAt,owner) VALUES($1,$2,$3) RETURNING *`;
 
-    dbManager.query(sql, [token.token, token.expiresAt, belongsTo], (err, res) => {
+    dbManager.query(sql, [token.token, token.expiresAt, owner], (err, res) => {
         if (err) return callback(err);
         const dbToken = res.rows[0];
         return callback(null, Token.fromObj(dbToken));
@@ -79,10 +80,10 @@ TokenModel.invalidate = function (token, callback) {
     });
 };
 
-TokenModel.invalidateBelongingTokens = function (belongsTo, callback) {
-    const sql = `DELETE FROM ${table} WHERE belongsTo=$1 RETURNING *`;
+TokenModel.invalidateTokensOwnedBy = function (owner, callback) {
+    const sql = `DELETE FROM ${table} WHERE owner=$1 RETURNING *`;
 
-    dbManager.query(sql, [belongsTo], (err, res) => {
+    dbManager.query(sql, [owner], (err, res) => {
         if (err) return callback(err);
         const tokens = res.rows.map(row => Token.fromObj(row));
         return callback(null, tokens);

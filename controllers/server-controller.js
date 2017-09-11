@@ -110,7 +110,7 @@ exports.updateServer = function (req, res) {
 exports.resetToken = function (req, res) {
     getServer(req, res, server => {
         const serverId = server.id;
-        TokenModel.invalidateBelongingTokens(serverId, (err, tokens) => {
+        TokenModel.invalidateTokensOwnedBy(serverId, (err, tokens) => {
             if (err) return responseUtils.sendMsgCodeResponse(res, 'Error al invalidar tokens del servidor', 500);
 
             logger.debug('Tokens invalidados:');
