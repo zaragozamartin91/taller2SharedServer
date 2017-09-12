@@ -44,7 +44,7 @@ const poolWrapper = {
  * @param {Function} callback Funcion a invocar al finalizar la query.
  */
 exports.query = function (sql, values, callback) {
-    if (typeof values == 'function') {
+    if (!values || typeof values == 'function') {
         throw new Error('No se indicaron valores de query (pasar [] en caso de no requerir asignar valores)');
     }
 
