@@ -35,9 +35,21 @@ exports.postUser = function (req, res) {
     });
 };
 
-exports.updateUser = function (req, res) {
-    const userId = req.params.userId;
+exports.updateMyUser = function (req, res) {
+    /* Obtengo el id de usuario a partir del token decodificado */
+    const userId = req.decodedToken.id;
+    logger.debug(`userId: ${userId}`);
+    updateUser(userId, req, res);
+};
 
+exports.updateUser = function (req, res) {
+    /* obtengo el id de usuario a partir de un parametro de url */
+    const userId = req.params.userId;
+    logger.debug(`userId: ${userId}`);
+    updateUser(userId, req, res);
+};
+
+function updateUser(userId, req, res) {
     const username = req.body.username;
     const newPassword = req.body.password;
     const name = req.body.name;
@@ -69,7 +81,7 @@ exports.updateUser = function (req, res) {
             res.send({ metadata, businessUser: user.withStringRoles() });
         });
     });
-};
+}
 
 exports.getUsers = function (req, res) {
     BusinessUser.find((err, users) => {
@@ -93,3 +105,24 @@ exports.deleteUser = function (req, res) {
         responseUtils.sendMsgCodeResponse(res, 'Baja correcta', 204);
     });
 };
+
+exports.getMyUser = function (req, res) {
+    const decodedToken = req.decodedToken;
+    const userId = decodedToken.id;
+    getUser(userId, req, res);
+};
+
+exports.getUser = function (req, res) {
+    const userId = req.params.userId;
+    getUser(userId, req, res);
+};
+
+function getUser(userId, req, res) {
+    BusinessUser.findById(userId, (err, user) => {
+        if (err) return responseUtils.sendMsgCodeResponse(res, 'Unexpected error', 500);
+        if (!user) return responseUtils.sendMsgCodeResponse(res, 'user inexistente', 404);
+
+        const metadata = { version: apiVersion };
+        res.send({ metadata, businessUser: user.withStringRoles() });
+    });
+}
