@@ -53,7 +53,7 @@ TokenModel.findById = function (token, callback) {
     const tokenId = token.token || token;
     const sql = `SELECT * FROM ${table} WHERE token=$1`;
 
-    dbManager.query(sql, (err, res) => {
+    dbManager.query(sql, [], (err, res) => {
         if (err) return callback(err);
         const dbToken = res.rows[0];
         return callback(null, Token.fromObj(dbToken));
@@ -72,7 +72,7 @@ TokenModel.verify = function (token, callback) {
 TokenModel.invalidate = function (token, callback) {
     const tokenId = token.token || token;
     const sql = `DELETE FROM ${table} WHERE token=$1 RETURNING *`;
-    
+
     dbManager.query(sql, [tokenId], (err, res) => {
         if (err) return callback(err);
         const dbToken = res.rows[0];

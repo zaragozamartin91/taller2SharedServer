@@ -44,10 +44,8 @@ const poolWrapper = {
  * @param {Function} callback Funcion a invocar al finalizar la query.
  */
 exports.query = function (sql, values, callback) {
-    /* Si callback no fue asignado, entonces se asume que callback se paso en el argumento 'values' */
-    if (!callback) {
-        callback = values;
-        values = [];
+    if (typeof values == 'function') {
+        throw new Error('No se indicaron valores de query (pasar [] en caso de no requerir asignar valores)');
     }
 
     poolWrapper.pool.connect((err, client, done) => {
