@@ -77,8 +77,4 @@ function addRoles() {
     });
 }
 
-BusinessUser.deleteUser('mateo-82475',(err,user)=>{
-    console.log(err);
-    console.log(user);
-    dbManager.end();
-});
+BusinessUser.hasRole('martin-27482', 'admin', (err, res) => console.log(res));

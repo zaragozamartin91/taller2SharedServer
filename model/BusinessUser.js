@@ -12,8 +12,8 @@ const logger = require('log4js').getLogger('BusinessUser');
 const table = 'business_user';
 const rolesTable = 'bu_role';
 const idType = 'VARCHAR(64)';
-const defName = 'UNKNOWN';
-const defSurname = 'UNKNOWN';
+const DEFAULT_NAME = 'UNKNOWN';
+const DEFAULT_SURNAME = 'UNKNOWN';
 
 /* CODIGO -------------------------------------------------------------------------------------- */
 
@@ -35,14 +35,14 @@ function hashUser(id, username, name, surname, password) {
  * @param {Array<Role>} roles 
  * @return {BusinessUser}
  */
-function BusinessUser(id, _ref, username, password, name, surname, roles) {
+function BusinessUser(id, _ref, username, password, name = DEFAULT_NAME, surname = DEFAULT_SURNAME, roles = []) {
     this.id = id;
     this._ref = _ref || '';
     this.username = username;
     this.password = password;
-    this.name = name || defName;
-    this.surname = surname || defSurname;
-    this.roles = roles || [];
+    this.name = name;
+    this.surname = surname;
+    this.roles = roles;
 }
 
 /**
@@ -62,6 +62,7 @@ BusinessUser.fromObj = function (usrObj) {
  * @return {Array<BusinessUser>} Usuarios.
  */
 function buildUsersFromRows(rows) {
+    if (!rows || rows.length == 0) return [];
     const users = {};
     rows.forEach(row => {
         const userId = row.id;
@@ -87,8 +88,8 @@ BusinessUser.createTable = function (callback) {
         _ref VARCHAR(128) NOT NULL,
         username VARCHAR(64) UNIQUE NOT NULL,
         password VARCHAR(256) NOT NULL,
-        name VARCHAR(32) DEFAULT '${defName}',
-        surname VARCHAR(32) DEFAULT '${defSurname}'
+        name VARCHAR(32) DEFAULT '${DEFAULT_NAME}',
+        surname VARCHAR(32) DEFAULT '${DEFAULT_SURNAME}'
     )`;
     dbManager.query(sql, [], err => {
         if (err) logger.error(err);
@@ -131,8 +132,8 @@ BusinessUser.insert = function (userObj, callback) {
     const username = userObj.username;
     const id = idGenerator.generateId(username);
     const password = encryptor.encrypt(userObj.password);
-    const name = userObj.name || defName;
-    const surname = userObj.surname || defSurname;
+    const name = userObj.name || DEFAULT_NAME;
+    const surname = userObj.surname || DEFAULT_SURNAME;
     const _ref = hashUser(id, username, name, surname, password);
     const roles = userObj.roles || [];
 
@@ -163,12 +164,7 @@ BusinessUser.findById = function (id, callback) {
     const sql = `SELECT u.*,${rolesTable}.role FROM ${table} u 
         LEFT OUTER JOIN ${rolesTable} ON (u.id=${rolesTable}.${table}) WHERE u.id=$1`;
 
-    dbManager.query(sql, [id], (err, res) => {
-        if (err) return callback(err);
-        const rows = res.rows;
-        if (rows.length) return callback(null, buildUsersFromRows(rows)[0]);
-        callback(null, null);
-    });
+    dbManager.query(sql, [id], (err, res) => callback(err, buildUsersFromRows(res.rows)[0]));
 };
 
 /**
@@ -176,15 +172,12 @@ BusinessUser.findById = function (id, callback) {
  * @param {Function} callback Funcion a invocar luego de buscar a los usuarios.
  */
 BusinessUser.find = function (callback) {
+    console.log('llamando a find con');
+    console.log(callback);
     const sql = `SELECT u.*,${rolesTable}.role FROM ${table} AS u 
         LEFT OUTER JOIN ${rolesTable} ON (u.id=${rolesTable}.${table})`;
 
-    dbManager.query(sql, (err, res) => {
-        if (err) return callback(err);
-        const rows = res.rows;
-        if (rows.length) return callback(null, buildUsersFromRows(rows));
-        callback(null, []);
-    });
+    dbManager.query(sql, [], (err, res) => callback(err, buildUsersFromRows(res.rows)));
 };
 
 
@@ -197,12 +190,7 @@ BusinessUser.findByUsername = function (username, callback) {
     const sql = `SELECT u.*,${rolesTable}.role 
         FROM ${table} u LEFT OUTER JOIN ${rolesTable} ON (u.id=${rolesTable}.${table}) WHERE u.username=$1`;
 
-    dbManager.query(sql, [username], (err, res) => {
-        if (err) return callback(err);
-        const rows = res.rows;
-        if (rows.length) return callback(null, buildUsersFromRows(rows)[0]);
-        callback(null, null);
-    });
+    dbManager.query(sql, [username], (err, res) => callback(err, buildUsersFromRows(res.rows)[0]));
 };
 
 /**
@@ -286,10 +274,7 @@ BusinessUser.hasRole = function (user, role, callback) {
     const userId = user.id || user;
     const roleId = role.type || role.role || role;
     const sql = `SELECT role FROM ${rolesTable} WHERE business_user=$1 AND role=$2`;
-    dbManager.query(sql, [userId, roleId], (err, res) => {
-        if (err) return callback(err);
-        callback(null, res.rows.length > 0);
-    });
+    dbManager.query(sql, [userId, roleId], (err, res) => callback(err, res.rows.length > 0));
 };
 
 /**

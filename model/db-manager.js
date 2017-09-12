@@ -2,6 +2,7 @@ console.log('CONFIGURANDO DATABASE MANAGER');
 
 const modelConfig = require('./model-config');
 const { Pool } = require('pg');
+const EMPTY_RES = { isEmpty: true, rows: [] };
 
 function buildPool() {
     console.log('CONSTRUYENDO POOL DE CONEXIONES DE BBDD');
@@ -43,15 +44,19 @@ const poolWrapper = {
  * @param {Function} callback Funcion a invocar al finalizar la query.
  */
 exports.query = function (sql, values, callback) {
+    /* Si callback no fue asignado, entonces se asume que callback se paso en el argumento 'values' */
+    if (!callback) {
+        callback = values;
+        values = [];
+    }
+
     poolWrapper.pool.connect((err, client, done) => {
         if (err) return callback(err);
 
-        if (typeof values == 'function') {
-            callback = values;
-            values = [];
-        }
         client.query(sql, values || [], (err, res) => {
             done(); // done libera un cliente del pool
+            res = res || EMPTY_RES;
+            res.rows = res.rows || [];
             callback(err, res);
         });
     });
