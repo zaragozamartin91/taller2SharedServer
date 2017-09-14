@@ -9,6 +9,7 @@ const logger = require('log4js').getLogger('ApplicationServer');
 /* CONSTANTES -------------------------------------------------------------------------------------- */
 
 const table = 'application_server';
+const idType = 'VARCHAR(64)';
 
 /* CODIGO -------------------------------------------------------------------------------------- */
 
@@ -36,6 +37,9 @@ function ApplicationServer(id, _ref, createdBy, createdTime, name, lastConnectio
     this.name = name;
     this.lastConnection = lastConnection;
 }
+
+ApplicationServer.table = table;
+ApplicationServer.idType = idType;
 
 /**
  * Crea una instancia de app server a partir de una fila de postgres.

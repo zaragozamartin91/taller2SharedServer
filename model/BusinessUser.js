@@ -45,6 +45,9 @@ function BusinessUser(id, _ref, username, password, name = DEFAULT_NAME, surname
     this.roles = roles;
 }
 
+BusinessUser.table = table;
+BusinessUser.idType = idType;
+
 /**
  * Crea un usuario de negocio a partir de un objeto.
  * @param {object} usrObj Objeto a partir del cual crear el usuario.
@@ -148,7 +151,7 @@ BusinessUser.insert = function (userObj, callback) {
         logger.debug(`Usuario ${id} insertado`);
         const user = rows[0];
 
-        BusinessUser.addRoles(user, roles, () => {
+        addRoles(user, roles, () => {
             user.roles = Role.filterValid(roles);
             callback(null, BusinessUser.fromObj(user));
         });
@@ -199,7 +202,7 @@ BusinessUser.findByUsername = function (username, callback) {
  * @param {Role} role Rol a agregar.
  * @param {function} callback Funcion a invocar luego de agregar el rol.
  */
-BusinessUser.addRole = function (user, role, callback) {
+function addRole(user, role, callback) {
     const userId = user.id || user;
     const roleId = Role.fromObj(role).type;
 
@@ -210,7 +213,7 @@ BusinessUser.addRole = function (user, role, callback) {
         logger.debug(`El rol ${roleId} es invalido!`);
         callback(new Error(`Rol ${roleId} invalido!`));
     }
-};
+}
 
 /**
  * Elimina roles de un usuario.
@@ -218,7 +221,7 @@ BusinessUser.addRole = function (user, role, callback) {
  * @param {Array<string>} roles Roles a remover.
  * @param {Function} callback Funcion a ejecutar luego de remover los roles.
  */
-BusinessUser.removeRoles = function (user, roles, callback) {
+function removeRoles(user, roles, callback) {
     roles = Role.asStrings(roles);
     if (roles.length == 0) return callback(null, user);
 
@@ -232,7 +235,7 @@ BusinessUser.removeRoles = function (user, roles, callback) {
 
     const sql = `DELETE FROM ${rolesTable} WHERE ${table}=$1 AND (${roleConstraints})`;
     dbManager.query(sql, [userId], err => callback(err, user));
-};
+}
 
 /**
  * Agrega un conjunto de roles a un usuario.
@@ -240,7 +243,7 @@ BusinessUser.removeRoles = function (user, roles, callback) {
  * @param {Array<string>} roles Roles a agregar.
  * @param {Function} callback Funcion a invocar al finalizar (err,user) => {}.
  */
-BusinessUser.addRoles = function (user, roles, callback) {
+function addRoles(user, roles, callback) {
     roles = Role.asStrings(roles);
     if (roles.length == 0) return callback(null, user);
 
@@ -255,14 +258,14 @@ BusinessUser.addRoles = function (user, roles, callback) {
         /* Encadeno las funciones a llamar. La funcion en [0] sera la ultima en invocarse y
         eventualmente llamara al callback pasado por parametro. Cada funcion llamara eventualmente
         a la anterior. */
-        if (index == 0) functions.push(e => BusinessUser.addRole(user, role, callback));
-        else functions.push(e => BusinessUser.addRole(user, role, prevFunction));
+        if (index == 0) functions.push(e => addRole(user, role, callback));
+        else functions.push(e => addRole(user, role, prevFunction));
     }
 
     const lastFunc = functions[functions.length - 1];
     if (lastFunc) lastFunc();
     else callback(null, user);
-};
+}
 
 /**
  * Determina si un usuario tiene un rol.
@@ -333,10 +336,10 @@ BusinessUser.update = function (user, callback) {
             const newRoles = user.roles;
             const oldRoles = dbUser.roles;
             const diffRoles = Role.diff(oldRoles, newRoles);
-            BusinessUser.addRoles(user, diffRoles.add, err => {
+            addRoles(user, diffRoles.add, err => {
                 if (err) logger.error(err.message);
                 const rolesToRemove = diffRoles.remove;
-                BusinessUser.removeRoles(user, diffRoles.remove, callback);
+                removeRoles(user, diffRoles.remove, callback);
             });
         });
     });
@@ -378,9 +381,6 @@ BusinessUser.prototype.withStringRoles = function () {
     this.roles = Role.asStrings(this.roles);
     return this;
 };
-
-BusinessUser.table = table;
-BusinessUser.idType = idType;
 
 module.exports = BusinessUser;
 

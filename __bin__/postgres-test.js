@@ -70,11 +70,5 @@ function addRole() {
     });
 }
 
-function addRoles() {
-    BusinessUser.addRoles('hector-70306', ['admin', 'manager', 'user'], (err, res) => {
-        if (err) console.error(err);
-        else console.log(res);
-    });
-}
 
 BusinessUser.hasRole('martin-27482', 'admin', (err, res) => console.log(res));
