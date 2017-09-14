@@ -2,6 +2,7 @@ const assert = require('assert');
 const BusinessUser = require('../model/BusinessUser');
 const dbManager = require('../model/db-manager');
 const sinon = require('sinon');
+const Role = require('../model/Role');
 
 let sandbox = null;
 
@@ -148,6 +149,21 @@ describe('BusinessUser', function () {
             assert.ok(BusinessUser.buildUsersFromRows(null).length == 0);
             assert.ok(BusinessUser.buildUsersFromRows(undefined).length == 0);
             assert.ok(BusinessUser.buildUsersFromRows([]).length == 0);
+        });
+    });
+
+    describe('#fromObj()', function () {
+        it('Crea un usuario a partir de un objeto', function () {
+            const user = BusinessUser.fromObj({
+                id: 'martin-27482',
+                _ref: 'e291451c15bcef07757e85804dec9a197ed27588',
+                username: 'martin',
+                password: '$2a$10$yoedT7nE4nVw3./pu1mzIeDqNlwXi0hOGfeAEL.nthhcTE6E5q/1K',
+                name: 'martin',
+                surname: 'zaragoza',
+                roles: ['manager', 'user']
+            });
+            assert.ok(user.roles.length > 0);
         });
     });
 });

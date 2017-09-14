@@ -11,58 +11,58 @@ exports.createTestData = function (req, res) {
     flow.series([
         callback => {
             logger.debug('Creando tabla de tokens');
-            TokenModel.createTable(callback);
+            TokenModel.createTable(() => callback());
         },
         callback => {
             logger.debug('Creando tabla de usuarios');
-            BusinessUser.createTable(callback);
+            BusinessUser.createTable(() => callback());
         },
         callback => {
             logger.debug('Creando tabla de roles');
-            Role.createTable(callback);
+            Role.createTable(() => callback());
         },
         callback => {
             logger.debug('Creando tabla de roles de usuario');
-            BusinessUser.createRolesTable(callback);
+            BusinessUser.createRolesTable(() => callback());
         },
         callback => {
             logger.debug('Creando tabla de servers');
-            ApplicationServer.createTable(callback);
+            ApplicationServer.createTable(() => callback());
         },
         callback => {
             logger.debug('Insertando rol');
-            Role.insert('manager', callback);
+            Role.insert('manager', () => callback());
         },
         callback => {
             logger.debug('Insertando rol');
-            Role.insert('admin', callback);
+            Role.insert('admin', () => callback());
         },
         callback => {
             logger.debug('Insertando rol');
-            Role.insert('user', callback);
+            Role.insert('user', () => callback());
         },
         callback => {
             logger.debug('Insertando usuario');
             BusinessUser.insert({
                 username: 'martin', password: 'pepe', name: 'martin',
                 surname: 'zaragoza', roles: ['manager', 'admin', 'user']
-            }, callback);
+            }, () => callback());
         },
         callback => {
             logger.debug('Insertando usuario');
             BusinessUser.insert({
                 username: 'mateo', password: 'posting', name: 'mateo',
                 surname: 'zaragoza', roles: ['user', 'admin']
-            }, callback);
+            }, () => callback());
         },
         callback => {
             logger.debug('Insertando usuario');
-            BusinessUser.insert({ username: 'hector', password: 'rules', name: 'hector', surname: 'zaragoza' }, callback);
+            BusinessUser.insert({ username: 'hector', password: 'rules', name: 'hector', surname: 'zaragoza' }, () => callback());
         },
         callback => {
             logger.debug('Agregando app server');
             BusinessUser.findByUsername('martin', (err, user) => {
-                ApplicationServer.insert({ name: 'oneApp', createdBy: user.id }, callback);
+                ApplicationServer.insert({ name: 'oneApp', createdBy: user.id }, () => callback());
             });
         },
         callback => {
@@ -76,23 +76,23 @@ exports.deleteTestData = function (req, res) {
     flow.series([
         callback => {
             logger.debug('Eliminando tabla de tokens');
-            TokenModel.dropTable(callback);
+            TokenModel.dropTable(() => callback());
         },
         callback => {
             logger.debug('Eliminando tabla de servers');
-            ApplicationServer.dropTable(callback);
+            ApplicationServer.dropTable(() => callback());
         },
         callback => {
             logger.debug('Eliminando tabla de roles de usuario de negocio');
-            BusinessUser.dropRolesTable(callback);
+            BusinessUser.dropRolesTable(() => callback());
         },
         callback => {
             logger.debug('Eliminando tabla de roles');
-            Role.dropTable(callback);
+            Role.dropTable(() => callback());
         },
         callback => {
             logger.debug('Eliminando tabla de usuarios de negocio');
-            BusinessUser.dropTable(callback);
+            BusinessUser.dropTable(() => callback());
         },
         callback => {
             logger.debug('Fin');
