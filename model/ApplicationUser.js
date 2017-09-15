@@ -6,6 +6,7 @@ const table = 'app_user';
 const DEFAULT_NAME = 'UNKNOWN';
 const DEFAULT_SURNAME = 'UNKNOWN';
 const DEFAULT_BALANCE_CURR = 'PESOS';
+const idType = 'VARCHAR(64)';
 
 function ApplicationUser(id, _ref, applicationOwner, username, name, surname, country, email, birthdate, type, images, cars, balance) {
     this.id = id;
@@ -23,6 +24,12 @@ function ApplicationUser(id, _ref, applicationOwner, username, name, surname, co
     this.balance = balance || { currency: DEFAULT_BALANCE_CURR, value: 0.0 };
 }
 
+ApplicationUser.table = table;
+ApplicationUser.DEFAULT_NAME = DEFAULT_NAME;
+ApplicationUser.DEFAULT_SURNAME = DEFAULT_SURNAME;
+ApplicationUser.DEFAULT_BALANCE_CURR = DEFAULT_BALANCE_CURR;
+ApplicationUser.idType = idType;
+
 ApplicationUser.fromObj = function (obj) {
     if (!obj) return null;
     let { id, _ref, applicationOwner, username, name, surname, country, email, birthdate, type, images, cars, balance } = obj;
@@ -30,39 +37,4 @@ ApplicationUser.fromObj = function (obj) {
     return new ApplicationUser(id, _ref, applicationOwner, username, name, surname, country, email, birthdate, type, images, cars, balance);
 };
 
-ApplicationUser.fromRow = function (obj) {
-    if (!obj) return null;
-    let { id, _ref, applicationOwner, username, name, surname, country, email, birthdate, type, images, cars, balanceval, balancecurr } = obj;
-    applicationOwner = applicationOwner || obj.applicationowner;
-    return new ApplicationUser(id, _ref, applicationOwner, username, name, surname, country, email, birthdate, type, images, cars, { value: balanceval, currency: balancecurr });
-};
-
-ApplicationUser.createTable = function (callback) {
-    const sql = `CREATE TABLE ${table} (
-        id VARCHAR(64) PRIMARY KEY,
-        _ref VARCHAR(128) NOT NULL,
-        applicationOwner ${ApplicationServer.idType} REFERENCES ${ApplicationServer.table}(id) ON DELETE CASCADE, 
-        username VARCHAR(64) UNIQUE NOT NULL,
-        name VARCHAR(32) DEFAULT '${DEFAULT_NAME}',
-        surname VARCHAR(32) DEFAULT '${DEFAULT_SURNAME}',
-        country VARCHAR(32),
-        email VARCHAR(64),
-        birthdate TIMESTAMP,
-        type VARCHAR(16),
-        balanceval DECIMAL(9,2),
-        balancecurr VARCHAR(16) DEFAULT '${DEFAULT_BALANCE_CURR}'
-    )`;
-    dbManager.query(sql, [], err => {
-        if (err) logger.error(err);
-        callback();
-    });
-};
-
-ApplicationUser.dropTable = function (callback) {
-    const sql = `DROP TABLE ${table}`;
-    dbManager.query(sql, [], err => {
-        if (err) logger.error(err);
-        callback();
-    });
-};
-
+module.exports = ApplicationUser;

@@ -1,9 +1,13 @@
 const BusinessUser = require('./BusinessUser');
 const Role = require('./Role');
 const ApplicationServer = require('./ApplicationServer');
+const ApplicationUser = require('./ApplicationUser');
+const Balance = require('./Balance');
 const TokenModel = require('./Token');
 const dbManager = require('./db-manager');
 const logger = require('log4js').getLogger('table-manager');
+
+// BusinessUser-----------------------------------------------------------------------------
 
 /**
  * Crea la tabla de usuarios de negocio.
@@ -50,6 +54,8 @@ exports.dropBusinessUserRolesTable = function (callback) {
     });
 };
 
+// Role -----------------------------------------------------------------------------------------------------
+
 /**
  * Crea la tabla de roles de usuario de negocio.
  * @param {function} callback Funcion a invocar luego de crear la tabla.
@@ -66,6 +72,8 @@ exports.dropRoleTable = function (callback) {
         callback();
     });
 };
+
+// ApplicationServer ----------------------------------------------------------------------------------------
 
 exports.createApplicationServerTable = function (callback) {
     dbManager.query(`CREATE TABLE ${ApplicationServer.table} (
@@ -84,6 +92,8 @@ exports.dropApplicationServerTable = function (callback) {
     });
 };
 
+// TokenModel -------------------------------------------------------------------------------------------------
+
 exports.createTokenTable = function (callback) {
     const sql = `CREATE TABLE ${TokenModel.table} (
         token VARCHAR(256) NOT NULL,
@@ -97,4 +107,53 @@ exports.createTokenTable = function (callback) {
 exports.dropTokenTable = function (callback) {
     const sql = `DROP TABLE ${TokenModel.table}`;
     dbManager.query(sql, [], callback);
+};
+
+// ApplicationUser -------------------------------------------------------------------------------------------------------
+
+exports.createApplicationUserTable = function (callback) {
+    const sql = `CREATE TABLE ${ApplicationUser.table} (
+        id ${ApplicationUser.idType} PRIMARY KEY,
+        _ref VARCHAR(128) NOT NULL,
+        applicationOwner ${ApplicationServer.idType} REFERENCES ${ApplicationServer.table}(id) ON DELETE CASCADE, 
+        username VARCHAR(64) UNIQUE NOT NULL,
+        name VARCHAR(32) DEFAULT '${ApplicationUser.DEFAULT_NAME}',
+        surname VARCHAR(32) DEFAULT '${ApplicationUser.DEFAULT_SURNAME}',
+        country VARCHAR(32),
+        email VARCHAR(64),
+        birthdate TIMESTAMP,
+        type VARCHAR(16)
+    )`;
+    dbManager.query(sql, [], err => {
+        if (err) logger.error(err);
+        callback();
+    });
+};
+
+exports.dropApplicationUserTable = function (callback) {
+    const sql = `DROP TABLE ${ApplicationUser.table}`;
+    dbManager.query(sql, [], err => {
+        if (err) logger.error(err);
+        callback();
+    });
+};
+
+exports.createBalanceTable = function (callback) {
+    const sql = `CREATE TABLE ${Balance.table} (
+        currency VARCHAR(16),
+        value DECIMAL(9,2),
+        user ${ApplicationUser.idType} REFERENCES ${ApplicationUser.table}(id) ON DELETE CASCADE 
+    )`;
+    dbManager.query(sql, [], err => {
+        if (err) logger.error(err);
+        callback();
+    });
+};
+
+exports.dropBalanceTable = function (callback) {
+    const sql = `DROP TABLE ${Balance.table}`;
+    dbManager.query(sql, [], err => {
+        if (err) logger.error(err);
+        callback();
+    });
 };
