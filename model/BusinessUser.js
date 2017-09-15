@@ -47,6 +47,9 @@ function BusinessUser(id, _ref, username, password, name = DEFAULT_NAME, surname
 
 BusinessUser.table = table;
 BusinessUser.idType = idType;
+BusinessUser.DEFAULT_NAME = DEFAULT_NAME;
+BusinessUser.DEFAULT_SURNAME = DEFAULT_SURNAME;
+BusinessUser.rolesTable = rolesTable;
 
 /**
  * Crea un usuario de negocio a partir de un objeto.
@@ -81,50 +84,6 @@ function buildUsersFromRows(rows) {
 
 BusinessUser.buildUsersFromRows = buildUsersFromRows;
 
-/**
- * Crea la tabla de usuarios de negocio.
- * @param {Function} callback Funcion a invocar luego de crear la tabla.
- */
-BusinessUser.createTable = function (callback) {
-    const sql = `CREATE TABLE ${table} (
-        id ${idType} PRIMARY KEY,
-        _ref VARCHAR(128) NOT NULL,
-        username VARCHAR(64) UNIQUE NOT NULL,
-        password VARCHAR(256) NOT NULL,
-        name VARCHAR(32) DEFAULT '${DEFAULT_NAME}',
-        surname VARCHAR(32) DEFAULT '${DEFAULT_SURNAME}'
-    )`;
-    dbManager.query(sql, [], err => {
-        if (err) logger.error(err);
-        callback();
-    });
-};
-
-BusinessUser.dropTable = function (callback) {
-    dbManager.query(`DROP TABLE ${table}`, [], err => {
-        if (err) logger.error(err);
-        callback();
-    });
-};
-
-/**
- * Crea la tabla de roles de usuario de negocio.
- * @param {Function} callback Funcion a invocar luego que la tabla fue creada.
- */
-BusinessUser.createRolesTable = function (callback) {
-    dbManager.query(`CREATE TABLE ${rolesTable} (
-        business_user ${idType} REFERENCES ${table}(id) ON DELETE CASCADE,
-        role ${Role.idType} REFERENCES ${Role.table}(type) ON DELETE CASCADE,
-        UNIQUE(business_user,role)
-    )`, [], callback);
-};
-
-BusinessUser.dropRolesTable = function (callback) {
-    dbManager.query(`DROP TABLE ${rolesTable}`, [], err => {
-        logger.error(err);
-        callback();
-    });
-};
 
 /**
  * Inserta un usuario de negocio en la BBDD.

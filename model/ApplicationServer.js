@@ -97,23 +97,6 @@ ApplicationServer.findById = function (serverId, callback) {
     });
 };
 
-ApplicationServer.createTable = function (callback) {
-    dbManager.query(`CREATE TABLE ${table} (
-        id VARCHAR(64) NOT NULL PRIMARY KEY,
-        _ref VARCHAR(256) NOT NULL,
-        created_by ${BusinessUser.idType} REFERENCES ${BusinessUser.table}(id) ON DELETE SET NULL,
-        created_time TIMESTAMP DEFAULT now(),
-        name VARCHAR(64) UNIQUE NOT NULL,
-        last_conn TIMESTAMP DEFAULT now())`, [], callback);
-};
-
-ApplicationServer.dropTable = function (callback) {
-    dbManager.query(`DROP TABLE ${table}`, [], err => {
-        if (err) logger.error(err);
-        callback();
-    });
-};
-
 ApplicationServer.delete = function (server, callback) {
     const id = server.id || server;
     const sql = `DELETE FROM ${table} WHERE id=$1 RETURNING *`;
