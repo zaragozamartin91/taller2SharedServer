@@ -18,22 +18,8 @@ function Role(type) {
     this.type = type;
 }
 
-/**
- * Crea la tabla de roles de usuario de negocio.
- * @param {function} callback Funcion a invocar luego de crear la tabla.
- */
-Role.createTable = function (callback) {
-    dbManager.query(`CREATE TABLE ${table} (
-        type ${idType} PRIMARY KEY
-    )`, [], callback);
-};
-
-Role.dropTable = function (callback) {
-    dbManager.query(`DROP TABLE ${table}`, [], err => {
-        if (err) logger.error(err);
-        callback();
-    });
-};
+Role.table = table;
+Role.idType = idType;
 
 /**
  * Inserta un rol de usuario de negocio.
@@ -144,8 +130,5 @@ Role.prototype.isAdmin = function () {
 Role.prototype.isValid = function () {
     return Role.isValid(this.type);
 };
-
-Role.table = table;
-Role.idType = idType;
 
 module.exports = Role;

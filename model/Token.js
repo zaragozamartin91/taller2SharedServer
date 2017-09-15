@@ -19,20 +19,7 @@ function TokenModel(token, expiresAt, owner) {
     this.owner = owner || '';
 }
 
-TokenModel.createTable = function (callback) {
-    const sql = `CREATE TABLE ${table} (
-        token VARCHAR(256) NOT NULL,
-        expiresAt TIMESTAMP NOT NULL,
-        owner VARCHAR(64) DEFAULT '',
-        counter SERIAL
-    )`;
-    dbManager.query(sql, [], callback);
-};
-
-TokenModel.dropTable = function (callback) {
-    const sql = `DROP TABLE ${table}`;
-    dbManager.query(sql, [], callback);
-};
+TokenModel.table = table;
 
 TokenModel.insert = function (token, owner, callback) {
     token = Token.fromObj(token).withDateExpiration();

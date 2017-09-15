@@ -3,6 +3,8 @@ const BusinessUser = require('../model/BusinessUser');
 const ApplicationServer = require('../model/ApplicationServer');
 const Role = require('../model/Role');
 const TokenModel = require('../model/Token');
+
+const tableManager = require('../model/table-manager');
 const flow = require('nimble');
 
 const logger = require('log4js').getLogger('test-data-controller');
@@ -11,23 +13,23 @@ exports.createTestData = function (req, res) {
     flow.series([
         callback => {
             logger.debug('Creando tabla de tokens');
-            TokenModel.createTable(() => callback());
+            tableManager.createTokenTable(() => callback());
         },
         callback => {
             logger.debug('Creando tabla de usuarios');
-            BusinessUser.createTable(() => callback());
+            tableManager.createBusinessUserTable(() => callback());
         },
         callback => {
             logger.debug('Creando tabla de roles');
-            Role.createTable(() => callback());
+            tableManager.createRoleTable(() => callback());
         },
         callback => {
             logger.debug('Creando tabla de roles de usuario');
-            BusinessUser.createRolesTable(() => callback());
+            tableManager.createBusinessUserRolesTable(() => callback());
         },
         callback => {
             logger.debug('Creando tabla de servers');
-            ApplicationServer.createTable(() => callback());
+            tableManager.createApplicationServerTable(() => callback());
         },
         callback => {
             logger.debug('Insertando rol');
@@ -76,23 +78,23 @@ exports.deleteTestData = function (req, res) {
     flow.series([
         callback => {
             logger.debug('Eliminando tabla de tokens');
-            TokenModel.dropTable(() => callback());
+            tableManager.dropTokenTable(() => callback());
         },
         callback => {
             logger.debug('Eliminando tabla de servers');
-            ApplicationServer.dropTable(() => callback());
+            tableManager.dropApplicationServerTable(() => callback());
         },
         callback => {
             logger.debug('Eliminando tabla de roles de usuario de negocio');
-            BusinessUser.dropRolesTable(() => callback());
+            tableManager.dropBusinessUserRolesTable(() => callback());
         },
         callback => {
             logger.debug('Eliminando tabla de roles');
-            Role.dropTable(() => callback());
+            tableManager.dropRoleTable(() => callback());
         },
         callback => {
             logger.debug('Eliminando tabla de usuarios de negocio');
-            BusinessUser.dropTable(() => callback());
+            tableManager.dropBusinessUserTable(() => callback());
         },
         callback => {
             logger.debug('Fin');

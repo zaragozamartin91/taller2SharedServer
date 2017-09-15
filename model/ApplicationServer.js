@@ -9,6 +9,7 @@ const logger = require('log4js').getLogger('ApplicationServer');
 /* CONSTANTES -------------------------------------------------------------------------------------- */
 
 const table = 'application_server';
+const idType = 'VARCHAR(64)';
 
 /* CODIGO -------------------------------------------------------------------------------------- */
 
@@ -36,6 +37,9 @@ function ApplicationServer(id, _ref, createdBy, createdTime, name, lastConnectio
     this.name = name;
     this.lastConnection = lastConnection;
 }
+
+ApplicationServer.table = table;
+ApplicationServer.idType = idType;
 
 /**
  * Crea una instancia de app server a partir de una fila de postgres.
@@ -90,23 +94,6 @@ ApplicationServer.findById = function (serverId, callback) {
         const rows = res.rows;
         if (rows.length) return callback(null, ApplicationServer.fromRow(rows[0]));
         return callback(null, null);
-    });
-};
-
-ApplicationServer.createTable = function (callback) {
-    dbManager.query(`CREATE TABLE ${table} (
-        id VARCHAR(64) NOT NULL PRIMARY KEY,
-        _ref VARCHAR(256) NOT NULL,
-        created_by ${BusinessUser.idType} REFERENCES ${BusinessUser.table}(id) ON DELETE SET NULL,
-        created_time TIMESTAMP DEFAULT now(),
-        name VARCHAR(64) UNIQUE NOT NULL,
-        last_conn TIMESTAMP DEFAULT now())`, [], callback);
-};
-
-ApplicationServer.dropTable = function (callback) {
-    dbManager.query(`DROP TABLE ${table}`, [], err => {
-        if (err) logger.error(err);
-        callback();
     });
 };
 
