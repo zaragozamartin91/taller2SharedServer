@@ -53,6 +53,23 @@ describe('Role', function () {
         });
     });
 
+    describe('#filterValid()', function () {
+        it('a partir de un arreglo filtra los roles validos', function () {
+            let strings = ['admin', 'manager', 'user'];
+            let valid = Role.filterValid(strings);
+            assert.ok(valid[0].isAdmin());
+            assert.ok(valid[1].isManager());
+            assert.ok(valid[2].isUser());
+            assert.ok(valid.length == 3);
+
+            strings = ['admin', 'asdasdasd', 'user'];
+            valid = Role.filterValid(strings);
+            assert.ok(valid[0].isAdmin());
+            assert.ok(valid[1].isUser());
+            assert.ok(valid.length == 2);
+        });
+    });
+
     afterEach(function () {
     });
 });

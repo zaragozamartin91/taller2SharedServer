@@ -86,6 +86,16 @@ Role.fromStrings = function (roleStrings) {
 };
 
 /**
+ * Filtra un arreglo de roles dejando solo los roles validos.
+ * @param {Array<Role>} roles roles a filtrar.
+ * @return {Array<Role>} Arreglo con roles validos.
+ */
+Role.filterValid = function (roles) {
+    roles = Role.fromStrings(roles);
+    return roles.filter(r => r.isValid());
+};
+
+/**
  * Determina la diferencia de roles.
  * @param {Array} roles1 Roles en BBDD.
  * @param {Array} roles2 Roles nuevos.

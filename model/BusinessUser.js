@@ -149,7 +149,7 @@ BusinessUser.insert = function (userObj, callback) {
         const user = rows[0];
 
         BusinessUser.addRoles(user, roles, () => {
-            user.roles = Role.fromStrings(roles);
+            user.roles = Role.filterValid(roles);
             callback(null, BusinessUser.fromObj(user));
         });
     });
@@ -327,12 +327,14 @@ BusinessUser.update = function (user, callback) {
             /* Actualizo el valor de _ref si la actualizacion fue exitosa */
             user._ref = newRef;
 
+            user.roles = Role.filterValid(user.roles);
+
             /* Finalmente agregamos/quitamos roles */
             const newRoles = user.roles;
             const oldRoles = dbUser.roles;
             const diffRoles = Role.diff(oldRoles, newRoles);
             BusinessUser.addRoles(user, diffRoles.add, err => {
-                if (err) return logger.error(err);
+                if (err) logger.error(err.message);
                 const rolesToRemove = diffRoles.remove;
                 BusinessUser.removeRoles(user, diffRoles.remove, callback);
             });
