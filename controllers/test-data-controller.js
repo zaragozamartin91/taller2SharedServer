@@ -3,9 +3,12 @@ const BusinessUser = require('../model/BusinessUser');
 const ApplicationServer = require('../model/ApplicationServer');
 const Role = require('../model/Role');
 const TokenModel = require('../model/Token');
+const ApplicationUser = require('../model/ApplicationUser');
+const Car = require('../model/Car');
 
 const tableManager = require('../model/table-manager');
 const flow = require('nimble');
+const moment = require('moment');
 
 const logger = require('log4js').getLogger('test-data-controller');
 
@@ -16,7 +19,7 @@ exports.createTestData = function (req, res) {
             tableManager.createTokenTable(() => callback());
         },
         callback => {
-            logger.debug('Creando tabla de usuarios');
+            logger.debug('Creando tabla de usuarios de negocio');
             tableManager.createBusinessUserTable(() => callback());
         },
         callback => {
@@ -24,12 +27,20 @@ exports.createTestData = function (req, res) {
             tableManager.createRoleTable(() => callback());
         },
         callback => {
-            logger.debug('Creando tabla de roles de usuario');
+            logger.debug('Creando tabla de roles de usuario de negocio');
             tableManager.createBusinessUserRolesTable(() => callback());
         },
         callback => {
             logger.debug('Creando tabla de servers');
             tableManager.createApplicationServerTable(() => callback());
+        },
+        callback => {
+            logger.debug('Creando tabla de usuarios de aplicacion');
+            tableManager.createApplicationUserTable(() => callback());
+        },
+        callback => {
+            logger.debug('Creando tabla de autos');
+            tableManager.createCarTable(() => callback());
         },
         callback => {
             logger.debug('Insertando rol');
@@ -64,9 +75,32 @@ exports.createTestData = function (req, res) {
         callback => {
             logger.debug('Agregando app server');
             BusinessUser.findByUsername('martin', (err, user) => {
-                ApplicationServer.insert({ name: 'oneApp', createdBy: user.id }, () => callback());
+                ApplicationServer.insert({ name: 'oneApp', createdBy: user.id }, (err, server) => {
+                    console.log('Agregando usuario de aplicacion');
+                    let [applicationOwner, username, name, surname, country, email, birthdate, type, images, balance] = [
+                        server.id,
+                        'mzaragoza',
+                        'Martin',
+                        'Zaragoza',
+                        'Argentina',
+                        'mzaragoza@accusys.com',
+                        moment('1991-03-21').toDate(),
+                        'driver',
+                        ['https://www.postgresql.org/docs/9.6/static/datatype-json.html'],
+                        [{ currency: 'peso', value: 123.45 }, { currency: 'dolar', value: 6789.10 }]
+                    ];
+                    let userObj = { applicationOwner, username, name, surname, country, email, birthdate, type, images, balance };
+                    ApplicationUser.insert(userObj, (err, user) => {
+                        console.log('Agregando auto a usuario');
+                        let [owner, properties] = [user.id, [{ name: 'model', value: 'renault' }, { name: 'year', value: 2001 }]];
+                        Car.insert({ owner, properties }, (err, res) => callback());
+                    });
+                });
             });
         },
+
+
+
         callback => {
             logger.debug('Fin');
             res.send({ code: 200, message: 'Todos los datos creados!' });
@@ -76,6 +110,14 @@ exports.createTestData = function (req, res) {
 
 exports.deleteTestData = function (req, res) {
     flow.series([
+        callback => {
+            logger.debug('Eliminando tabla de autos');
+            tableManager.dropCarTable(() => callback());
+        },
+        callback => {
+            logger.debug('Eliminando tabla de usuarios de aplicacion');
+            tableManager.dropApplicationUserTable(() => callback());
+        },
         callback => {
             logger.debug('Eliminando tabla de tokens');
             tableManager.dropTokenTable(() => callback());

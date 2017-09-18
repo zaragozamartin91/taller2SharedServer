@@ -2,8 +2,9 @@ const BusinessUser = require('./BusinessUser');
 const Role = require('./Role');
 const ApplicationServer = require('./ApplicationServer');
 const ApplicationUser = require('./ApplicationUser');
-const Balance = require('./Balance');
+const Car = require('./Car');
 const TokenModel = require('./Token');
+
 const dbManager = require('./db-manager');
 const logger = require('log4js').getLogger('table-manager');
 
@@ -111,18 +112,22 @@ exports.dropTokenTable = function (callback) {
 
 // ApplicationUser -------------------------------------------------------------------------------------------------------
 
+// EL BALANCE LO GUARDO COMO UN JSON
 exports.createApplicationUserTable = function (callback) {
     const sql = `CREATE TABLE ${ApplicationUser.table} (
         id ${ApplicationUser.idType} PRIMARY KEY,
         _ref VARCHAR(128) NOT NULL,
         applicationOwner ${ApplicationServer.idType} REFERENCES ${ApplicationServer.table}(id) ON DELETE CASCADE, 
-        username VARCHAR(64) UNIQUE NOT NULL,
+        username VARCHAR(64) NOT NULL,
         name VARCHAR(32) DEFAULT '${ApplicationUser.DEFAULT_NAME}',
         surname VARCHAR(32) DEFAULT '${ApplicationUser.DEFAULT_SURNAME}',
         country VARCHAR(32),
         email VARCHAR(64),
         birthdate TIMESTAMP,
-        type VARCHAR(16)
+        type VARCHAR(16),
+        images JSON DEFAULT '[]',
+        balance JSON DEFAULT '[]',
+        fb JSON DEFAULT '{}'
     )`;
     dbManager.query(sql, [], err => {
         if (err) logger.error(err);
@@ -138,11 +143,12 @@ exports.dropApplicationUserTable = function (callback) {
     });
 };
 
-exports.createBalanceTable = function (callback) {
-    const sql = `CREATE TABLE ${Balance.table} (
-        currency VARCHAR(16),
-        value DECIMAL(9,2),
-        user ${ApplicationUser.idType} REFERENCES ${ApplicationUser.table}(id) ON DELETE CASCADE 
+exports.createCarTable = function (callback) {
+    const sql = `CREATE TABLE ${Car.table} (
+        id ${Car.idType} PRIMARY KEY,
+        _ref VARCHAR(128) NOT NULL,
+        owner ${ApplicationUser.idType} REFERENCES ${ApplicationUser.table}(id) ON DELETE CASCADE,
+        properties JSON DEFAULT '[]'
     )`;
     dbManager.query(sql, [], err => {
         if (err) logger.error(err);
@@ -150,8 +156,8 @@ exports.createBalanceTable = function (callback) {
     });
 };
 
-exports.dropBalanceTable = function (callback) {
-    const sql = `DROP TABLE ${Balance.table}`;
+exports.dropCarTable = function(callback) {
+    const sql = `DROP TABLE ${Car.table}`;
     dbManager.query(sql, [], err => {
         if (err) logger.error(err);
         callback();
