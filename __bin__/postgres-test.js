@@ -92,11 +92,11 @@ let value = [{
 
 let [applicationOwner, username, name, surname, country, email, birthdate, type, images, balance] = [
     'oneApp-63140',
-    'mzaragoza',
-    'martin',
+    'quelopario',
+    'hector',
     'zaragoza',
     'argentina',
-    'mzaragoza@accusys',
+    'quelopario@accusys',
     moment('1995-12-25').toDate(),
     'driver',
     ['https://www.postgresql.org/docs/9.6/static/datatype-json.html'],
@@ -104,17 +104,29 @@ let [applicationOwner, username, name, surname, country, email, birthdate, type,
 ];
 let userObj = { applicationOwner, username, name, surname, country, email, birthdate, type, images, balance };
 
-// ApplicationUser.insert(userObj, (err, res) => {
-//     console.error(err);
-//     console.log(res);
-//     dbManager.end();
-
-// });
-
-
-let [owner, properties] = ['mzaragoza-58646', [{ name: 'model', value: 'ford' }, { name: 'year', value: 1998 }]];
-Car.insert({ owner, properties }, (err, res) => {
+ApplicationUser.insert(userObj, (err, res) => {
     console.error(err);
     console.log(res);
     dbManager.end();
 });
+
+
+// let [owner, properties] = ['mzaragoza-58646', [{ name: 'model', value: 'renault' }, { name: 'year', value: 2001 }]];
+// Car.insert({ owner, properties }, (err, res) => {
+//     console.error(err);
+//     console.log(res);
+//     dbManager.end();
+// });
+
+// Car.findByOwner('mzaragoza-58646', (err, cars) => {
+//     console.error(err);
+//     console.log(cars);
+//     console.log(cars[0].properties[1]);
+//     dbManager.end();
+// });
+
+// ApplicationUser.find((err, res) => {
+//     console.error(err);
+//     console.log(res);
+//     dbManager.end();
+// });

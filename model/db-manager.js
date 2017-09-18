@@ -49,7 +49,7 @@ exports.query = function (sql, values, callback) {
     }
 
     poolWrapper.pool.connect((err, client, done) => {
-        if (err) return callback(err);
+        if (err) return callback(err, EMPTY_RES);
 
         client.query(sql, values || [], (err, res) => {
             done(); // done libera un cliente del pool

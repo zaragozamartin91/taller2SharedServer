@@ -2,7 +2,9 @@ const dbManager = require('./db-manager');
 const ApplicationServer = require('./ApplicationServer');
 const hasher = require('../utils/hasher');
 const idGenerator = require('../utils/id-generator');
+const Car = require('./Car');
 const logger = require('log4js').getLogger('ApplicationUser');
+const flow = require('nimble');
 
 const table = 'app_user';
 const DEFAULT_NAME = 'UNKNOWN';
@@ -44,6 +46,10 @@ ApplicationUser.fromObj = function (obj) {
     return new ApplicationUser(id, _ref, applicationOwner, username, name, surname, country, email, birthdate, type, images, balance, cars);
 };
 
+ApplicationUser.fromRows = function (rows) {
+    return rows.map(ApplicationUser.fromObj);
+};
+
 ApplicationUser.insert = function (usrObj, callback) {
     const user = ApplicationUser.fromObj(usrObj);
     let { applicationOwner, username, name, surname, country, email, birthdate, type, images, balance, cars } = user;
@@ -55,6 +61,27 @@ ApplicationUser.insert = function (usrObj, callback) {
     dbManager.query(sql, values, (err, res) => {
         if (err) logger.error(err);
         callback(err, ApplicationUser.fromObj(res.rows[0]));
+    });
+};
+
+ApplicationUser.find = function (callback) {
+    const sql = `SELECT * FROM ${table}`;
+    dbManager.query(sql, [], (err, { rows }) => {
+        if (err) return callback(err);
+
+        const users = ApplicationUser.fromRows(rows);
+        const calls = [];
+        users.forEach(user => calls.push(cb => {
+            Car.findByOwner(user.id, (err, cars) => {
+                user.cars = cars;
+                cb();
+            });
+        }));
+        calls.push(cb => {
+            callback(err, users);
+            cb();
+        });
+        flow.series(calls);
     });
 };
 
