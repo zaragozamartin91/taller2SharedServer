@@ -1,5 +1,9 @@
-function destructure({x,y,z}) {
-    console.log(x,y,z);
-}
+const flow = require('nimble');
 
-destructure(null);
+flow.series([
+    callback => {
+        callback();
+        console.log('hola');
+    }
+]);
+
