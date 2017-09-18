@@ -7,6 +7,7 @@ const ApplicationUser = require('../model/ApplicationUser');
 const Car = require('../model/Car');
 
 const tableManager = require('../model/table-manager');
+const tokenManager = require('../utils/token-manager');
 const flow = require('nimble');
 const moment = require('moment');
 
@@ -76,6 +77,12 @@ exports.createTestData = function (req, res) {
             logger.debug('Agregando app server');
             BusinessUser.findByUsername('martin', (err, user) => {
                 ApplicationServer.insert({ name: 'oneApp', createdBy: user.id }, (err, server) => {
+                    console.log('Agregando token de servidor');
+                    const token = tokenManager.signServer(server);
+                    TokenModel.insert(token, server.id, err => {
+                        if (err) console.error(err);
+                    });
+
                     console.log('Agregando usuario de aplicacion');
                     let [applicationOwner, username, name, surname, country, email, birthdate, type, images, balance] = [
                         server.id,
