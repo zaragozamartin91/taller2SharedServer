@@ -104,11 +104,11 @@ let [applicationOwner, username, name, surname, country, email, birthdate, type,
 ];
 let userObj = { applicationOwner, username, name, surname, country, email, birthdate, type, images, balance };
 
-ApplicationUser.insert(userObj, (err, res) => {
-    console.error(err);
-    console.log(res);
-    dbManager.end();
-});
+// ApplicationUser.insert(userObj, (err, res) => {
+//     console.error(err);
+//     console.log(res);
+//     dbManager.end();
+// });
 
 
 // let [owner, properties] = ['mzaragoza-58646', [{ name: 'model', value: 'renault' }, { name: 'year', value: 2001 }]];
@@ -125,8 +125,8 @@ ApplicationUser.insert(userObj, (err, res) => {
 //     dbManager.end();
 // });
 
-// ApplicationUser.find((err, res) => {
-//     console.error(err);
-//     console.log(res);
-//     dbManager.end();
-// });
+ApplicationUser.find((err, res) => {
+    console.error(err);
+    console.log(res[0].cars[0]);
+    dbManager.end();
+});

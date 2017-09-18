@@ -12,6 +12,7 @@ const DEFAULT_SURNAME = 'UNKNOWN';
 const DEFAULT_BALANCE_CURR = 'PESOS';
 const idType = 'VARCHAR(64)';
 const DEFAULT_BALANCE = [{ currency: DEFAULT_BALANCE_CURR, value: 0.0 }];
+const carTable = Car.table;
 
 function hashUser({ username, name, surname, country }) {
     return hasher.hash({ username, name, surname, country });
@@ -22,7 +23,6 @@ function ApplicationUser(id, _ref, applicationOwner, username, name, surname, co
     this._ref = _ref;
     this.applicationOwner = applicationOwner;
     this.type = type;
-    this.cars = cars || [];
     this.username = username;
     this.name = name || DEFAULT_NAME;
     this.surname = surname || DEFAULT_SURNAME;
@@ -31,6 +31,7 @@ function ApplicationUser(id, _ref, applicationOwner, username, name, surname, co
     this.birthdate = birthdate;
     this.images = images || [];
     this.balance = balance || DEFAULT_BALANCE;
+    this.cars = cars || [];
 }
 
 ApplicationUser.table = table;
@@ -47,7 +48,15 @@ ApplicationUser.fromObj = function (obj) {
 };
 
 ApplicationUser.fromRows = function (rows) {
-    return rows.map(ApplicationUser.fromObj);
+    const users = {};
+    rows.forEach(row => {
+        const userId = row.id;
+        const user = users[userId] || ApplicationUser.fromObj(row);
+        let { carid, car_ref, carproperties } = row;
+        if (carid) user.cars.push(new Car(carid, car_ref, userId, carproperties));
+        users[userId] = user;
+    });
+    return Object.keys(users).map(userId => users[userId]);
 };
 
 ApplicationUser.insert = function (usrObj, callback) {
@@ -65,23 +74,12 @@ ApplicationUser.insert = function (usrObj, callback) {
 };
 
 ApplicationUser.find = function (callback) {
-    const sql = `SELECT * FROM ${table}`;
+    const sql = `select u.*,${carTable}.id as carid, ${carTable}._ref as car_ref,${carTable}.properties as carproperties 
+    from ${table} as u 
+    left outer join ${carTable} on (u.id=${carTable}.owner)`;
     dbManager.query(sql, [], (err, { rows }) => {
-        if (err) return callback(err);
-
-        const users = ApplicationUser.fromRows(rows);
-        const calls = [];
-        users.forEach(user => calls.push(cb => {
-            Car.findByOwner(user.id, (err, cars) => {
-                user.cars = cars;
-                cb();
-            });
-        }));
-        calls.push(cb => {
-            callback(err, users);
-            cb();
-        });
-        flow.series(calls);
+        if (err) console.error(err);
+        callback(err, ApplicationUser.fromRows(rows));
     });
 };
 
