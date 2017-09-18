@@ -18,7 +18,7 @@ function hashUser({ username, name, surname, country }) {
     return hasher.hash({ username, name, surname, country });
 }
 
-function ApplicationUser(id, _ref, applicationOwner, username, name, surname, country, email, birthdate, type, images, balance, cars) {
+function ApplicationUser(id, _ref, applicationOwner, username, name, surname, country, email, birthdate, type, images, balance, fb, cars) {
     this.id = id;
     this._ref = _ref;
     this.applicationOwner = applicationOwner;
@@ -31,6 +31,7 @@ function ApplicationUser(id, _ref, applicationOwner, username, name, surname, co
     this.birthdate = birthdate;
     this.images = images || [];
     this.balance = balance || DEFAULT_BALANCE;
+    this.fb = fb || {};
     this.cars = cars || [];
 }
 
@@ -42,9 +43,9 @@ ApplicationUser.idType = idType;
 
 ApplicationUser.fromObj = function (obj) {
     if (!obj) return null;
-    let { id, _ref, applicationOwner, username, name, surname, country, email, birthdate, type, images, balance, cars } = obj;
+    let { id, _ref, applicationOwner, username, name, surname, country, email, birthdate, type, images, balance, fb, cars } = obj;
     applicationOwner = applicationOwner || obj.applicationowner;
-    return new ApplicationUser(id, _ref, applicationOwner, username, name, surname, country, email, birthdate, type, images, balance, cars);
+    return new ApplicationUser(id, _ref, applicationOwner, username, name, surname, country, email, birthdate, type, images, balance, fb, cars);
 };
 
 ApplicationUser.fromRows = function (rows) {
@@ -61,11 +62,12 @@ ApplicationUser.fromRows = function (rows) {
 
 ApplicationUser.insert = function (usrObj, callback) {
     const user = ApplicationUser.fromObj(usrObj);
-    let { applicationOwner, username, name, surname, country, email, birthdate, type, images, balance, cars } = user;
+    let { applicationOwner, username, name, surname, country, email, birthdate, type, images, balance, fb } = user;
     let id = idGenerator.generateId(username);
     let _ref = hashUser(user);
-    const sql = `INSERT INTO ${table} VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) RETURNING *`;
-    const values = [id, _ref, applicationOwner, username, name, surname, country, email, birthdate, type, JSON.stringify(images), JSON.stringify(balance)];
+    const sql = `INSERT INTO ${table} VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) RETURNING *`;
+    const values = [id, _ref, applicationOwner, username, name, surname, country, email, birthdate, 
+        type, JSON.stringify(images), JSON.stringify(balance), JSON.stringify(fb)];
 
     dbManager.query(sql, values, (err, res) => {
         if (err) logger.error(err);

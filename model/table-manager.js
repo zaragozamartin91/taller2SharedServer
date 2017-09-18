@@ -125,8 +125,9 @@ exports.createApplicationUserTable = function (callback) {
         email VARCHAR(64),
         birthdate TIMESTAMP,
         type VARCHAR(16),
+        images JSON DEFAULT '[]',
         balance JSON DEFAULT '[]',
-        images JSON DEFAULT '[]'
+        fb JSON DEFAULT '{}'
     )`;
     dbManager.query(sql, [], err => {
         if (err) logger.error(err);
