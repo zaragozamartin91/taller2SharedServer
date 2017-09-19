@@ -43,6 +43,13 @@ TokenModel.findById = function (token, callback) {
     dbManager.query(sql, [], (err, { rows }) => callback(err, Token.fromObj(rows[0])));
 };
 
+TokenModel.findByOwner = function(owner, callback) {
+    const ownerId = owner.id || owner;
+    const sql = `SELECT * FROM ${table} WHERE owner=$1`;
+    dbManager.query(sql, [ownerId], 
+        (err, { rows }) => callback(err, Token.fromObj(rows[0])));
+};
+
 TokenModel.verify = function (token, callback) {
     const tokenId = token.token || token;
     TokenModel.findById(tokenId, (err, dbToken) => {

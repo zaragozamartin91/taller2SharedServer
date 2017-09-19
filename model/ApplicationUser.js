@@ -66,7 +66,7 @@ ApplicationUser.insert = function (usrObj, callback) {
     let id = idGenerator.generateId(username);
     let _ref = hashUser(user);
     const sql = `INSERT INTO ${table} VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) RETURNING *`;
-    const values = [id, _ref, applicationOwner, username, name, surname, country, email, birthdate, 
+    const values = [id, _ref, applicationOwner, username, name, surname, country, email, birthdate,
         type, JSON.stringify(images), JSON.stringify(balance), JSON.stringify(fb)];
 
     dbManager.query(sql, values, (err, res) => {
@@ -80,6 +80,18 @@ ApplicationUser.find = function (callback) {
     from ${table} as u 
     left outer join ${carTable} on (u.id=${carTable}.owner)`;
     dbManager.query(sql, [], (err, { rows }) => {
+        if (err) console.error(err);
+        callback(err, ApplicationUser.fromRows(rows));
+    });
+};
+
+ApplicationUser.findByApp = function (app, callback) {
+    const appId = app.id || app;
+    const sql = `select u.*,${carTable}.id as carid, ${carTable}._ref as car_ref,${carTable}.properties as carproperties 
+    from ${table} as u 
+    left outer join ${carTable} on (u.id=${carTable}.owner)
+    where u.applicationowner=$1`;
+    dbManager.query(sql, [appId], (err, { rows }) => {
         if (err) console.error(err);
         callback(err, ApplicationUser.fromRows(rows));
     });
