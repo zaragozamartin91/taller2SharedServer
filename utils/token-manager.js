@@ -82,6 +82,15 @@ function verifyToken(token, callback) {
     jwt.verify(token, secret, callback);
 }
 
+
+/**
+ * Genera un token firmado a partir de un objeto de tipo servidor de aplicaciones.
+ * @param {object} server servidor de aplicaciones a partir del cual generar el token.
+ */
+exports.signServer = function ({ id, createdBy }) {
+    return signToken({ id, createdBy });
+};
+
 exports.signToken = signToken;
 exports.verifyToken = verifyToken;
 exports.Token = Token;

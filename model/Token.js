@@ -40,11 +40,14 @@ TokenModel.findById = function (token, callback) {
     const tokenId = token.token || token;
     const sql = `SELECT * FROM ${table} WHERE token=$1`;
 
-    dbManager.query(sql, [], (err, res) => {
-        if (err) return callback(err);
-        const dbToken = res.rows[0];
-        return callback(null, Token.fromObj(dbToken));
-    });
+    dbManager.query(sql, [], (err, { rows }) => callback(err, Token.fromObj(rows[0])));
+};
+
+TokenModel.findByOwner = function(owner, callback) {
+    const ownerId = owner.id || owner;
+    const sql = `SELECT * FROM ${table} WHERE owner=$1`;
+    dbManager.query(sql, [ownerId], 
+        (err, { rows }) => callback(err, Token.fromObj(rows[0])));
 };
 
 TokenModel.verify = function (token, callback) {

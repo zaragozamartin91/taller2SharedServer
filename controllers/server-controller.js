@@ -10,14 +10,6 @@ const logger = require('log4js').getLogger('server-controller');
 
 const apiVersion = mainConf.apiVersion;
 
-/**
- * Genera un token firmado a partir de un objeto de tipo servidor de aplicaciones.
- * @param {ApplicationServer} server servidor de aplicaciones a partir del cual generar el token.
- */
-function signServer(server) {
-    return tokenManager.signToken({ id: server.id });
-}
-
 exports.getServer = function (req, res) {
     getServer(req, res, server => {
         const metadata = apiVersion;
@@ -68,7 +60,7 @@ exports.postServer = function (req, res) {
 
         const metadata = mainConf.apiVersion;
         const server = result.withTimestampFields();
-        const token = signServer(server);
+        const token = tokenManager.signServer(server);
         TokenModel.insert(token, server.id, (err, dbtoken) => {
             if (err) return responseUtils.sendMsgCodeResponse(res, 'Error al insertar el token del nuevo server', 500);
             res.send({ metadata, server, token });
@@ -116,7 +108,7 @@ exports.resetToken = function (req, res) {
             logger.debug('Tokens invalidados:');
             logger.debug(tokens);
 
-            const newToken = signServer(server);
+            const newToken = tokenManager.signServer(server);
             TokenModel.insert(newToken, serverId, (err, dbToken) => {
                 if (err) return responseUtils.sendMsgCodeResponse(res, 'Error al insertar nuevo token en server', 500);
 

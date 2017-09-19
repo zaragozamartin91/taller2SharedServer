@@ -3,6 +3,7 @@ const serverController = require('../controllers/server-controller');
 const tokenController = require('../controllers/token-controller');
 const tokenValidator = require('../middleware/token-validator');
 const businessUsersController = require('../controllers/business-user-controller');
+const appUserController = require('../controllers/app-user-controller');
 
 const testDataController = require('../controllers/test-data-controller');
 
@@ -56,6 +57,17 @@ router.get('/business-users/me', tokenValidator.verifyUserToken, businessUsersCo
 router.get('/business-users/:userId', tokenValidator.verifyUserToken, businessUsersController.getUser);
 
 /* FIN /business-users ROUTES ---------------------------------------------------------------------------------------------------- */
+
+
+/* /users ROUTES ------------------------------------------------------------------------------------------------------- */
+
+router.use('/users', tokenValidator.verifyToken);
+
+router.get('/users', tokenValidator.verifyServerOrUserToken, appUserController.getUsers);
+
+
+/* FIN /users ROUTES ---------------------------------------------------------------------------------------------------- */
+
 
 module.exports = router;
 
