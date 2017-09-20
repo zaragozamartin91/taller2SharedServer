@@ -119,6 +119,7 @@ exports.createApplicationUserTable = function (callback) {
         _ref VARCHAR(128) NOT NULL,
         applicationOwner ${ApplicationServer.idType} REFERENCES ${ApplicationServer.table}(id) ON DELETE CASCADE, 
         username VARCHAR(64) NOT NULL,
+        password VARCHAR(256) NOT NULL,
         name VARCHAR(32) DEFAULT '${ApplicationUser.DEFAULT_NAME}',
         surname VARCHAR(32) DEFAULT '${ApplicationUser.DEFAULT_SURNAME}',
         country VARCHAR(32),

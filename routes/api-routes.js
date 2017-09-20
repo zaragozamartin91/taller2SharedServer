@@ -64,7 +64,7 @@ router.get('/business-users/:userId', tokenValidator.verifyUserToken, businessUs
 router.use('/users', tokenValidator.verifyToken);
 
 router.get('/users', tokenValidator.verifyServerOrUserToken, appUserController.getUsers);
-
+router.post('/users', tokenValidator.verifyServerToken, appUserController.postUser);
 
 /* FIN /users ROUTES ---------------------------------------------------------------------------------------------------- */
 
