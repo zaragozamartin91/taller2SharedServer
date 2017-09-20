@@ -84,9 +84,10 @@ exports.createTestData = function (req, res) {
                     });
 
                     console.log('Agregando usuario de aplicacion');
-                    let [applicationOwner, username, name, surname, country, email, birthdate, type, images, balance] = [
+                    let [applicationOwner, username, password, name, surname, country, email, birthdate, type, images, balance] = [
                         server.id,
                         'mzaragoza',
+                        'pepe',
                         'Martin',
                         'Zaragoza',
                         'Argentina',
@@ -96,7 +97,7 @@ exports.createTestData = function (req, res) {
                         ['https://www.postgresql.org/docs/9.6/static/datatype-json.html'],
                         [{ currency: 'peso', value: 123.45 }, { currency: 'dolar', value: 6789.10 }]
                     ];
-                    let userObj = { applicationOwner, username, name, surname, country, email, birthdate, type, images, balance };
+                    let userObj = { applicationOwner, username, password, name, surname, country, email, birthdate, type, images, balance };
                     ApplicationUser.insert(userObj, (err, user) => {
                         console.log('Agregando auto a usuario');
                         let [owner, properties] = [user.id, [{ name: 'model', value: 'renault' }, { name: 'year', value: 2001 }]];
