@@ -90,10 +90,21 @@ ApplicationUser.insert = function (usrObj, callback) {
     });
 };
 
-ApplicationUser.find = function (callback) {
+/**
+ * Construye la base de la query de busqueda para usuarios de aplicacion.
+ * @param {string} whereClause Sentencia where.
+ * @return {string} Sql a invocar en una query.
+ */
+function buildFindQuery(whereClause) {
+    whereClause = whereClause || '';
     const sql = `select u.*,${carTable}.id as carid, ${carTable}._ref as car_ref,${carTable}.properties as carproperties 
     from ${table} as u 
     left outer join ${carTable} on (u.id=${carTable}.owner)`;
+    return `${sql} ${whereClause}`;
+}
+
+ApplicationUser.find = function (callback) {
+    const sql = buildFindQuery();
     dbManager.query(sql, [], (err, { rows }) => {
         if (err) console.error(err);
         callback(err, fromRows(rows));
@@ -102,10 +113,7 @@ ApplicationUser.find = function (callback) {
 
 ApplicationUser.findById = function (user, callback) {
     const userId = user.id || user;
-    const sql = `select u.*,${carTable}.id as carid, ${carTable}._ref as car_ref,${carTable}.properties as carproperties 
-    from ${table} as u 
-    left outer join ${carTable} on (u.id=${carTable}.owner)
-    where u.id=$1`;
+    const sql = buildFindQuery('where u.id=$1');
     dbManager.query(sql, [userId], (err, { rows }) => {
         if (err) console.error(err);
         callback(err, fromRows(rows)[0]);
@@ -114,10 +122,7 @@ ApplicationUser.findById = function (user, callback) {
 
 ApplicationUser.findByApp = function (app, callback) {
     const appId = app.id || app;
-    const sql = `select u.*,${carTable}.id as carid, ${carTable}._ref as car_ref,${carTable}.properties as carproperties 
-    from ${table} as u 
-    left outer join ${carTable} on (u.id=${carTable}.owner)
-    where u.applicationowner=$1`;
+    const sql = buildFindQuery('where u.applicationowner=$1');
     dbManager.query(sql, [appId], (err, { rows }) => {
         if (err) console.error(err);
         callback(err, fromRows(rows));
@@ -127,10 +132,7 @@ ApplicationUser.findByApp = function (app, callback) {
 ApplicationUser.findByIdAndApp = function (user, app, callback) {
     const userId = user.id || user;
     const appId = app.id || app;
-    const sql = `select u.*,${carTable}.id as carid, ${carTable}._ref as car_ref,${carTable}.properties as carproperties 
-    from ${table} as u 
-    left outer join ${carTable} on (u.id=${carTable}.owner)
-    where u.applicationowner=$1 AND u.id=$2`;
+    const sql = buildFindQuery('where u.applicationowner=$1 AND u.id=$2');
     dbManager.query(sql, [appId, userId], (err, { rows }) => {
         if (err) console.error(err);
         callback(err, fromObj(rows[0]));
@@ -141,6 +143,22 @@ ApplicationUser.delete = function (user, callback) {
     const userId = user.id || user;
     const sql = `DELETE FROM ${table} WHERE id=$1 RETURNING *`;
     dbManager.query(sql, [userId], (err, { rows }) => callback(err, fromObj(rows[0])));
+};
+
+ApplicationUser.findByUsernameAndApp = function (user, app, callback) {
+    const username = user.username || user;
+    const appId = app.id || app;
+    const sql = buildFindQuery('where u.applicationowner=$1 AND u.username=$2');
+    dbManager.query(sql, [appId, username], (err, { rows }) => {
+        if (err) console.error(err);
+        callback(err, fromObj(rows[0]));
+    });
+};
+
+ApplicationUser.prototype.validate = function (password, fbToken) {
+    if (password) return password == this.password;
+    const authToken = this.fb.authToken;
+    return authToken && fbToken == authToken;
 };
 
 module.exports = ApplicationUser;
