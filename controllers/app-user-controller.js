@@ -35,6 +35,23 @@ exports.getUsers = function (req, res) {
     else return ApplicationUser.find(callback);
 };
 
+exports.getUser = function (req, res) {
+    const serverId = req.serverId;
+    const userId = req.params.userId;
+
+    function callback(err, dbUser) {
+        if (err) return sendMsgCodeResponse(res, 'Ocurrio un error al obtener los usuarios de ' + serverId, 500);
+        const metadata = { version: apiVersion };
+        const user = getUserView(dbUser);
+        res.send({ metadata, user });
+    }
+
+    /* Si serverId esta presente en el request quiere decir que se invoco esta funcion pasando un ApplicationToken.
+    Caso contrario, se invoco usando un BusinessToken */
+    if (serverId) return ApplicationUser.findByIdAndApp(userId, serverId, callback);
+    else return ApplicationUser.findById(userId, callback);
+};
+
 /**
  * Obtiene una vista simplificada del usuario para enviar como respuesta al cliente.
  * @param {ApplicationUser} user Usuario del cual obtener la vista. 
@@ -73,3 +90,12 @@ function validatePostUserForm({ type, username, password, firstName, lastName, c
     if (!dataValidator.validateDate(birthdate)) return { valid: false, msg: 'Fecha de necimiento invalida' };
     return { valid: true };
 }
+
+exports.deleteUser = function (req, res) {
+    const userId = req.params.userId;
+    ApplicationUser.delete(userId, (err, user) => {
+        if (err) return sendMsgCodeResponse(res, 'Error al eliminar el usuario', 500);
+        if (!user) return sendMsgCodeResponse(res, 'No existe el usuario', 404);
+        sendMsgCodeResponse(res, 'Baja correcta', 204);
+    });
+};

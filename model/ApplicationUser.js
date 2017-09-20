@@ -42,28 +42,41 @@ ApplicationUser.DEFAULT_SURNAME = DEFAULT_SURNAME;
 ApplicationUser.DEFAULT_BALANCE_CURR = DEFAULT_BALANCE_CURR;
 ApplicationUser.idType = idType;
 
-ApplicationUser.fromObj = function (obj) {
+/**
+ * Crea un usuario a partir de un objeto.
+ * @param {object} obj Objeto a partir del cual crear el usuario.
+ */
+function fromObj(obj) {
     if (!obj) return null;
     let { id, _ref, applicationOwner, username, password, name, surname, country, email, birthdate, type, images, balance, fb, cars } = obj;
     applicationOwner = applicationOwner || obj.applicationowner;
     return new ApplicationUser(id, _ref, applicationOwner, username, password, name, surname, country, email, birthdate, type, images, balance, fb, cars);
-};
+}
 
-ApplicationUser.fromRows = function (rows) {
+ApplicationUser.fromObj = fromObj;
+
+/**
+ * Obtiene un arreglo de usuarios a partir de un arreglo de filas de query de usuarios.
+ * @param {Array} rows Filas.
+ * @return {Array<ApplicationUser>} Arreglo de usuarios.
+ */
+function fromRows(rows) {
     const users = {};
     rows.forEach(row => {
         const userId = row.id;
-        const user = users[userId] || ApplicationUser.fromObj(row);
+        const user = users[userId] || fromObj(row);
         let { carid, car_ref, carproperties } = row;
         if (carid) user.cars.push(new Car(carid, car_ref, userId, carproperties));
         users[userId] = user;
     });
     return Object.keys(users).map(userId => users[userId]);
-};
+}
+
+ApplicationUser.fromRows = fromRows;
 
 // TODO : GUARDAR EL PASSWORD ENCRIPTADO
 ApplicationUser.insert = function (usrObj, callback) {
-    const user = ApplicationUser.fromObj(usrObj);
+    const user = fromObj(usrObj);
     let { applicationOwner, username, password, name, surname, country, email, birthdate, type, images, balance, fb } = user;
     let id = idGenerator.generateId(username);
     let _ref = hashUser(user);
@@ -73,7 +86,7 @@ ApplicationUser.insert = function (usrObj, callback) {
 
     dbManager.query(sql, values, (err, res) => {
         if (err) logger.error(err);
-        callback(err, ApplicationUser.fromObj(res.rows[0]));
+        callback(err, fromObj(res.rows[0]));
     });
 };
 
@@ -83,7 +96,19 @@ ApplicationUser.find = function (callback) {
     left outer join ${carTable} on (u.id=${carTable}.owner)`;
     dbManager.query(sql, [], (err, { rows }) => {
         if (err) console.error(err);
-        callback(err, ApplicationUser.fromRows(rows));
+        callback(err, fromRows(rows));
+    });
+};
+
+ApplicationUser.findById = function (user, callback) {
+    const userId = user.id || user;
+    const sql = `select u.*,${carTable}.id as carid, ${carTable}._ref as car_ref,${carTable}.properties as carproperties 
+    from ${table} as u 
+    left outer join ${carTable} on (u.id=${carTable}.owner)
+    where u.id=$1`;
+    dbManager.query(sql, [userId], (err, { rows }) => {
+        if (err) console.error(err);
+        callback(err, fromRows(rows)[0]);
     });
 };
 
@@ -95,8 +120,27 @@ ApplicationUser.findByApp = function (app, callback) {
     where u.applicationowner=$1`;
     dbManager.query(sql, [appId], (err, { rows }) => {
         if (err) console.error(err);
-        callback(err, ApplicationUser.fromRows(rows));
+        callback(err, fromRows(rows));
     });
+};
+
+ApplicationUser.findByIdAndApp = function (user, app, callback) {
+    const userId = user.id || user;
+    const appId = app.id || app;
+    const sql = `select u.*,${carTable}.id as carid, ${carTable}._ref as car_ref,${carTable}.properties as carproperties 
+    from ${table} as u 
+    left outer join ${carTable} on (u.id=${carTable}.owner)
+    where u.applicationowner=$1 AND u.id=$2`;
+    dbManager.query(sql, [appId, userId], (err, { rows }) => {
+        if (err) console.error(err);
+        callback(err, fromObj(rows[0]));
+    });
+};
+
+ApplicationUser.delete = function (user, callback) {
+    const userId = user.id || user;
+    const sql = `DELETE FROM ${table} WHERE id=$1 RETURNING *`;
+    dbManager.query(sql, [userId], (err, { rows }) => callback(err, fromObj(rows[0])));
 };
 
 module.exports = ApplicationUser;
