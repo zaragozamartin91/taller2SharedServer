@@ -128,7 +128,8 @@ exports.createApplicationUserTable = function (callback) {
         type VARCHAR(16),
         images JSON DEFAULT '[]',
         balance JSON DEFAULT '[]',
-        fb JSON DEFAULT '{}'
+        fb JSON DEFAULT '{}',
+        UNIQUE (applicationOwner, username)
     )`;
     dbManager.query(sql, [], err => {
         if (err) logger.error(err);

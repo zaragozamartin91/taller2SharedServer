@@ -99,3 +99,21 @@ exports.deleteUser = function (req, res) {
         sendMsgCodeResponse(res, 'Baja correcta', 204);
     });
 };
+
+exports.validateUser = function (req, res) {
+    const { username, password, facebookAuthToken } = req.body;
+    if (!username || (!password && !facebookAuthToken)) return sendMsgCodeResponse(res, 'Parametros faltantes', 400);
+
+    const serverId = req.serverId;
+    ApplicationUser.findByUsernameAndApp(username, serverId, (err, dbUser) => {
+        if (err) return sendMsgCodeResponse(res, 'Error al obtener el usuario', 500);
+        if (!dbUser) return sendMsgCodeResponse(res, 'El usuario no existe', 401);
+
+        const isValid = dbUser.validate(password, facebookAuthToken);
+        if (!isValid) return sendMsgCodeResponse(res, 'Las credenciales son invalidas', 401);
+
+        const metadata = { version: apiVersion };
+        const user = getUserView(dbUser);
+        res.send({ metadata, user });
+    });
+};

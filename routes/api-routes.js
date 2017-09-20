@@ -67,6 +67,7 @@ router.get('/users', tokenValidator.verifyServerOrUserToken, appUserController.g
 router.get('/users/:userId', tokenValidator.verifyServerOrUserToken, appUserController.getUser);
 router.post('/users', tokenValidator.verifyServerToken, appUserController.postUser);
 router.delete('/users/:userId', tokenValidator.verifyServerToken, appUserController.deleteUser);
+router.post('/users/validate', tokenValidator.verifyServerToken, appUserController.validateUser);
 
 /* FIN /users ROUTES ---------------------------------------------------------------------------------------------------- */
 
