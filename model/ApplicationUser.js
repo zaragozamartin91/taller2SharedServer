@@ -145,6 +145,12 @@ ApplicationUser.delete = function (user, callback) {
     dbManager.query(sql, [userId], (err, { rows }) => callback(err, fromObj(rows[0])));
 };
 
+ApplicationUser.deleteByIdAndApp = function (user, serverId, callback) {
+    const userId = user.id || user;
+    const sql = `DELETE FROM ${table} WHERE id=$1 AND applicationowner=$2 RETURNING *`;
+    dbManager.query(sql, [userId, serverId], (err, { rows }) => callback(err, fromObj(rows[0])));
+};
+
 ApplicationUser.findByUsernameAndApp = function (user, app, callback) {
     const username = user.username || user;
     const appId = app.id || app;
@@ -159,6 +165,22 @@ ApplicationUser.prototype.validate = function (password, fbToken) {
     if (password) return password == this.password;
     const authToken = this.fb.authToken;
     return authToken && fbToken == authToken;
+};
+
+ApplicationUser.prototype.update = function (callback) {
+    const user = this;
+    const newRef = hashUser(user);
+
+    const sql = `UPDATE ${table} SET type=$1, username=$2, password=$3, fb=$4, name=$5, 
+        surname=$6, country=$7, email=$8, birthdate=$9, images=$10, _ref=$11 WHERE id=$12 RETURNING *`;
+    const { type, username, password, fb, name, surname, country, email, birthdate, images, id } = user;
+    const values = [type, username, password, JSON.stringify(fb), name, surname, country, email, birthdate, JSON.stringify(images), newRef, id];
+
+    dbManager.query(sql, values, err => {
+        /* Si no hay error, actualizo el valor de _ref */
+        if (!err) user._ref = newRef;
+        callback(err, user);
+    });
 };
 
 module.exports = ApplicationUser;

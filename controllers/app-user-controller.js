@@ -3,6 +3,7 @@ const mainConf = require('../config/main-config');
 const logger = require('log4js').getLogger('app-user-controller');
 const responseUtils = require('../utils/response-utils');
 const dataValidator = require('../utils/data-validator');
+const moment = require('moment');
 
 const apiVersion = mainConf.apiVersion;
 const sendMsgCodeResponse = responseUtils.sendMsgCodeResponse;
@@ -69,6 +70,7 @@ exports.postUser = function (req, res) {
     userObj.applicationOwner = req.serverId;
     userObj.name = userObj.firstName;
     userObj.surname = userObj.lastName;
+    userObj.birthdate = moment(userObj.birthdate).toDate();
 
     ApplicationUser.insert(userObj, (err, dbUser) => {
         if (err) return sendMsgCodeResponse(res, 'Ocurrio un error al dar de alta el usuario', 500);
@@ -93,11 +95,18 @@ function validatePostUserForm({ type, username, password, firstName, lastName, c
 
 exports.deleteUser = function (req, res) {
     const userId = req.params.userId;
-    ApplicationUser.delete(userId, (err, user) => {
+    const serverId = req.serverId;
+
+    function callback(err, user) {
         if (err) return sendMsgCodeResponse(res, 'Error al eliminar el usuario', 500);
         if (!user) return sendMsgCodeResponse(res, 'No existe el usuario', 404);
         sendMsgCodeResponse(res, 'Baja correcta', 204);
-    });
+    }
+
+    /* Si serverId esta presente en el request quiere decir que se invoco esta funcion pasando un ApplicationToken.
+    Caso contrario, se invoco usando un BusinessToken */
+    if (serverId) return ApplicationUser.deleteByIdAndApp(userId, serverId, callback);
+    else return ApplicationUser.delete(userId, callback);
 };
 
 exports.validateUser = function (req, res) {
@@ -116,4 +125,56 @@ exports.validateUser = function (req, res) {
         const user = getUserView(dbUser);
         res.send({ metadata, user });
     });
+};
+
+/*
+  _ref,
+  type,
+  username,
+  password,
+  fb,
+  firstName,
+  lastName,
+  country,
+  email,
+  birthdate,
+  images: 
+*/
+
+exports.updateUser = function (req, res) {
+    const serverId = req.serverId;
+    const userId = req.params.userId;
+
+    function callback(err, user) {
+        if (!user) return sendMsgCodeResponse(res, 'El usuario no existe', 404);
+
+        const { _ref, type, username, password, fb, firstName, lastName, country, email, birthdate, images } = req.body;
+        const oldRef = _ref;
+        if (user._ref != oldRef) return sendMsgCodeResponse(res, 'Ocurrio una colision', 409);
+
+        user.type = type || user.type;
+        user.username = username || user.username;
+        user.password = password || user.password;
+        user.fb = fb || user.fb;
+        user.name = firstName || user.name;
+        user.surname = lastName || user.surname;
+        user.country = country || user.country;
+        if (email && !dataValidator.validateEmail(email)) return sendMsgCodeResponse(res, 'El email es invalido', 400);
+        user.email = email || user.email;
+        if (birthdate) {
+            const dateIsValid = dataValidator.validateDate(birthdate);
+            if (!dateIsValid) return sendMsgCodeResponse(res, 'La fecha es invalida', 400);
+            else user.birthdate = moment(birthdate).toDate();
+        }
+        user.images = images || user.images;
+
+        user.update(err => {
+            if (err) return sendMsgCodeResponse(res, 'Ocurrio un error al actualizar el usuario', 500);
+            const metadata = { version: apiVersion };
+            res.send({ metadata, user });
+        });
+    }
+
+    if (serverId) return ApplicationUser.findByIdAndApp(userId, serverId, callback);
+    else return ApplicationUser.findById(userId, callback);
 };
