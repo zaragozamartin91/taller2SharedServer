@@ -64,6 +64,7 @@ router.get('/business-users/:userId', tokenValidator.verifyUserToken, businessUs
 router.use('/users', tokenValidator.verifyToken);
 
 router.get('/users', tokenValidator.verifyServerOrUserToken, appUserController.getUsers);
+router.get('/users/:userId/cars', tokenValidator.verifyServerOrUserToken, appUserController.getUserCars);
 router.get('/users/:userId', tokenValidator.verifyServerOrUserToken, appUserController.getUser);
 router.post('/users', tokenValidator.verifyServerToken, appUserController.postUser);
 router.delete('/users/:userId', tokenValidator.verifyServerOrUserToken, appUserController.deleteUser);

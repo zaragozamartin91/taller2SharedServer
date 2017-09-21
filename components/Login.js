@@ -31,6 +31,7 @@ const Login = React.createClass({
             <div>
                 <Header title="Shared server" />
                 {msgElem}
+                
                 <MuiThemeProvider>
                     <Card>
                         <CardHeader
@@ -40,9 +41,9 @@ const Login = React.createClass({
                         <CardText expandable={false}>
                             <form method="POST" action="/login" ref={f => { this.form = f; }}>
                                 <TextField
-                                    name="email"
-                                    hint="email"
-                                    floatingLabelText="email" /><br />
+                                    name="username"
+                                    hint="username"
+                                    floatingLabelText="username" /><br />
 
                                 <TextField
                                     name="password"

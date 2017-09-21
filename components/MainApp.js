@@ -27,8 +27,6 @@ const MainApp = React.createClass({
         return {
             currPage: 'index',
             drawerOpen: false,
-            songIndex: 0,
-            playlist: []
         };
     },
 

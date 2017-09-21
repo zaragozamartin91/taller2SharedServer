@@ -36,22 +36,17 @@ exports.getUsers = function (req, res) {
     else return ApplicationUser.find(callback);
 };
 
-exports.getUser = function (req, res) {
-    const serverId = req.serverId;
-    const userId = req.params.userId;
-
-    function callback(err, dbUser) {
-        if (err) return sendMsgCodeResponse(res, 'Ocurrio un error al obtener los usuarios de ' + serverId, 500);
-        const metadata = { version: apiVersion };
-        const user = getUserView(dbUser);
-        res.send({ metadata, user });
-    }
-
+/**
+ * Busca un usuario en la BBDD y realiza una accion con el usuario encontrado.
+ * @param {object} req Request del cliente. 
+ * @param {Function} callback Accion a realizar luego de obtener el usuario.
+ */
+function findUserAndDo({serverId , params: {userId}}, callback) {
     /* Si serverId esta presente en el request quiere decir que se invoco esta funcion pasando un ApplicationToken.
     Caso contrario, se invoco usando un BusinessToken */
     if (serverId) return ApplicationUser.findByIdAndApp(userId, serverId, callback);
     else return ApplicationUser.findById(userId, callback);
-};
+}
 
 /**
  * Obtiene una vista simplificada del usuario para enviar como respuesta al cliente.
@@ -59,6 +54,27 @@ exports.getUser = function (req, res) {
  */
 function getUserView({ id, _ref, applicationOwner, type, cars, username, name, surname, country, email, birthdate, images, balance }) {
     return { id, _ref, applicationOwner, type, cars, username, name, surname, country, email, birthdate, images, balance };
+}
+
+exports.getUser = function (req, res) {
+    findUserAndDo(req, (err, dbUser) => {
+        if (err) return sendMsgCodeResponse(res, 'Ocurrio un error al obtener los usuarios', 500);
+        const metadata = { version: apiVersion };
+        const user = getUserView(dbUser);
+        res.send({ metadata, user });
+    });
+};
+
+/**
+ * Valida un formulario de usuario.
+ * @param {any} userObj Formulario de usuario. 
+ * @return {any} Objeto con formato {valid,msg}
+ */
+function validatePostUserForm({ type, username, password, firstName, lastName, country, email, birthdate }) {
+    if (!type || !username || !password || !firstName || !lastName || !country || !email || !birthdate) return { valid: false, msg: 'No fueron ingresados todos los parametros' };
+    if (!dataValidator.validateEmail(email)) return { valid: false, msg: 'Email invalido' };
+    if (!dataValidator.validateDate(birthdate)) return { valid: false, msg: 'Fecha de necimiento invalida' };
+    return { valid: true };
 }
 
 exports.postUser = function (req, res) {
@@ -81,32 +97,17 @@ exports.postUser = function (req, res) {
     });
 };
 
-/**
- * Valida un formulario de usuario.
- * @param {any} userObj Formulario de usuario. 
- * @return {any} Objeto con formato {valid,msg}
- */
-function validatePostUserForm({ type, username, password, firstName, lastName, country, email, birthdate }) {
-    if (!type || !username || !password || !firstName || !lastName || !country || !email || !birthdate) return { valid: false, msg: 'No fueron ingresados todos los parametros' };
-    if (!dataValidator.validateEmail(email)) return { valid: false, msg: 'Email invalido' };
-    if (!dataValidator.validateDate(birthdate)) return { valid: false, msg: 'Fecha de necimiento invalida' };
-    return { valid: true };
-}
-
 exports.deleteUser = function (req, res) {
-    const userId = req.params.userId;
-    const serverId = req.serverId;
-
-    function callback(err, user) {
-        if (err) return sendMsgCodeResponse(res, 'Error al eliminar el usuario', 500);
+    findUserAndDo(req, (err, user) => {
+        if (err) return sendMsgCodeResponse(res, 'Error al obtener el usuario', 500);
         if (!user) return sendMsgCodeResponse(res, 'No existe el usuario', 404);
-        sendMsgCodeResponse(res, 'Baja correcta', 204);
-    }
 
-    /* Si serverId esta presente en el request quiere decir que se invoco esta funcion pasando un ApplicationToken.
-    Caso contrario, se invoco usando un BusinessToken */
-    if (serverId) return ApplicationUser.deleteByIdAndApp(userId, serverId, callback);
-    else return ApplicationUser.delete(userId, callback);
+        user.delete((err, deleted) => {
+            if (err) return sendMsgCodeResponse(res, 'Error al eliminar el usuario', 500);
+            if (!deleted) return sendMsgCodeResponse(res, 'El usuario no fue eliminado', 404);
+            sendMsgCodeResponse(res, 'Baja correcta', 204);
+        });
+    });
 };
 
 exports.validateUser = function (req, res) {
@@ -127,25 +128,8 @@ exports.validateUser = function (req, res) {
     });
 };
 
-/*
-  _ref,
-  type,
-  username,
-  password,
-  fb,
-  firstName,
-  lastName,
-  country,
-  email,
-  birthdate,
-  images: 
-*/
-
 exports.updateUser = function (req, res) {
-    const serverId = req.serverId;
-    const userId = req.params.userId;
-
-    function callback(err, user) {
+    findUserAndDo(req, (err, user) => {
         if (!user) return sendMsgCodeResponse(res, 'El usuario no existe', 404);
 
         const { _ref, type, username, password, fb, firstName, lastName, country, email, birthdate, images } = req.body;
@@ -173,8 +157,16 @@ exports.updateUser = function (req, res) {
             const metadata = { version: apiVersion };
             res.send({ metadata, user });
         });
-    }
+    });
+};
 
-    if (serverId) return ApplicationUser.findByIdAndApp(userId, serverId, callback);
-    else return ApplicationUser.findById(userId, callback);
+exports.getUserCars = function (req, res) {
+    findUserAndDo(req, (err, user) => {
+        if (err) return sendMsgCodeResponse(res, 'Ocurrio un error al obtener el usuario', 500);
+        if (!user) return sendMsgCodeResponse(res, 'El usuario no existe', 404);
+
+        const cars = user.cars;
+        const metadata = buildMetadata(cars.length);
+        res.send({ metadata, cars });
+    });
 };
