@@ -1,6 +1,5 @@
 const dbManager = require('./db-manager');
 const hasher = require('../utils/hasher');
-const idGenerator = require('../utils/id-generator');
 const logger = require('log4js').getLogger('Car');
 
 const table = 'car';
@@ -34,11 +33,10 @@ Car.fromRows = function (rows) {
 Car.insert = function (carObj, callback) {
     const car = Car.fromObj(carObj);
     let { owner, properties } = car;
-    let id = idGenerator.generateId(`${owner}-car`);
     let _ref = hashCar(car);
 
-    const values = [id, _ref, owner, JSON.stringify(properties)];
-    const sql = `INSERT INTO ${table} VALUES($1,$2,$3,$4) RETURNING *`;
+    const values = [_ref, owner, JSON.stringify(properties)];
+    const sql = `INSERT INTO ${table}(_ref, owner, properties) VALUES($1,$2,$3) RETURNING *`;
     dbManager.query(sql, values, (err, { rows }) => {
         if (err) logger.error(err);
         callback(err, Car.fromObj(rows[0]));

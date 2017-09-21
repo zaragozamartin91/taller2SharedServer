@@ -70,6 +70,7 @@ router.post('/users', tokenValidator.verifyServerToken, appUserController.postUs
 router.delete('/users/:userId', tokenValidator.verifyServerOrUserToken, appUserController.deleteUser);
 router.post('/users/validate', tokenValidator.verifyServerToken, appUserController.validateUser);
 router.put('/users/:userId', tokenValidator.verifyServerToken, appUserController.updateUser);
+router.post('/users/:userId/cars', tokenValidator.verifyServerOrUserToken, appUserController.postUserCar);
 
 /* FIN /users ROUTES ---------------------------------------------------------------------------------------------------- */
 
