@@ -135,7 +135,7 @@ ApplicationUser.findByIdAndApp = function (user, app, callback) {
     const sql = buildFindQuery('where u.applicationowner=$1 AND u.id=$2');
     dbManager.query(sql, [appId, userId], (err, { rows }) => {
         if (err) console.error(err);
-        callback(err, fromObj(rows[0]));
+        callback(err, fromRows(rows)[0]);
     });
 };
 
@@ -145,19 +145,13 @@ ApplicationUser.delete = function (user, callback) {
     dbManager.query(sql, [userId], (err, { rows }) => callback(err, fromObj(rows[0])));
 };
 
-ApplicationUser.deleteByIdAndApp = function (user, serverId, callback) {
-    const userId = user.id || user;
-    const sql = `DELETE FROM ${table} WHERE id=$1 AND applicationowner=$2 RETURNING *`;
-    dbManager.query(sql, [userId, serverId], (err, { rows }) => callback(err, fromObj(rows[0])));
-};
-
 ApplicationUser.findByUsernameAndApp = function (user, app, callback) {
     const username = user.username || user;
     const appId = app.id || app;
     const sql = buildFindQuery('where u.applicationowner=$1 AND u.username=$2');
     dbManager.query(sql, [appId, username], (err, { rows }) => {
         if (err) console.error(err);
-        callback(err, fromObj(rows[0]));
+        callback(err, fromRows(rows)[0]);
     });
 };
 
@@ -181,6 +175,10 @@ ApplicationUser.prototype.update = function (callback) {
         if (!err) user._ref = newRef;
         callback(err, user);
     });
+};
+
+ApplicationUser.prototype.delete = function (callback) {
+    ApplicationUser.delete(this.id, callback);
 };
 
 module.exports = ApplicationUser;

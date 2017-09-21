@@ -1,9 +1,8 @@
-const flow = require('nimble');
+function parse( {serverId , params: {userId}} ) {
+    console.log(serverId);
+    console.log(userId);
+}
 
-flow.series([
-    callback => {
-        callback();
-        console.log('hola');
-    }
-]);
+const req = { serverId: 1234, params: {  } };
 
+parse(req);
