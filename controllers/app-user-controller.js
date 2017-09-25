@@ -196,3 +196,14 @@ exports.postUserCar = function (req, res) {
         res.send({ metadata, car });
     });
 };
+
+exports.deleteUserCar = function (req, res) {
+    const userId = req.params.userId;
+    const carId = req.params.carId;
+    Car.delete(userId, carId, (err, car) => {
+        if (err) return sendMsgCodeResponse(res, 'Ocurrio un error al eliminar el auto', 500);
+        if (!car) return sendMsgCodeResponse(res, 'No existe el auto', 404);
+
+        sendMsgCodeResponse(res, 'Baja de auto correcta', 204);
+    });
+};

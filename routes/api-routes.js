@@ -64,13 +64,15 @@ router.get('/business-users/:userId', tokenValidator.verifyUserToken, businessUs
 router.use('/users', tokenValidator.verifyToken);
 
 router.get('/users', tokenValidator.verifyServerOrUserToken, appUserController.getUsers);
-router.get('/users/:userId/cars', tokenValidator.verifyServerOrUserToken, appUserController.getUserCars);
 router.get('/users/:userId', tokenValidator.verifyServerOrUserToken, appUserController.getUser);
 router.post('/users', tokenValidator.verifyServerToken, appUserController.postUser);
 router.delete('/users/:userId', tokenValidator.verifyServerOrUserToken, appUserController.deleteUser);
 router.post('/users/validate', tokenValidator.verifyServerToken, appUserController.validateUser);
 router.put('/users/:userId', tokenValidator.verifyServerToken, appUserController.updateUser);
+
+router.get('/users/:userId/cars', tokenValidator.verifyServerOrUserToken, appUserController.getUserCars);
 router.post('/users/:userId/cars', tokenValidator.verifyServerOrUserToken, appUserController.postUserCar);
+router.delete('/users/:userId/cars/:carId', tokenValidator.verifyServerOrUserToken, appUserController.deleteUserCar);
 
 /* FIN /users ROUTES ---------------------------------------------------------------------------------------------------- */
 

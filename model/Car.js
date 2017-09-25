@@ -26,9 +26,9 @@ Car.fromObj = function (obj) {
     return new Car(id, _ref, owner, properties);
 };
 
-Car.fromRows = function (rows) {
+function fromRows(rows) {
     return rows.map(Car.fromObj);
-};
+}
 
 Car.insert = function (carObj, callback) {
     const car = Car.fromObj(carObj);
@@ -46,7 +46,14 @@ Car.insert = function (carObj, callback) {
 Car.findByOwner = function (owner, callback) {
     const ownerId = owner.id || owner;
     const sql = `SELECT * FROM ${table} WHERE owner=$1`;
-    dbManager.query(sql, [ownerId], (err, { rows }) => callback(err, Car.fromRows(rows)));
+    dbManager.query(sql, [ownerId], (err, { rows }) => callback(err, fromRows(rows)));
+};
+
+Car.delete = function (user, car, callback) {
+    const userId = user.id || user;
+    const carId = car.id || car;
+    const sql = `DELETE FROM ${table} WHERE id=$1 AND owner=$2 RETURNING *`;
+    dbManager.query(sql, [carId, userId], (err, { rows }) => callback(err, fromRows(rows)[0]));
 };
 
 module.exports = Car;
