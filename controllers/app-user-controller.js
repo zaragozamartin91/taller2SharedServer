@@ -198,12 +198,33 @@ exports.postUserCar = function (req, res) {
 };
 
 exports.deleteUserCar = function (req, res) {
-    const userId = req.params.userId;
-    const carId = req.params.carId;
-    Car.delete(userId, carId, (err, car) => {
+    findUserAndDo(req, (err, user) => {
         if (err) return sendMsgCodeResponse(res, 'Ocurrio un error al eliminar el auto', 500);
+        if (!user) return sendMsgCodeResponse(res, 'No existe el usuario', 404);
+
+        const carId = req.params.carId;
+        const cars = user.cars || [];
+        const car = cars.filter(c => c.id == carId)[0];
         if (!car) return sendMsgCodeResponse(res, 'No existe el auto', 404);
 
-        sendMsgCodeResponse(res, 'Baja de auto correcta', 204);
+        Car.delete(car, err => {
+            if (err) return sendMsgCodeResponse(res, 'Ocurrio un error al eliminar el auto', 500);
+            sendMsgCodeResponse(res, 'Baja correcta', 204);
+        });
+    });
+};
+
+exports.getUserCar = function (req, res) {
+    findUserAndDo(req, (err, user) => {
+        if (err) return sendMsgCodeResponse(res, 'Ocurrio un error al obtener el auto', 500);
+        if (!user) return sendMsgCodeResponse(res, 'No existe el usuario', 404);
+
+        const carId = req.params.carId;
+        const cars = user.cars || [];
+        const car = cars.filter(c => c.id == carId)[0];
+        if (!car) return sendMsgCodeResponse(res, 'No existe el auto', 404);
+
+        const metadata = { version: apiVersion };
+        res.send({ metadata, car });
     });
 };
