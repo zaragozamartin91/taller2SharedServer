@@ -147,7 +147,7 @@ exports.dropApplicationUserTable = function (callback) {
 
 exports.createCarTable = function (callback) {
     const sql = `CREATE TABLE ${Car.table} (
-        id ${Car.idType} PRIMARY KEY,
+        id SERIAL PRIMARY KEY,
         _ref VARCHAR(128) NOT NULL,
         owner ${ApplicationUser.idType} REFERENCES ${ApplicationUser.table}(id) ON DELETE CASCADE,
         properties JSON DEFAULT '[]'

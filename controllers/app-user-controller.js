@@ -1,4 +1,5 @@
 const ApplicationUser = require('../model/ApplicationUser');
+const Car = require('../model/Car');
 const mainConf = require('../config/main-config');
 const logger = require('log4js').getLogger('app-user-controller');
 const responseUtils = require('../utils/response-utils');
@@ -41,7 +42,7 @@ exports.getUsers = function (req, res) {
  * @param {object} req Request del cliente. 
  * @param {Function} callback Accion a realizar luego de obtener el usuario.
  */
-function findUserAndDo({serverId , params: {userId}}, callback) {
+function findUserAndDo({ serverId, params: { userId } }, callback) {
     /* Si serverId esta presente en el request quiere decir que se invoco esta funcion pasando un ApplicationToken.
     Caso contrario, se invoco usando un BusinessToken */
     if (serverId) return ApplicationUser.findByIdAndApp(userId, serverId, callback);
@@ -52,12 +53,13 @@ function findUserAndDo({serverId , params: {userId}}, callback) {
  * Obtiene una vista simplificada del usuario para enviar como respuesta al cliente.
  * @param {ApplicationUser} user Usuario del cual obtener la vista. 
  */
-function getUserView({ id, _ref, applicationOwner, type, cars, username, name, surname, country, email, birthdate, images, balance }) {
+function getUserView({ id, _ref, applicationOwner, type, cars, username, name, surname, country, email, birthdate, images, balance } = {}) {
     return { id, _ref, applicationOwner, type, cars, username, name, surname, country, email, birthdate, images, balance };
 }
 
 exports.getUser = function (req, res) {
     findUserAndDo(req, (err, dbUser) => {
+        if (!dbUser) return sendMsgCodeResponse(res, 'El usuario no existe', 404);
         if (err) return sendMsgCodeResponse(res, 'Ocurrio un error al obtener los usuarios', 500);
         const metadata = { version: apiVersion };
         const user = getUserView(dbUser);
@@ -168,5 +170,40 @@ exports.getUserCars = function (req, res) {
         const cars = user.cars;
         const metadata = buildMetadata(cars.length);
         res.send({ metadata, cars });
+    });
+};
+
+function validateCarProperties(properties = []) {
+    let res = { valid: true };
+    properties.forEach(p => {
+        if (!p.name) return res = { valid: false, msg: 'Falta "name" en alguna de las propiedades' };
+        if (!p.value) return res = { valid: false, msg: 'Falta "value" en alguna de las propiedades' };
+    });
+    return res;
+}
+
+exports.postUserCar = function (req, res) {
+    const userId = req.params.userId;
+    const carObj = req.body;
+    carObj.owner = userId;
+
+    const carPropsValidation = validateCarProperties(carObj.properties);
+    if (!carPropsValidation.valid) return sendMsgCodeResponse(res, carPropsValidation.msg, 400);
+
+    Car.insert(carObj, (err, car) => {
+        if (err) return sendMsgCodeResponse(res, 'Ocurrio un error al insertar el auto', 500);
+        const metadata = { version: apiVersion };
+        res.send({ metadata, car });
+    });
+};
+
+exports.deleteUserCar = function (req, res) {
+    const userId = req.params.userId;
+    const carId = req.params.carId;
+    Car.delete(userId, carId, (err, car) => {
+        if (err) return sendMsgCodeResponse(res, 'Ocurrio un error al eliminar el auto', 500);
+        if (!car) return sendMsgCodeResponse(res, 'No existe el auto', 404);
+
+        sendMsgCodeResponse(res, 'Baja de auto correcta', 204);
     });
 };

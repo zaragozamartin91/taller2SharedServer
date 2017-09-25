@@ -1,8 +1,12 @@
-function parse( {serverId , params: {userId}} ) {
-    console.log(serverId);
-    console.log(userId);
+function *foo() {
+    yield 1;
+    yield 2;
+    yield 3;
+    yield 4;
+    yield 5;
 }
 
-const req = { serverId: 1234, params: {  } };
+var it = foo();
 
-parse(req);
+var message = it.next();
+console.log(message);
