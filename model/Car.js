@@ -49,11 +49,10 @@ Car.findByOwner = function (owner, callback) {
     dbManager.query(sql, [ownerId], (err, { rows }) => callback(err, fromRows(rows)));
 };
 
-Car.delete = function (user, car, callback) {
-    const userId = user.id || user;
+Car.delete = function (car, callback) {
     const carId = car.id || car;
-    const sql = `DELETE FROM ${table} WHERE id=$1 AND owner=$2 RETURNING *`;
-    dbManager.query(sql, [carId, userId], (err, { rows }) => callback(err, fromRows(rows)[0]));
+    const sql = `DELETE FROM ${table} WHERE id=$1 RETURNING *`;
+    dbManager.query(sql, [carId], (err, { rows }) => callback(err, fromRows(rows)[0]));
 };
 
 module.exports = Car;
