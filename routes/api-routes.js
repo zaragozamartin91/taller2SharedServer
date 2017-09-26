@@ -74,6 +74,7 @@ router.get('/users/:userId/cars', tokenValidator.verifyServerOrUserToken, appUse
 router.post('/users/:userId/cars', tokenValidator.verifyServerOrUserToken, appUserController.postUserCar);
 router.delete('/users/:userId/cars/:carId', tokenValidator.verifyServerOrUserToken, appUserController.deleteUserCar);
 router.get('/users/:userId/cars/:carId', tokenValidator.verifyServerOrUserToken, appUserController.getUserCar);
+router.put('/users/:userId/cars/:carId', tokenValidator.verifyServerOrUserToken, appUserController.updateUserCar);
 
 /* FIN /users ROUTES ---------------------------------------------------------------------------------------------------- */
 

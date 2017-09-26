@@ -207,7 +207,7 @@ exports.deleteUserCar = function (req, res) {
         const car = cars.filter(c => c.id == carId)[0];
         if (!car) return sendMsgCodeResponse(res, 'No existe el auto', 404);
 
-        Car.delete(car, err => {
+        car.delete(err => {
             if (err) return sendMsgCodeResponse(res, 'Ocurrio un error al eliminar el auto', 500);
             sendMsgCodeResponse(res, 'Baja correcta', 204);
         });
@@ -226,5 +226,27 @@ exports.getUserCar = function (req, res) {
 
         const metadata = { version: apiVersion };
         res.send({ metadata, car });
+    });
+};
+
+exports.updateUserCar = function (req, res) {
+    findUserAndDo(req, (err, user) => {
+        if (err) return sendMsgCodeResponse(res, 'Ocurrio un error al actualizar el auto', 500);
+        if (!user) return sendMsgCodeResponse(res, 'No existe el usuario', 404);
+
+        const carId = req.params.carId;
+        const cars = user.cars || [];
+        const car = cars.filter(c => c.id == carId)[0];
+        if (!car) return sendMsgCodeResponse(res, 'No existe el auto', 404);
+
+        const carData = req.body || {};
+        if (carData._ref != car._ref) return sendMsgCodeResponse(res, 'Ocurrio una colision', 409);
+        car.properties = carData.properties;
+
+        car.update(err => {
+            if (err) return sendMsgCodeResponse(res, 'Ocurrio un error al actualizar el auto', 500);
+            const metadata = { version: apiVersion };
+            res.send({ metadata, car });
+        });
     });
 };

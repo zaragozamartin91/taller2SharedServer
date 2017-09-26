@@ -65,7 +65,7 @@ function fromRows(rows) {
     rows.forEach(row => {
         const userId = row.id;
         const user = users[userId] || fromObj(row);
-        let { carid, car_ref, carproperties } = row;
+        let { carid, car_ref, carproperties } = row; // el nombre de la columna es carproperties, NO carProperties
         if (carid) user.cars.push(new Car(carid, car_ref, userId, carproperties));
         users[userId] = user;
     });

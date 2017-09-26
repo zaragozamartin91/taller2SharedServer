@@ -10,11 +10,31 @@ function hashCar({ owner, properties }) {
     return hasher.hash({ owner, properties });
 }
 
-function Car(id, _ref, owner, properties) {
-    this.id = id;
-    this._ref = _ref;
-    this.owner = owner;
-    this.properties = properties || DEFAULT_PROPERTIES;
+class Car {
+    constructor(id, _ref, owner, properties = DEFAULT_PROPERTIES) {
+        this.id = id;
+        this._ref = _ref;
+        this.owner = owner;
+        this.properties = properties;
+    }
+
+    update(callback) {
+        const carId = this.id;
+        const newRef = hashCar(this);
+        const sql = `UPDATE ${table} SET _ref=$1, properties=$2 WHERE id=$3 RETURNING *`;
+        
+        dbManager.query(sql,[newRef, JSON.stringify(this.properties), carId], (err,{rows}) => {
+            if(err) return callback(err);
+            this._ref = newRef;
+            callback(null, this);
+        });
+    }
+
+    delete(callback) {
+        const carId = this.id;
+        const sql = `DELETE FROM ${table} WHERE id=$1 RETURNING *`;
+        dbManager.query(sql, [carId], (err, { rows }) => callback(err, fromRows(rows)[0]));
+    }
 }
 
 Car.table = table;
@@ -47,12 +67,6 @@ Car.findByOwner = function (owner, callback) {
     const ownerId = owner.id || owner;
     const sql = `SELECT * FROM ${table} WHERE owner=$1`;
     dbManager.query(sql, [ownerId], (err, { rows }) => callback(err, fromRows(rows)));
-};
-
-Car.delete = function (car, callback) {
-    const carId = car.id || car;
-    const sql = `DELETE FROM ${table} WHERE id=$1 RETURNING *`;
-    dbManager.query(sql, [carId], (err, { rows }) => callback(err, fromRows(rows)[0]));
 };
 
 module.exports = Car;
