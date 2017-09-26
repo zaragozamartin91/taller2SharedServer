@@ -1,12 +1,7 @@
-function *foo() {
-    yield 1;
-    yield 2;
-    yield 3;
-    yield 4;
-    yield 5;
+function foo(tok) {
+    let { token, owner, expiresAt = tok.expiresat } = tok;
+    console.log(token, owner, expiresAt);
 }
 
-var it = foo();
-
-var message = it.next();
-console.log(message);
+foo({token:'pepe',owner:'martin',expiresat:'12313'});
+foo({token:'pepe',owner:'martin',expiresAt:'12313'});

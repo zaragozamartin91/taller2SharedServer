@@ -7,54 +7,46 @@ const defaultExpirationTime = 60 * 180;
 const defaultExpirationTimeUnits = 'm';
 
 /**
- * Crea una instancia de un token firmado.
- * @constructor
- * @this {Token}
- * @param {string} token Token firmado.
- * @param {number} expiresAt Tiempo de expiracion en milisegundos.
- * @return {Token} Nuevo token.
+ * Representa un token de identificacion
  */
-function Token(token, expiresAt) {
-    this.token = token;
-    this.expiresAt = expiresAt;
+class Token {
+    /**
+     * Crea una instancia de un token firmado.
+     * @constructor
+     * @this {Token}
+     * @param {string} token Token firmado.
+     * @param {number} expiresAt Tiempo de expiracion en milisegundos.
+     * @return {Token} Nuevo token.
+     */
+    constructor(token, expiresAt) {
+        this.token = token;
+        this.expiresAt = expiresAt;
+    }
+    verify(callback) {
+        verifyToken(this.token, callback);
+    }
+    /**
+     * Convierte la fecha de expiracion a Date.
+     * @this {Token}
+     * @return {Token} this.
+     */
+    withDateExpiration() {
+        if (typeof this.expiresAt == 'object') return this;
+        this.expiresAt = new Date(this.expiresAt);
+        return this;
+    }
+    /**
+     * Convierte la fecha de expiracion a timestamp (en milisegundos).
+     * @this {Token}
+     * @return {Token} this.
+     */
+    withTimestampExpiration() {
+        if (typeof this.expiresAt == 'number') return this;
+        this.expiresAt = this.expiresAt.getTime();
+        return this;
+    }
 }
 
-Token.fromObj = function (tok) {
-    if (!tok) return null;
-    const expiresAt = tok.expiresAt || tok.expiresat;
-    return new Token(tok.token, expiresAt);
-};
-
-/**
- * Verifica la validez del token.
- * @this {Token}
- * @param {Function} callback funcion a invocar luego de verificar el token.
- */
-Token.prototype.verify = function (callback) {
-    verifyToken(this.token, callback);
-};
-
-/**
- * Convierte la fecha de expiracion a Date.
- * @this {Token}
- * @return {Token} this.
- */
-Token.prototype.withDateExpiration = function () {
-    if (typeof this.expiresAt == 'object') return this;
-    this.expiresAt = new Date(this.expiresAt);
-    return this;
-};
-
-/**
- * Convierte la fecha de expiracion a timestamp (en milisegundos).
- * @this {Token}
- * @return {Token} this.
- */
-Token.prototype.withTimestampExpiration = function () {
-    if (typeof this.expiresAt == 'number') return this;
-    this.expiresAt = this.expiresAt.getTime();
-    return this;
-};
 
 /**
  * Crea y firma un token.
@@ -82,13 +74,12 @@ function verifyToken(token, callback) {
     jwt.verify(token, secret, callback);
 }
 
-
 /**
  * Genera un token firmado a partir de un objeto de tipo servidor de aplicaciones.
  * @param {object} server servidor de aplicaciones a partir del cual generar el token.
  */
-exports.signServer = function ({ id, createdBy }) {
-    return signToken({ id, createdBy });
+exports.signServer = function ({ id }) {
+    return signToken({ id });
 };
 
 exports.signToken = signToken;
