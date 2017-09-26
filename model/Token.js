@@ -43,20 +43,16 @@ TokenModel.findById = function (token, callback) {
     dbManager.query(sql, [], (err, { rows }) => callback(err, Token.fromObj(rows[0])));
 };
 
-TokenModel.findByOwner = function(owner, callback) {
+/**
+ * Obtiene el ultimo token de un apoderado de token.
+ * @param {string} owner Id del apoderado del token.
+ * @param {Function} callback Funcion a invocar luego de obtener el token.
+ */
+TokenModel.findByOwner = function (owner, callback) {
     const ownerId = owner.id || owner;
-    const sql = `SELECT * FROM ${table} WHERE owner=$1`;
-    dbManager.query(sql, [ownerId], 
+    const sql = `SELECT * FROM ${table} WHERE owner=$1 ORDER BY counter DESC LIMIT 1`;
+    dbManager.query(sql, [ownerId],
         (err, { rows }) => callback(err, Token.fromObj(rows[0])));
-};
-
-TokenModel.verify = function (token, callback) {
-    const tokenId = token.token || token;
-    TokenModel.findById(tokenId, (err, dbToken) => {
-        if (err) return callback(err);
-        const tokenOk = dbToken && tokenManager.verifyToken(dbToken);
-        callback(null, tokenOk);
-    });
 };
 
 TokenModel.invalidate = function (token, callback) {
