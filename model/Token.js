@@ -4,43 +4,48 @@ const Token = tokenManager.Token;
 
 const table = 'token';
 
-/**
- * Crea una instancia de un token firmado.
- * @constructor
- * @this {Token}
- * @param {string} token Token firmado.
- * @param {number} expiresAt Tiempo de expiracion en milisegundos.
- * @param {string} owner A que entidad pertenece el token (ej: servidor de aplicaciones)
- * @return {TokenModel} Nuevo token.
- */
-function TokenModel(token, expiresAt, owner) {
-    this.token = token;
-    this.expiresAt = expiresAt;
-    this.owner = owner || '';
+class TokenModel extends Token {
+    /**
+    * Crea una instancia de un token firmado.
+    * @constructor
+    * @this {Token}
+    * @param {string} token Token firmado.
+    * @param {number} expiresAt Tiempo de expiracion en milisegundos.
+    * @param {string} owner A que entidad pertenece el token (ej: servidor de aplicaciones)
+    * @return {TokenModel} Nuevo token.
+    */
+    constructor(token, expiresAt, owner = '') {
+        super(token, expiresAt);
+        this.owner = owner;
+    }
+
+    withoutOwner() {
+        this.owner = undefined;
+        return this;
+    }
+}
+
+function fromObj(tok) {
+    if (!tok) return null;
+    const { token, owner, expiresAt = tok.expiresat } = tok;
+    return new TokenModel(token, expiresAt, owner);
 }
 
 TokenModel.table = table;
 
 TokenModel.insert = function (token, owner, callback) {
-    token = Token.fromObj(token).withDateExpiration();
-    if (typeof owner == 'function') {
-        callback = owner;
-        owner = '';
-    }
+    token = fromObj(token).withDateExpiration();
     const sql = `INSERT INTO ${table}(token,expiresAt,owner) VALUES($1,$2,$3) RETURNING *`;
 
-    dbManager.query(sql, [token.token, token.expiresAt, owner], (err, res) => {
-        if (err) return callback(err);
-        const dbToken = res.rows[0];
-        return callback(null, Token.fromObj(dbToken));
-    });
+    dbManager.query(sql, [token.token, token.expiresAt, owner],
+        (err, { rows }) => callback(err, fromObj(rows[0])));
 };
 
-TokenModel.findById = function (token, callback) {
+TokenModel.findToken = function (token, callback) {
     const tokenId = token.token || token;
     const sql = `SELECT * FROM ${table} WHERE token=$1`;
-
-    dbManager.query(sql, [], (err, { rows }) => callback(err, Token.fromObj(rows[0])));
+    dbManager.query(sql, [tokenId],
+        (err, { rows }) => callback(err, fromObj(rows[0])));
 };
 
 /**
@@ -52,18 +57,14 @@ TokenModel.findByOwner = function (owner, callback) {
     const ownerId = owner.id || owner;
     const sql = `SELECT * FROM ${table} WHERE owner=$1 ORDER BY counter DESC LIMIT 1`;
     dbManager.query(sql, [ownerId],
-        (err, { rows }) => callback(err, Token.fromObj(rows[0])));
+        (err, { rows }) => callback(err, fromObj(rows[0])));
 };
 
 TokenModel.invalidate = function (token, callback) {
     const tokenId = token.token || token;
     const sql = `DELETE FROM ${table} WHERE token=$1 RETURNING *`;
-
-    dbManager.query(sql, [tokenId], (err, res) => {
-        if (err) return callback(err);
-        const dbToken = res.rows[0];
-        return callback(null, Token.fromObj(dbToken));
-    });
+    dbManager.query(sql, [tokenId],
+        (err, { rows }) => callback(err, fromObj(rows[0])));
 };
 
 TokenModel.invalidateTokensOwnedBy = function (owner, callback) {
@@ -71,7 +72,7 @@ TokenModel.invalidateTokensOwnedBy = function (owner, callback) {
 
     dbManager.query(sql, [owner], (err, res) => {
         if (err) return callback(err);
-        const tokens = res.rows.map(row => Token.fromObj(row));
+        const tokens = res.rows.map(row => fromObj(row));
         return callback(null, tokens);
     });
 };

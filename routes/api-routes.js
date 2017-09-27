@@ -21,6 +21,9 @@ router.get('/test', function (req, res) {
 router.post('/token', tokenController.generateToken);
 
 /* /servers ROUTES -------------------------------------------------------------------------------------------------------------- */
+
+router.post('/servers/ping', serverController.renewToken);
+
 // Agrego el middleware para parsear y deocdificar el token
 router.use('/servers', tokenValidator.verifyToken);
 
@@ -34,6 +37,7 @@ router.delete('/servers/:serverId', tokenValidator.verifyManagerToken, serverCon
 router.put('/servers/:serverId', tokenValidator.verifyManagerToken, serverController.updateServer);
 
 router.post('/servers/:serverId', tokenValidator.verifyManagerToken, serverController.resetToken);
+
 
 /* FIN servers ROUTES ----------------------------------------------------------------------------------------------------------- */
 
