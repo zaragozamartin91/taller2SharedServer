@@ -1,5 +1,7 @@
 import React from 'react';
 import ReactDom from 'react-dom';
+import { HashRouter } from 'react-router-dom';
+import { Link, Route, Switch } from 'react-router-dom';
 
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 import AppBar from 'material-ui/AppBar';
@@ -10,6 +12,8 @@ import axios from 'axios';
 
 import Index from './Index';
 import FormExample from './FormExample';
+
+import $ from 'jquery';
 
 /* ESTE FRAGMENTO DE CODIGO ES REQUERIDO PARA LOS EVENTOS DE TIPO TOUCH O CLICK EN COMPONENTES MATERIAL-UI */
 const injectTapEventPlugin = require('react-tap-event-plugin');
@@ -50,6 +54,10 @@ const MainApp = React.createClass({
         console.log('MainApp DID MOUNT!');
     },
 
+    closeDrawer: function () {
+        this.setState({ drawerOpen: false });
+    },
+
     render: function () {
         console.log('RENDERING MainApp!');
         let currentPage = PAGES[this.state.currPage];
@@ -62,11 +70,12 @@ const MainApp = React.createClass({
                         title="Shared server" />
 
                     <Drawer open={this.state.drawerOpen} docked={false} onRequestChange={this.onDrawerRequestChange} >
-                        <MenuItem onTouchTap={e => this.gotoPage('index')}>Principal</MenuItem>
-                        <MenuItem onTouchTap={e => this.gotoPage('formExample')}>Ejemplo formulario</MenuItem>
+                        <Link to="/Index" onClick={this.closeDrawer}><MenuItem >Principal</MenuItem></Link>
+                        <Link to="/FormExample" onClick={this.closeDrawer}><MenuItem >FormExample</MenuItem></Link>
                     </Drawer>
 
-                    {currentPage}
+                    <Route path="/Index" component={Index} />
+                    <Route path="/FormExample" component={FormExample} />
                 </div>
             </MuiThemeProvider>
         );
@@ -74,7 +83,9 @@ const MainApp = React.createClass({
 });
 
 ReactDom.render(
-    <MainApp />,
+    <HashRouter>
+        <MainApp />
+    </HashRouter>,
     document.getElementById('root')
 );
 

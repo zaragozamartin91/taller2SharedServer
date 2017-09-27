@@ -130,9 +130,13 @@ const nameId = `NAME-${id}`;
 dbManager.queryPromise('INSERT INTO person VALUES($1,$2) RETURNING *', [nameId, id])
     .then(rows => {
         console.log(rows);
-        return dbManager.queryPromise('UPDATE person SET name=$1 WHERE dni=$2 RETURNING *', ['PEPE', id]);
+        return dbManager.queryPromise('UPDATE asdad SET name=$1 WHERE dni=$2 RETURNING *', ['PEPE', id]);
     })
     .then(rows => {
         console.log(rows);
+        return dbManager.queryPromise('UPDATE person SET name=$1 WHERE dni=$2 RETURNING *', ['PEPE', id]);
+    })
+    .catch(cause => {
+        console.error(cause);
         dbManager.end();
     });
