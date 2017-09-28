@@ -125,8 +125,18 @@ let userObj = { applicationOwner, username, name, surname, country, email, birth
 //     dbManager.end();
 // });
 
-ApplicationUser.find((err, res) => {
-    console.error(err);
-    console.log(res[0].cars[0]);
-    dbManager.end();
-});
+const id = Math.floor(Math.random() * 1000);
+const nameId = `NAME-${id}`;
+dbManager.queryPromise('INSERT INTO person VALUES($1,$2) RETURNING *', [nameId, id])
+    .then(rows => {
+        console.log(rows);
+        return dbManager.queryPromise('UPDATE asdad SET name=$1 WHERE dni=$2 RETURNING *', ['PEPE', id]);
+    })
+    .then(rows => {
+        console.log(rows);
+        return dbManager.queryPromise('UPDATE person SET name=$1 WHERE dni=$2 RETURNING *', ['PEPE', id]);
+    })
+    .catch(cause => {
+        console.error(cause);
+        dbManager.end();
+    });
