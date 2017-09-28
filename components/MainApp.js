@@ -7,46 +7,32 @@ import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 import AppBar from 'material-ui/AppBar';
 import Drawer from 'material-ui/Drawer';
 import MenuItem from 'material-ui/MenuItem';
+import ArrowDropRight from 'material-ui/svg-icons/navigation-arrow-drop-right';
 
 import axios from 'axios';
 
 import Index from './Index';
 import FormExample from './FormExample';
 
-import $ from 'jquery';
-
 /* ESTE FRAGMENTO DE CODIGO ES REQUERIDO PARA LOS EVENTOS DE TIPO TOUCH O CLICK EN COMPONENTES MATERIAL-UI */
 const injectTapEventPlugin = require('react-tap-event-plugin');
 injectTapEventPlugin();
 /* -------------------------------------------------------------------------------------------------------- */
 
-/* PAGINAS USADAS PARA EL ENRUTAMIENTO */
-const PAGES = {
-    index: <Index />,
-    formExample: <FormExample />
-};
-
 const MainApp = React.createClass({
     getInitialState: function () {
         return {
-            currPage: 'index',
             drawerOpen: false,
         };
     },
 
-    appBarLeftTap: function () {
-        let drawerOpen = this.state.drawerOpen;
-        this.setState({ drawerOpen: !drawerOpen });
+    toggleDrawer: function () {
+        this.setState({ drawerOpen: !this.state.drawerOpen });
     },
 
     /* Esta funcion se ejecutara cada vez que se solicite cambiar el estado de la barra. */
     onDrawerRequestChange: function (open) {
         this.setState({ drawerOpen: open });
-    },
-
-    gotoPage: function (page) {
-        console.log('GOING TO PAGE: ' + page);
-        this.setState({ currPage: page, drawerOpen: false });
     },
 
     componentDidMount: function () {
@@ -60,18 +46,23 @@ const MainApp = React.createClass({
 
     render: function () {
         console.log('RENDERING MainApp!');
-        let currentPage = PAGES[this.state.currPage];
 
         return (
             <MuiThemeProvider>
                 <div>
                     <AppBar
-                        onLeftIconButtonTouchTap={this.appBarLeftTap}
+                        onLeftIconButtonTouchTap={this.toggleDrawer}
                         title="Shared server" />
 
                     <Drawer open={this.state.drawerOpen} docked={false} onRequestChange={this.onDrawerRequestChange} >
                         <Link to="/Index" onClick={this.closeDrawer}><MenuItem >Principal</MenuItem></Link>
                         <Link to="/FormExample" onClick={this.closeDrawer}><MenuItem >FormExample</MenuItem></Link>
+                        <MenuItem primaryText='Usuarios'
+                            rightIcon={<ArrowDropRight />}
+                            menuItems={[
+                                <Link to="/Users/Create" onClick={this.closeDrawer}><MenuItem >Crear</MenuItem></Link>
+                            ]}
+                        />
                     </Drawer>
 
                     <Route path="/Index" component={Index} />

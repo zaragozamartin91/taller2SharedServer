@@ -20,6 +20,8 @@ a {
   color: #00B7FF;
 }
 
+a:link { text-decoration:none;}
+
 .err-div {
   color: red;
 }
