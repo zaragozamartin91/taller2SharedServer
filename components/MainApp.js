@@ -91,17 +91,18 @@ const MainApp = React.createClass({
                     <Drawer open={this.state.drawerOpen} docked={false} onRequestChange={this.onDrawerRequestChange} >
                         <MenuItem style={{ fontWeight: 'bold' }} onClick={e => this.logoutForm.submit()}>Cerrar sesion</MenuItem>
 
-                        <Link to="/Index" onClick={this.closeDrawer}><MenuItem >Principal</MenuItem></Link>
-                        <Link to="/FormExample" onClick={this.closeDrawer}><MenuItem >FormExample</MenuItem></Link>
+                        <Link to="/index" onClick={this.closeDrawer}><MenuItem >Principal</MenuItem></Link>
+                        <Link to="/form-example" onClick={this.closeDrawer}><MenuItem >form-example</MenuItem></Link>
                         <MenuItem primaryText='Usuarios'
                             rightIcon={<ArrowDropRight />}
                             menuItems={[
-                                <Link to="/Users/Create" onClick={this.closeDrawer}><MenuItem >Crear</MenuItem></Link>
+                                <Link to="/users/create" onClick={this.closeDrawer}><MenuItem >Crear</MenuItem></Link>,
+                                <Link to="/users/list" onClick={this.closeDrawer}><MenuItem >Ver</MenuItem></Link>
                             ]} />
                     </Drawer>
 
-                    <Route path="/Index" component={Index} />
-                    <Route path="/FormExample" component={FormExample} />
+                    <Route path="/index" component={Index} />
+                    <Route path="/form-example" component={FormExample} />
 
                     <form
                         action='/logout'
