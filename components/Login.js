@@ -50,22 +50,17 @@ const Login = React.createClass({
     },
 
     render: function () {
-        const cardHeader = this.state.errMsg ?
-            <CardHeader
-                title="Iniciar sesion"
-                subtitle={this.state.errMsg}
-                style={{backgroundColor:'rgba(225, 11, 11, 0.19)'}} /> :
-            <CardHeader
-                title="Iniciar sesion"
-                subtitle='Ingrese credenciales' />;
+        let msgElem = this.state.errMsg ? <p style={{ color: 'red' }} >{this.state.errMsg}</p> : <div />;
 
         return (
             <div onKeyPress={this.handleKeyPress}>
                 <Header title="Shared server" />
-
+                {msgElem}
                 <MuiThemeProvider>
                     <Card>
-                        {cardHeader}
+                        <CardHeader
+                            title="Iniciar sesion"
+                            subtitle='Ingrese credenciales' />;
 
                         <CardText expandable={false}>
                             <TextField
