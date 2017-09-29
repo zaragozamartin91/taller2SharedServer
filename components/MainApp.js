@@ -17,6 +17,7 @@ import axios from 'axios';
 import Index from './Index';
 import FormExample from './FormExample';
 import Login from './Login';
+import Users from './Users';
 
 /* ESTE FRAGMENTO DE CODIGO ES REQUERIDO PARA LOS EVENTOS DE TIPO TOUCH O CLICK EN COMPONENTES MATERIAL-UI */
 import injectTapEventPlugin from 'react-tap-event-plugin';
@@ -78,7 +79,8 @@ const MainApp = React.createClass({
 
         if (!this.state.renderReady) return <span>Espere...</span>;
 
-        if (!this.state.token) return <Login onSubmit={this.setToken} />;
+        const token = this.state.token;
+        if (!token) return <Login onSubmit={this.setToken} />;
 
         /* Si un usuario inicio sesion, renderizo la app normal */
         return (
@@ -103,12 +105,14 @@ const MainApp = React.createClass({
 
                     <Route path="/index" component={Index} />
                     <Route path="/form-example" component={FormExample} />
+                    <Route path="/users/list" component={() => <Users token={token} />} />
 
                     <form
                         action='/logout'
                         method='POST'
                         ref={f => this.logoutForm = f}
-                        style={{ display: 'hidden' }}></form>
+                        style={{ display: 'hidden' }}>
+                    </form>
                 </div>
             </MuiThemeProvider>
         );
