@@ -1,19 +1,5 @@
-@font-face {
-  font-family: 'Roboto-bold';
-  font-style: normal;
-  font-weight: 400;
-  src:  url('Roboto-Regular.ttf');
-}
-
-/* cyrillic-ext */
-@font-face {
-  font-family: 'Roboto';
-  font-style: normal;
-  src:  url('Roboto-Light.ttf');
-}
-
 body {
-  font: 14px "Roboto",  sans-serif;
+  font-family: 'Roboto', sans-serif;  
 }
 
 a {

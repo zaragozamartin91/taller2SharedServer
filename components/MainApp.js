@@ -8,23 +8,34 @@ import AppBar from 'material-ui/AppBar';
 import Drawer from 'material-ui/Drawer';
 import MenuItem from 'material-ui/MenuItem';
 import ArrowDropRight from 'material-ui/svg-icons/navigation-arrow-drop-right';
+import IconButton from 'material-ui/IconButton';
+import IconMenu from 'material-ui/IconMenu';
+import MoreVertIcon from 'material-ui/svg-icons/navigation/more-vert';
 
 import axios from 'axios';
 
 import Index from './Index';
 import FormExample from './FormExample';
 import Login from './Login';
+import Users from './Users';
 
 /* ESTE FRAGMENTO DE CODIGO ES REQUERIDO PARA LOS EVENTOS DE TIPO TOUCH O CLICK EN COMPONENTES MATERIAL-UI */
 import injectTapEventPlugin from 'react-tap-event-plugin';
 injectTapEventPlugin();
 /* -------------------------------------------------------------------------------------------------------- */
 
+console.log('Parseando cookie ' + document.cookie);
+const cookie = document.cookie || '';
+const cookieTokenStr = cookie.split('; ').find(s => s.startsWith('token='));
+const cookieToken = cookieTokenStr ? cookieTokenStr.replace('token=', '') : null;
+
 const MainApp = React.createClass({
     getInitialState: function () {
         return {
             drawerOpen: false,
-            user: null
+            token: null,
+            user: null,
+            renderReady: false
         };
     },
 
@@ -39,50 +50,72 @@ const MainApp = React.createClass({
 
     componentDidMount: function () {
         /* SE CARGAN LAS CANCIONES DESPUES QUE EL COMPONENTE HAYA SIDO MONTADO */
-        console.log('MainApp DID MOUNT!');
+        console.log('MainApp MONTADA!');
+        /* Si se encuentra un token en las cookies entonces se setea el mismo y se obtiene el usuario
+        Caso contrario, se marca al componente como listo para renderizar */
+        if (cookieToken) this.setToken(cookieToken);
+        else this.setState({ renderReady: true });
     },
 
     closeDrawer: function () {
         this.setState({ drawerOpen: false });
     },
 
-    setUser: function (user) {
-        this.setState({ user });
+    setToken: function (token) {
+        token = token.token || token;
+        console.log('Seteando token: ' + token);
+        axios.get(`/api/v1/business-users/me?token=${token}`)
+            .then(contents => {
+                console.log(contents.data.businessUser);
+                this.setState({ token, user: contents.data.businessUser, renderReady: true });
+            })
+            .catch(cause => {
+                console.error(cause);
+            });
     },
 
     render: function () {
         console.log('RENDERING MainApp!');
 
-        const user = this.state.user;
-        if (user) {
-            /* Si un usuario inicio sesion, renderizo la app normal */
-            return (
-                <MuiThemeProvider>
-                    <div>
-                        <AppBar
-                            onLeftIconButtonTouchTap={this.toggleDrawer}
-                            title="Shared server" />
+        if (!this.state.renderReady) return <span>Espere...</span>;
 
-                        <Drawer open={this.state.drawerOpen} docked={false} onRequestChange={this.onDrawerRequestChange} >
-                            <Link to="/Index" onClick={this.closeDrawer}><MenuItem >Principal</MenuItem></Link>
-                            <Link to="/FormExample" onClick={this.closeDrawer}><MenuItem >FormExample</MenuItem></Link>
-                            <MenuItem primaryText='Usuarios'
-                                rightIcon={<ArrowDropRight />}
-                                menuItems={[
-                                    <Link to="/Users/Create" onClick={this.closeDrawer}><MenuItem >Crear</MenuItem></Link>
-                                ]}
-                            />
-                        </Drawer>
+        const token = this.state.token;
+        if (!token) return <Login onSubmit={this.setToken} />;
 
-                        <Route path="/Index" component={Index} />
-                        <Route path="/FormExample" component={FormExample} />
-                    </div>
-                </MuiThemeProvider>
-            );
-        } else {
-            /* Sino, renderizo la pagina de login */
-            return <Login onSubmit={this.setUser} />;
-        }
+        /* Si un usuario inicio sesion, renderizo la app normal */
+        return (
+            <MuiThemeProvider>
+                <div>
+                    <AppBar
+                        onLeftIconButtonTouchTap={this.toggleDrawer}
+                        title="Shared server" />
+
+                    <Drawer open={this.state.drawerOpen} docked={false} onRequestChange={this.onDrawerRequestChange} >
+                        <MenuItem style={{ fontWeight: 'bold' }} onClick={e => this.logoutForm.submit()}>Cerrar sesion</MenuItem>
+
+                        <Link to="/index" onClick={this.closeDrawer}><MenuItem >Principal</MenuItem></Link>
+                        <Link to="/form-example" onClick={this.closeDrawer}><MenuItem >form-example</MenuItem></Link>
+                        <MenuItem primaryText='Usuarios'
+                            rightIcon={<ArrowDropRight />}
+                            menuItems={[
+                                <Link to="/users/create" onClick={this.closeDrawer}><MenuItem >Crear</MenuItem></Link>,
+                                <Link to="/users/list" onClick={this.closeDrawer}><MenuItem >Ver</MenuItem></Link>
+                            ]} />
+                    </Drawer>
+
+                    <Route path="/index" component={Index} />
+                    <Route path="/form-example" component={FormExample} />
+                    <Route path="/users/list" component={() => <Users token={token} />} />
+
+                    <form
+                        action='/logout'
+                        method='POST'
+                        ref={f => this.logoutForm = f}
+                        style={{ display: 'hidden' }}>
+                    </form>
+                </div>
+            </MuiThemeProvider>
+        );
     }
 });
 

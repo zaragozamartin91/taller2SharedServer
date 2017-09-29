@@ -6,7 +6,10 @@ import TextField from 'material-ui/TextField';
 import { Card, CardActions, CardHeader, CardText } from 'material-ui/Card';
 import FlatButton from 'material-ui/FlatButton';
 
+import axios from 'axios';
+
 import Header from './Header';
+//import mainConfig from '../config/main-config';
 
 /* FIN DE IMPORTS -------------------------------------------------------------------------------------- */
 
@@ -14,7 +17,11 @@ const EMPTY_CALLBACK = () => { };
 
 const Login = React.createClass({
     getInitialState: function () {
-        return { username: '', password: '' };
+        return {
+            username: '',
+            password: '',
+            errMsg: null,
+        };
     },
 
     getDefaultProps: function () {
@@ -22,10 +29,20 @@ const Login = React.createClass({
     },
 
     submitForm: function () {
-        const user = { username: this.state.username, password: this.state.password };
+        const data = { username: this.state.username, password: this.state.password, backoffice: true };
         console.log('Subiendo:');
-        console.log(user);
-        this.props.onSubmit(user);
+        console.log(data);
+
+        axios.post('/api/v1/token', data)
+            .then(contents => {
+                console.log('Contenido:');
+                console.log(contents.data);
+                this.props.onSubmit(contents.data.token);
+            })
+            .catch(cause => {
+                console.error('Error');
+                this.setState({ errMsg: 'Credenciales invalidas' });
+            });
     },
 
     handleKeyPress: function (event) {
@@ -33,15 +50,17 @@ const Login = React.createClass({
     },
 
     render: function () {
+        let msgElem = this.state.errMsg ? <p style={{ color: 'red' }} >{this.state.errMsg}</p> : <div />;
+
         return (
             <div onKeyPress={this.handleKeyPress}>
                 <Header title="Shared server" />
-
+                {msgElem}
                 <MuiThemeProvider>
                     <Card>
                         <CardHeader
                             title="Iniciar sesion"
-                            subtitle="Usuario de negocio" />
+                            subtitle='Ingrese credenciales' />;
 
                         <CardText expandable={false}>
                             <TextField
