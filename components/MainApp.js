@@ -1,19 +1,13 @@
 import React from 'react';
 import ReactDom from 'react-dom';
 import { HashRouter } from 'react-router-dom';
-import { Link, Route } from 'react-router-dom';
+import { Route } from 'react-router-dom';
 
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
-import AppBar from 'material-ui/AppBar';
-import Drawer from 'material-ui/Drawer';
-import MenuItem from 'material-ui/MenuItem';
-import ArrowDropRight from 'material-ui/svg-icons/navigation-arrow-drop-right';
-import IconButton from 'material-ui/IconButton';
-import IconMenu from 'material-ui/IconMenu';
-import MoreVertIcon from 'material-ui/svg-icons/navigation/more-vert';
 
 import axios from 'axios';
 
+import MainAppBar from './MainAppBar';
 import Index from './Index';
 import FormExample from './FormExample';
 import Login from './Login';
@@ -32,20 +26,10 @@ const cookieToken = cookieTokenStr ? cookieTokenStr.replace('token=', '') : null
 const MainApp = React.createClass({
     getInitialState: function () {
         return {
-            drawerOpen: false,
             token: null,
             user: null,
             renderReady: false
         };
-    },
-
-    toggleDrawer: function () {
-        this.setState({ drawerOpen: !this.state.drawerOpen });
-    },
-
-    /* Esta funcion se ejecutara cada vez que se solicite cambiar el estado de la barra. */
-    onDrawerRequestChange: function (open) {
-        this.setState({ drawerOpen: open });
     },
 
     componentDidMount: function () {
@@ -55,10 +39,6 @@ const MainApp = React.createClass({
         Caso contrario, se marca al componente como listo para renderizar */
         if (cookieToken) this.setToken(cookieToken);
         else this.setState({ renderReady: true });
-    },
-
-    closeDrawer: function () {
-        this.setState({ drawerOpen: false });
     },
 
     setToken: function (token) {
@@ -86,22 +66,7 @@ const MainApp = React.createClass({
         return (
             <MuiThemeProvider>
                 <div>
-                    <AppBar
-                        onLeftIconButtonTouchTap={this.toggleDrawer}
-                        title="Shared server" />
-
-                    <Drawer open={this.state.drawerOpen} docked={false} onRequestChange={this.onDrawerRequestChange} >
-                        <MenuItem style={{ fontWeight: 'bold' }} onClick={e => this.logoutForm.submit()}>Cerrar sesion</MenuItem>
-
-                        <Link to="/index" onClick={this.closeDrawer}><MenuItem >Principal</MenuItem></Link>
-                        <Link to="/form-example" onClick={this.closeDrawer}><MenuItem >form-example</MenuItem></Link>
-                        <MenuItem primaryText='Usuarios'
-                            rightIcon={<ArrowDropRight />}
-                            menuItems={[
-                                <Link to="/users/create" onClick={this.closeDrawer}><MenuItem >Crear</MenuItem></Link>,
-                                <Link to="/users/list" onClick={this.closeDrawer}><MenuItem >Ver</MenuItem></Link>
-                            ]} />
-                    </Drawer>
+                    <MainAppBar onLogout={() => this.logoutForm.submit()} />
 
                     <Route path="/index" component={Index} />
                     <Route path="/form-example" component={FormExample} />

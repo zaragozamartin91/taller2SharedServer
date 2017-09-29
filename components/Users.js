@@ -5,6 +5,7 @@ import RaisedButton from 'material-ui/RaisedButton';
 import TextField from 'material-ui/TextField';
 import { Card, CardActions, CardHeader, CardText } from 'material-ui/Card';
 import FlatButton from 'material-ui/FlatButton';
+import Snackbar from 'material-ui/Snackbar';
 
 import axios from 'axios';
 
@@ -24,7 +25,8 @@ const Users = React.createClass({
 
     getInitialState: function () {
         return {
-            users: []
+            users: [],
+            errSnackbarOpen: false,
         };
     },
 
@@ -39,7 +41,16 @@ const Users = React.createClass({
             })
             .catch(cause => {
                 console.error(cause);
+                this.openErrSnackbar();
             });
+    },
+
+    openErrSnackbar: function () {
+        this.setState({ errSnackbarOpen: true });
+    },
+
+    handleErrSnackbarRequestClose: function () {
+        this.setState({ errSnackbarOpen: false });
     },
 
     render: function () {
@@ -64,6 +75,12 @@ const Users = React.createClass({
         return (
             <div>
                 {userCards}
+                <Snackbar
+                    open={this.state.errSnackbarOpen}
+                    message="Error al obtener los usuarios"
+                    autoHideDuration={3000}
+                    onRequestClose={this.handleErrSnackbarRequestClose}
+                />
             </div >
         );
     }
