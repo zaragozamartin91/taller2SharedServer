@@ -79,15 +79,18 @@ exports.updateServer = function (req, res) {
 
     ApplicationServer.findById(serverId, (err, server) => {
         if (!server) return sendMsgCodeResponse(res, 'No existe el servidor buscado', 404);
+        
+        const { name, _ref, oldRef = _ref } = req.body;
+        if (oldRef != server._ref) return sendMsgCodeResponse(res, 'Ocurrio una colision', 409);
 
         /* La actualizacion implica modificar el nombre del server. Si no se asigno un nombre nuevo en el body del request,
         entonces la actualizacion no tendra efecto */
-        server.name = req.body.name || server.name;
-        ApplicationServer.update(server, err => {
+        server.name = name || server.name;
+        ApplicationServer.update(server, (err, updatedServer) => {
             if (err) return sendMsgCodeResponse(res, 'Ocurrio un error al actualizar el server', 500);
 
             const metadata = { version: apiVersion };
-            res.send({ metadata, server: server.withTimestampFields() });
+            res.send({ metadata, server: updatedServer.withTimestampFields() });
         });
     });
 };

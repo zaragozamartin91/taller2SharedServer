@@ -54,8 +54,7 @@ class Token {
  * @param {Number} expirationMins Tiempo de expiracion en minutos.
  * @return {Token} Nuevo token.
  */
-function signToken(obj, expirationMins) {
-    expirationMins = expirationMins || defaultExpirationTime;
+function signToken(obj, expirationMins = defaultExpirationTime) {
     const token = jwt.sign(obj, secret, {
         expiresIn: `${expirationMins}${defaultExpirationTimeUnits}`
     });
