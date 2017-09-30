@@ -80,7 +80,7 @@ BusinessUser.fromRows = fromRows;
  */
 BusinessUser.insert = function (userObj, callback) {
     const { username, id = idGenerator.generateId(username), name = DEFAULT_NAME,
-        surname = DEFAULT_SURNAME, roles = [], okRoles = roles.filter(Role.isValid) } = userObj;
+        surname = DEFAULT_SURNAME, roles = [], okRoles = Role.standarize(roles) } = userObj;
     const password = encryptor.encrypt(userObj.password);
     const _ref = hashUser(id, username, name, surname, password);
 
@@ -159,7 +159,7 @@ BusinessUser.delete = function (user, callback) {
  */
 BusinessUser.update = function (user, callback) {
     logger.debug(`Actualizando usuario ${user.id}`);
-    const { id, username, name, surname, password, roles, okRoles = roles.filter(Role.isValid) } = user;
+    const { id, username, name, surname, password, roles = [], okRoles = Role.standarize(roles) } = user;
     const newRef = hashUser(id, username, name, surname, password);
 
     console.log('okRoles: ' + okRoles);
