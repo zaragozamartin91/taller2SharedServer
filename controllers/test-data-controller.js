@@ -24,14 +24,6 @@ exports.createTestData = function (req, res) {
             tableManager.createBusinessUserTable(() => callback());
         },
         callback => {
-            logger.debug('Creando tabla de roles');
-            tableManager.createRoleTable(() => callback());
-        },
-        callback => {
-            logger.debug('Creando tabla de roles de usuario de negocio');
-            tableManager.createBusinessUserRolesTable(() => callback());
-        },
-        callback => {
             logger.debug('Creando tabla de servers');
             tableManager.createApplicationServerTable(() => callback());
         },
@@ -42,18 +34,6 @@ exports.createTestData = function (req, res) {
         callback => {
             logger.debug('Creando tabla de autos');
             tableManager.createCarTable(() => callback());
-        },
-        callback => {
-            logger.debug('Insertando rol');
-            Role.insert('manager', () => callback());
-        },
-        callback => {
-            logger.debug('Insertando rol');
-            Role.insert('admin', () => callback());
-        },
-        callback => {
-            logger.debug('Insertando rol');
-            Role.insert('user', () => callback());
         },
         callback => {
             logger.debug('Insertando usuario');
@@ -133,14 +113,6 @@ exports.deleteTestData = function (req, res) {
         callback => {
             logger.debug('Eliminando tabla de servers');
             tableManager.dropApplicationServerTable(() => callback());
-        },
-        callback => {
-            logger.debug('Eliminando tabla de roles de usuario de negocio');
-            tableManager.dropBusinessUserRolesTable(() => callback());
-        },
-        callback => {
-            logger.debug('Eliminando tabla de roles');
-            tableManager.dropRoleTable(() => callback());
         },
         callback => {
             logger.debug('Eliminando tabla de usuarios de negocio');

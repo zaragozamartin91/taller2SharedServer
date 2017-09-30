@@ -130,7 +130,7 @@ describe('BusinessUser', function () {
         });
     });
 
-    describe('#buildUsersFromRows()', function () {
+    describe('#fromRows()', function () {
         it('crea un arreglo de usuarios de negocio a partir de filas de resultado de una query',
             function () {
                 const rows = [
@@ -139,16 +139,16 @@ describe('BusinessUser', function () {
                     { id: 'mateo-5678', username: 'mateo', password: 'posting', name: 'mateo', surname: 'zaragoza' }
                 ];
 
-                const users = BusinessUser.buildUsersFromRows(rows);
+                const users = BusinessUser.fromRows(rows);
                 assert.equal(2, users.length);
                 assert.equal(2, users[0].roles.length);
                 assert.equal(0, users[1].roles.length);
             });
 
         it('Retorna un arreglo vacio de usuarios de negocio si no hay filas', function () {
-            assert.ok(BusinessUser.buildUsersFromRows(null).length == 0);
-            assert.ok(BusinessUser.buildUsersFromRows(undefined).length == 0);
-            assert.ok(BusinessUser.buildUsersFromRows([]).length == 0);
+            assert.ok(BusinessUser.fromRows(null).length == 0);
+            assert.ok(BusinessUser.fromRows(undefined).length == 0);
+            assert.ok(BusinessUser.fromRows([]).length == 0);
         });
     });
 

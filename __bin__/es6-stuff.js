@@ -1,7 +1,13 @@
-function foo(tok) {
-    let { token, owner, expiresAt = tok.expiresat } = tok;
-    console.log(token, owner, expiresAt);
+function transform(str) {
+    return 'trans-' + str;
 }
 
-foo({token:'pepe',owner:'martin',expiresat:'12313'});
-foo({token:'pepe',owner:'martin',expiresAt:'12313'});
+const userObj = {
+    name: 'martin'
+};
+
+//let { name, surname = transform(name) } = userObj;
+let {newName: name} = userObj;
+ 
+//console.log(name, surname);
+console.log(name);
