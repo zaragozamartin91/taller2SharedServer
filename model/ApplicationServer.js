@@ -65,9 +65,7 @@ function fromRows(rows = []) {
     return rows.map(ApplicationServer.fromObj);
 }
 
-/* TODO : created_by TIENE QUE SER UNA REFERENCIA A UN BusinessUser?
-created_time / last_conn, TIENEN QUE SER DE TIPO Date EN POSTGRES? */
-
+/* istanbul ignore next */
 ApplicationServer.insert = function (obj, callback) {
     const name = obj.name;
     const id = idGenerator.generateId(name);
@@ -84,6 +82,7 @@ ApplicationServer.insert = function (obj, callback) {
         });
 };
 
+/* istanbul ignore next */
 ApplicationServer.find = function (callback) {
     dbManager.query(`SELECT * FROM ${table}`, [], (err, res) => {
         if (err) return callback(err);
@@ -91,6 +90,7 @@ ApplicationServer.find = function (callback) {
     });
 };
 
+/* istanbul ignore next */
 ApplicationServer.findById = function (serverId, callback) {
     console.log('BUSCANDO SERVER CON ID: ' + serverId);
     dbManager.query(`SELECT * FROM ${table} WHERE id=$1`, [serverId], (err, res) => {
@@ -101,6 +101,7 @@ ApplicationServer.findById = function (serverId, callback) {
     });
 };
 
+/* istanbul ignore next */
 ApplicationServer.delete = function (server, callback) {
     const id = server.id || server;
     const sql = `DELETE FROM ${table} WHERE id=$1 RETURNING *`;
@@ -110,6 +111,7 @@ ApplicationServer.delete = function (server, callback) {
     });
 };
 
+/* istanbul ignore next */
 ApplicationServer.update = function (server, callback) {
     const { id, name = '' } = server;
     const newRef = hashServer(id, name);
@@ -121,6 +123,15 @@ ApplicationServer.update = function (server, callback) {
             if (rows[0]) server._ref = newRef;
             callback(null, server);
         })
+        .catch(err => callback(err));
+};
+
+/* istanbul ignore next */
+ApplicationServer.updateLastConnection = function (server, callback) {
+    const id = server.id || server;
+    const sql = `UPDATE ${table} SET last_conn=now() WHERE id=$1 RETURNING *`;
+    dbManager.queryPromise(sql, [id])
+        .then(rows => callback(null, fromRows(rows)[0]))
         .catch(err => callback(err));
 };
 

@@ -79,7 +79,7 @@ exports.updateServer = function (req, res) {
 
     ApplicationServer.findById(serverId, (err, server) => {
         if (!server) return sendMsgCodeResponse(res, 'No existe el servidor buscado', 404);
-        
+
         const { name, _ref, oldRef = _ref } = req.body;
         if (oldRef != server._ref) return sendMsgCodeResponse(res, 'Ocurrio una colision', 409);
 
@@ -139,9 +139,12 @@ exports.renewToken = function (req, res) {
                         const newToken = tokenManager.signServer(server);
                         TokenModel.insert(newToken, owner, (err, newDbToken) => {
                             if (err) return sendMsgCodeResponse(res, 'Error al renovar el token', 500);
-                            const metadata = { version: apiVersion };
-                            const ping = { server: server.withTimestampFields(), token: newDbToken.withTimestampExpiration() };
-                            res.send({ metadata, ping });
+
+                            ApplicationServer.updateLastConnection(server, (err, updatedServer) => {
+                                const metadata = { version: apiVersion };
+                                const ping = { server: updatedServer.withTimestampFields(), token: newDbToken.withTimestampExpiration() };
+                                res.send({ metadata, ping });
+                            });
                         });
                     });
                 });
@@ -151,9 +154,11 @@ exports.renewToken = function (req, res) {
                     if (err) return sendMsgCodeResponse(res, 'Error al obtener el servidor', 500);
                     if (!server) return sendMsgCodeResponse(res, 'El servidor ya no existe', 404);
 
-                    const metadata = { version: apiVersion };
-                    const ping = { server: server.withTimestampFields(), token: dbToken.withTimestampExpiration().withoutOwner() };
-                    res.send({ metadata, ping });
+                    ApplicationServer.updateLastConnection(server, (err, updatedServer) => {
+                        const metadata = { version: apiVersion };
+                        const ping = { server: updatedServer.withTimestampFields(), token: dbToken.withTimestampExpiration().withoutOwner() };
+                        res.send({ metadata, ping });
+                    });
                 });
             }
         });
