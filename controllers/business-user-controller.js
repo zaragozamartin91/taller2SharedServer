@@ -1,16 +1,16 @@
 const BusinessUser = require('../model/BusinessUser');
 const responseUtils = require('../utils/response-utils');
 const mainConf = require('../config/main-config');
-const CollectionMetadata = require('../model/CollectionMetadata');
 
 const logger = require('log4js').getLogger('business-user-controller');
 
 const apiVersion = mainConf.apiVersion;
 
 const sendMsgCodeResponse = responseUtils.sendMsgCodeResponse;
+const buildMetadata = responseUtils.buildMetadata;
 
-function insertFieldsOk(user) {
-    if (user.username && user.password && user.name && user.surname) return true;
+function insertFieldsOk({ username, password, name, surname }) {
+    if (username && password && name && surname) return true;
     else return false;
 }
 
@@ -85,7 +85,7 @@ exports.getUsers = function (req, res) {
     BusinessUser.find((err, users) => {
         if (err) return sendMsgCodeResponse(res, 'Ocurrio un error al obtener los usuarios', 500);
 
-        const metadata = new CollectionMetadata(users.length, users.length, '', '', '', '', apiVersion);
+        const metadata = buildMetadata(users.length, users.length);
         const resUsers = users.map(u => u.withStringRoles());
         res.send({ metadata, businessUser: resUsers });
     });

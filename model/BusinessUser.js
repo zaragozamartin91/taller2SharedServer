@@ -16,7 +16,7 @@ const DEFAULT_SURNAME = 'UNKNOWN';
 
 /* CODIGO -------------------------------------------------------------------------------------- */
 
-function hashUser(id, username, name, surname, password) {
+function hashUser({ id, username, name, surname, password }) {
     return hasher.hash({ id, username, name, surname, password });
 }
 
@@ -43,6 +43,8 @@ function BusinessUser(id, _ref, username, password, name = DEFAULT_NAME, surname
     this.surname = surname;
     this.roles = roles;
 }
+
+BusinessUser.hashUser = hashUser;
 
 BusinessUser.table = table;
 BusinessUser.idType = idType;
@@ -78,11 +80,12 @@ BusinessUser.fromRows = fromRows;
  * @param {object} userObj Objeto a partir del cual crear el usuario.
  * @param {Function} callback Funcion a llamar luego de insertar el usuario.
  */
+/* istanbul ignore next */
 BusinessUser.insert = function (userObj, callback) {
     const { username, id = idGenerator.generateId(username), name = DEFAULT_NAME,
         surname = DEFAULT_SURNAME, roles = [], okRoles = Role.standarize(roles) } = userObj;
     const password = encryptor.encrypt(userObj.password);
-    const _ref = hashUser(id, username, name, surname, password);
+    const _ref = hashUser({ id, username, name, surname, password });
 
     const sql = `INSERT INTO ${table} VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *`;
 
@@ -96,6 +99,7 @@ BusinessUser.insert = function (userObj, callback) {
  * @param {string} id Id del usuario de negocio buscado.
  * @param {Function} callback Funcion a invocar al obtener el usuario.
  */
+/* istanbul ignore next */
 BusinessUser.findById = function (user, callback) {
     const id = user.id || user;
     dbManager.queryPromise(`SELECT * FROM ${table} WHERE id=$1`, [id])
@@ -107,6 +111,7 @@ BusinessUser.findById = function (user, callback) {
  * Obtiene todos los usuarios de negocio de la BBDD.
  * @param {Function} callback Funcion a invocar luego de buscar a los usuarios.
  */
+/* istanbul ignore next */
 BusinessUser.find = function (callback) {
     dbManager.queryPromise(`SELECT * FROM ${table}`, [])
         .then(rows => callback(null, fromRows(rows)))
@@ -118,6 +123,7 @@ BusinessUser.find = function (callback) {
  * @param {string} username username del usuario de negocio buscado.
  * @param {Function} callback Funcion a invocar al obtener el usuario.
  */
+/* istanbul ignore next */
 BusinessUser.findByUsername = function (username, callback) {
     dbManager.queryPromise(`SELECT * FROM ${table} WHERE username=$1`, [username])
         .then(rows => callback(null, fromObj(rows[0])))
@@ -130,6 +136,7 @@ BusinessUser.findByUsername = function (username, callback) {
  * @param {Role} role Rol a verificar.
  * @param {Function} callback Funcion a llamar luego de verificar el rol. 
  */
+/* istanbul ignore next */
 BusinessUser.hasRole = function (user, role, callback) {
     const userId = user.id || user;
     const roleId = role.type || role.role || role;
@@ -143,6 +150,7 @@ BusinessUser.hasRole = function (user, role, callback) {
  * Elimina un usuario de la BBDD.
  * @param {BusinessUser} user Usuario a eliminar.
  */
+/* istanbul ignore next */
 BusinessUser.delete = function (user, callback) {
     const userId = user.id || user;
     const sql = `DELETE FROM ${table} WHERE id=$1 RETURNING *`;
@@ -157,10 +165,11 @@ BusinessUser.delete = function (user, callback) {
  * @param {BusinessUser} user Usuario a actualizar en la BBDD.
  * @param {Function} callback Funcion a ejecutar luego de actualizar el usuario: (err,user) => {}.
  */
+/* istanbul ignore next */
 BusinessUser.update = function (user, callback) {
     logger.debug(`Actualizando usuario ${user.id}`);
     const { id, username, name, surname, password, roles = [], okRoles = Role.standarize(roles) } = user;
-    const newRef = hashUser(id, username, name, surname, password);
+    const newRef = hashUser({ id, username, name, surname, password });
 
     console.log('okRoles: ' + okRoles);
 
