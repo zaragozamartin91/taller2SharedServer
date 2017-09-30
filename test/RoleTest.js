@@ -70,6 +70,26 @@ describe('Role', function () {
         });
     });
 
+    describe('#standarize()', function () {
+        it('a partir de un arreglo de roles filtra los roles y los retorna como lowercase strings', function () {
+            const roles = [Role.manager(), Role.admin(), Role.user(), new Role('asd')];
+            const stdRoles = Role.standarize(roles);
+            assert.ok(Role.fromObj(stdRoles[0]).isManager());
+            assert.ok(Role.fromObj(stdRoles[1]).isAdmin());
+            assert.ok(Role.fromObj(stdRoles[2]).isUser());
+            assert.equal(3, stdRoles.length);
+        });
+
+        it('a partir de un arreglo de strings de roles filtra los roles y los retorna como lowercase strings', function () {
+            const roles = ['Manager','ADMIN','user','asd'];
+            const stdRoles = Role.standarize(roles);
+            assert.ok(Role.fromObj(stdRoles[0]).isManager());
+            assert.ok(Role.fromObj(stdRoles[1]).isAdmin());
+            assert.ok(Role.fromObj(stdRoles[2]).isUser());
+            assert.equal(3, stdRoles.length);
+        });
+    });
+
     afterEach(function () {
     });
 });

@@ -7,19 +7,9 @@ const dataValidator = require('../utils/data-validator');
 const moment = require('moment');
 
 const apiVersion = mainConf.apiVersion;
-const sendMsgCodeResponse = responseUtils.sendMsgCodeResponse;
 
-function buildMetadata(count = 0, total = count) {
-    return {
-        count,
-        total,
-        'next': '',
-        'prev': '',
-        'first': '',
-        'last': '',
-        'version': apiVersion
-    };
-}
+const sendMsgCodeResponse = responseUtils.sendMsgCodeResponse;
+const buildMetadata = responseUtils.buildMetadata;
 
 exports.getUsers = function (req, res) {
     const serverId = req.serverId;

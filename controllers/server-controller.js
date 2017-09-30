@@ -1,7 +1,6 @@
 const mainConf = require('../config/main-config');
 const responseUtils = require('../utils/response-utils');
 const ApplicationServer = require('../model/ApplicationServer');
-const CollectionMetadata = require('../model/CollectionMetadata');
 const tokenManager = require('../utils/token-manager');
 const BusinessUser = require('../model/BusinessUser');
 const TokenModel = require('../model/Token');
@@ -10,6 +9,7 @@ const logger = require('log4js').getLogger('server-controller');
 
 const apiVersion = mainConf.apiVersion;
 const sendMsgCodeResponse = responseUtils.sendMsgCodeResponse;
+const buildMetadata = responseUtils.buildMetadata;
 
 exports.getServer = function (req, res) {
     getServer(req, res, server => {
@@ -34,15 +34,7 @@ exports.getServers = function (req, res) {
 
         const count = srvs.length;
         const total = count;
-        const metadata = new CollectionMetadata(
-            count,
-            total,
-            '',
-            '',
-            '',
-            '',
-            mainConf.apiVersion
-        );
+        const metadata = buildMetadata(count, total);
 
         const servers = srvs.map(ApplicationServer.withTimestampFields);
         res.send({ metadata, servers });

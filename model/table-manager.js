@@ -1,5 +1,5 @@
 const BusinessUser = require('./BusinessUser');
-const Role = require('./Role');
+//const Role = require('./Role');
 const ApplicationServer = require('./ApplicationServer');
 const ApplicationUser = require('./ApplicationUser');
 const Car = require('./Car');
@@ -21,7 +21,8 @@ exports.createBusinessUserTable = function (callback) {
         username VARCHAR(64) UNIQUE NOT NULL,
         password VARCHAR(256) NOT NULL,
         name VARCHAR(32) DEFAULT '${BusinessUser.DEFAULT_NAME}',
-        surname VARCHAR(32) DEFAULT '${BusinessUser.DEFAULT_SURNAME}'
+        surname VARCHAR(32) DEFAULT '${BusinessUser.DEFAULT_SURNAME}',
+        roles JSON DEFAULT '[]'
     )`;
     dbManager.query(sql, [], err => {
         if (err) logger.error(err);
@@ -31,44 +32,6 @@ exports.createBusinessUserTable = function (callback) {
 
 exports.dropBusinessUserTable = function (callback) {
     dbManager.query(`DROP TABLE ${BusinessUser.table}`, [], err => {
-        if (err) logger.error(err);
-        callback();
-    });
-};
-
-/**
- * Crea la tabla de roles de usuario de negocio.
- * @param {Function} callback Funcion a invocar luego que la tabla fue creada.
- */
-exports.createBusinessUserRolesTable = function (callback) {
-    dbManager.query(`CREATE TABLE ${BusinessUser.rolesTable} (
-        business_user ${BusinessUser.idType} REFERENCES ${BusinessUser.table}(id) ON DELETE CASCADE,
-        role ${Role.idType} REFERENCES ${Role.table}(type) ON DELETE CASCADE,
-        UNIQUE(business_user,role)
-    )`, [], callback);
-};
-
-exports.dropBusinessUserRolesTable = function (callback) {
-    dbManager.query(`DROP TABLE ${BusinessUser.rolesTable}`, [], err => {
-        logger.error(err);
-        callback();
-    });
-};
-
-// Role -----------------------------------------------------------------------------------------------------
-
-/**
- * Crea la tabla de roles de usuario de negocio.
- * @param {function} callback Funcion a invocar luego de crear la tabla.
- */
-exports.createRoleTable = function (callback) {
-    dbManager.query(`CREATE TABLE ${Role.table} (
-        type ${Role.idType} PRIMARY KEY
-    )`, [], callback);
-};
-
-exports.dropRoleTable = function (callback) {
-    dbManager.query(`DROP TABLE ${Role.table}`, [], err => {
         if (err) logger.error(err);
         callback();
     });
@@ -102,12 +65,18 @@ exports.createTokenTable = function (callback) {
         owner VARCHAR(64) DEFAULT '',
         counter SERIAL
     )`;
-    dbManager.query(sql, [], callback);
+    dbManager.query(sql, [], err => {
+        if (err) console.error(err);
+        callback(err);
+    });
 };
 
 exports.dropTokenTable = function (callback) {
     const sql = `DROP TABLE ${TokenModel.table}`;
-    dbManager.query(sql, [], callback);
+    dbManager.query(sql, [], err => {
+        if (err) console.error(err);
+        callback(err);
+    });
 };
 
 // ApplicationUser -------------------------------------------------------------------------------------------------------
@@ -158,7 +127,7 @@ exports.createCarTable = function (callback) {
     });
 };
 
-exports.dropCarTable = function(callback) {
+exports.dropCarTable = function (callback) {
     const sql = `DROP TABLE ${Car.table}`;
     dbManager.query(sql, [], err => {
         if (err) logger.error(err);

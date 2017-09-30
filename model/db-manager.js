@@ -4,6 +4,7 @@ const modelConfig = require('./model-config');
 const { Pool } = require('pg');
 const EMPTY_RES = { isEmpty: true, rows: [] };
 
+/* istanbul ignore next */
 function buildPool() {
     console.log('CONSTRUYENDO POOL DE CONEXIONES DE BBDD');
 
@@ -43,6 +44,7 @@ const poolWrapper = {
  * @param {Array} values Valores a reemplazar en los placeholders.
  * @param {Function} callback Funcion a invocar al finalizar la query: (err,res) => {}.
  */
+/* istanbul ignore next */
 function query(sql, values, callback) {
     if (!values || typeof values == 'function') {
         throw new Error('No se indicaron valores de query (pasar [] en caso de no requerir asignar valores)');
@@ -66,6 +68,7 @@ function query(sql, values, callback) {
  * @param {Array} values Valores a reemplazar en los placeholders.
  * @return {Promise} Promesa de ejecucion de query.
  */
+/* istanbul ignore next */
 function queryPromise(sql, values) {
     return new Promise((resolve, reject) => {
         query(sql, values, (err, { rows }) => {
@@ -78,10 +81,12 @@ function queryPromise(sql, values) {
 exports.query = query;
 exports.queryPromise = queryPromise;
 
+/* istanbul ignore next */
 exports.end = function () {
     poolWrapper.pool.end();
 };
 
+/* istanbul ignore next */
 exports.reset = function () {
     try {
         poolWrapper.pool.end();
