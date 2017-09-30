@@ -204,5 +204,75 @@ describe('business-user-controller', function () {
             businessUserController.getUsers(req, res);
         });
     });
+
+    describe('#deleteUser', function () {
+        it('elimina un usuario exitosamente', function (done) {
+            sandbox.stub(BusinessUser, 'delete')
+                .callsFake((user, callback) => callback(null, BusinessUser.fromObj(usrObjMock1)));
+
+            const req = { params: { userId: usrObjMock1.id } };
+            const res = {
+                status(code) { this.code = code; },
+                send({ code, message }) {
+                    assert.equal(204, code);
+                    assert.ok(message);
+                    assert.equal(code, this.code);
+                    done();
+                }
+            };
+            businessUserController.deleteUser(req, res);
+        });
+
+        it('falla porque no existe el usuario', function (done) {
+            sandbox.stub(BusinessUser, 'delete')
+                .callsFake((user, callback) => callback());
+
+            const req = { params: usrObjMock1.id };
+            const res = {
+                status(code) { this.code = code; },
+                send({ code, message }) {
+                    assert.equal(404, code);
+                    assert.ok(message);
+                    assert.equal(code, this.code);
+                    done();
+                }
+            };
+            businessUserController.deleteUser(req, res);
+        });
+    });
+
+    describe('#getUser', function () {
+        it('Obtiene un usuario', function (done) {
+            sandbox.stub(BusinessUser, 'findById')
+                .callsFake((user, callback) => callback(null, BusinessUser.fromObj(usrObjMock1)));
+
+            const req = { params: { userId: usrObjMock1.id } };
+            const res = {
+                send({ metadata, businessUser }) {
+                    assert.ok(businessUser);
+                    assert.ok(metadata);
+                    done();
+                }
+            };
+            businessUserController.getUser(req, res);
+        });
+
+        it('Falla debido a que el usuario no existe', function (done) {
+            sandbox.stub(BusinessUser, 'findById')
+                .callsFake((user, callback) => callback());
+
+            const req = { params: { userId: usrObjMock1.id } };
+            const res = {
+                status(code) { this.code = code; },
+                send({ code, message }) {
+                    assert.equal(404, code);
+                    assert.ok(message);
+                    assert.equal(code, this.code);
+                    done();
+                }
+            };
+            businessUserController.getUser(req, res);
+        });
+    });
 });
 
