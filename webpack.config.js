@@ -5,7 +5,6 @@ function config() {
     let conf = {
         entry: {
             mainapp: path.join(__dirname, 'components', 'MainApp.js'),
-            login: path.join(__dirname, 'components', 'Login.js')
         },
 
         /* Se creara un archivo por cada entrada */

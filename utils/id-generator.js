@@ -5,10 +5,10 @@ const defaultPrefix = 'ID';
  * @param {string} prefix Prefijo del id.
  * @return {string} Id generado.
  */
-function generateId(prefix) {
+function generateId(prefix, limit = 100000) {
     prefix = prefix || defaultPrefix;
     prefix = prefix.replace(/ +/g, '');
-    return `${prefix}-${Math.floor(Math.random() * 100000).toString()}`;
+    return `${prefix}-${Math.floor(Math.random() * limit).toString()}`;
 }
 
 exports.generateId = generateId;

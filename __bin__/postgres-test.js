@@ -2,6 +2,10 @@ const BusinessUser = require('../model/BusinessUser');
 const dbManager = require('../model/db-manager');
 const ApplicationServer = require('../model/ApplicationServer');
 const Role = require('../model/Role');
+const tableManager = require('../model/table-manager');
+const moment = require('moment');
+const ApplicationUser = require('../model/ApplicationUser');
+const Car = require('../model/Car');
 
 function createUserTable() {
     BusinessUser.createTable(err => {
@@ -70,11 +74,69 @@ function addRole() {
     });
 }
 
-function addRoles() {
-    BusinessUser.addRoles('hector-70306', ['admin', 'manager', 'user'], (err, res) => {
-        if (err) console.error(err);
-        else console.log(res);
-    });
-}
+let value = [{
+    currency: 'pesos',
+    value: 12.50
+}, {
+    currency: 'dolares',
+    value: 65478.12
+}, {
+    currency: 'euros',
+    value: 987.0
+}];
+// dbManager.query('INSERT INTO jsons(data) VALUES($1)', [JSON.stringify(value)], (err, res) => {
+//     console.error(err);
+//     console.log(res);
+//     dbManager.end();
+// });
 
-BusinessUser.hasRole('martin-27482', 'admin', (err, res) => console.log(res));
+let [applicationOwner, username, name, surname, country, email, birthdate, type, images, balance] = [
+    'oneApp-63140',
+    'quelopario',
+    'hector',
+    'zaragoza',
+    'argentina',
+    'quelopario@accusys',
+    moment('1995-12-25').toDate(),
+    'driver',
+    ['https://www.postgresql.org/docs/9.6/static/datatype-json.html'],
+    [{ currency: 'peso', value: 123.45 }, { currency: 'dolar', value: 6789.10 }]
+];
+let userObj = { applicationOwner, username, name, surname, country, email, birthdate, type, images, balance };
+
+// ApplicationUser.insert(userObj, (err, res) => {
+//     console.error(err);
+//     console.log(res);
+//     dbManager.end();
+// });
+
+
+// let [owner, properties] = ['mzaragoza-58646', [{ name: 'model', value: 'renault' }, { name: 'year', value: 2001 }]];
+// Car.insert({ owner, properties }, (err, res) => {
+//     console.error(err);
+//     console.log(res);
+//     dbManager.end();
+// });
+
+// Car.findByOwner('mzaragoza-58646', (err, cars) => {
+//     console.error(err);
+//     console.log(cars);
+//     console.log(cars[0].properties[1]);
+//     dbManager.end();
+// });
+
+const id = Math.floor(Math.random() * 1000);
+const nameId = `NAME-${id}`;
+dbManager.queryPromise('INSERT INTO person VALUES($1,$2) RETURNING *', [nameId, id])
+    .then(rows => {
+        console.log(rows);
+        return dbManager.queryPromise('UPDATE asdad SET name=$1 WHERE dni=$2 RETURNING *', ['PEPE', id]);
+    })
+    .then(rows => {
+        console.log(rows);
+        return dbManager.queryPromise('UPDATE person SET name=$1 WHERE dni=$2 RETURNING *', ['PEPE', id]);
+    })
+    .catch(cause => {
+        console.error(cause);
+        dbManager.end();
+    });

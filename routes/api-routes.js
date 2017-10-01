@@ -3,6 +3,7 @@ const serverController = require('../controllers/server-controller');
 const tokenController = require('../controllers/token-controller');
 const tokenValidator = require('../middleware/token-validator');
 const businessUsersController = require('../controllers/business-user-controller');
+const appUserController = require('../controllers/app-user-controller');
 
 const testDataController = require('../controllers/test-data-controller');
 
@@ -20,6 +21,9 @@ router.get('/test', function (req, res) {
 router.post('/token', tokenController.generateToken);
 
 /* /servers ROUTES -------------------------------------------------------------------------------------------------------------- */
+
+router.post('/servers/ping', serverController.renewToken);
+
 // Agrego el middleware para parsear y deocdificar el token
 router.use('/servers', tokenValidator.verifyToken);
 
@@ -33,6 +37,7 @@ router.delete('/servers/:serverId', tokenValidator.verifyManagerToken, serverCon
 router.put('/servers/:serverId', tokenValidator.verifyManagerToken, serverController.updateServer);
 
 router.post('/servers/:serverId', tokenValidator.verifyManagerToken, serverController.resetToken);
+
 
 /* FIN servers ROUTES ----------------------------------------------------------------------------------------------------------- */
 
@@ -56,6 +61,27 @@ router.get('/business-users/me', tokenValidator.verifyUserToken, businessUsersCo
 router.get('/business-users/:userId', tokenValidator.verifyUserToken, businessUsersController.getUser);
 
 /* FIN /business-users ROUTES ---------------------------------------------------------------------------------------------------- */
+
+
+/* /users ROUTES ------------------------------------------------------------------------------------------------------- */
+
+router.use('/users', tokenValidator.verifyToken);
+
+router.get('/users', tokenValidator.verifyServerOrUserToken, appUserController.getUsers);
+router.get('/users/:userId', tokenValidator.verifyServerOrUserToken, appUserController.getUser);
+router.post('/users', tokenValidator.verifyServerToken, appUserController.postUser);
+router.delete('/users/:userId', tokenValidator.verifyServerOrUserToken, appUserController.deleteUser);
+router.post('/users/validate', tokenValidator.verifyServerToken, appUserController.validateUser);
+router.put('/users/:userId', tokenValidator.verifyServerToken, appUserController.updateUser);
+
+router.get('/users/:userId/cars', tokenValidator.verifyServerOrUserToken, appUserController.getUserCars);
+router.post('/users/:userId/cars', tokenValidator.verifyServerOrUserToken, appUserController.postUserCar);
+router.delete('/users/:userId/cars/:carId', tokenValidator.verifyServerOrUserToken, appUserController.deleteUserCar);
+router.get('/users/:userId/cars/:carId', tokenValidator.verifyServerOrUserToken, appUserController.getUserCar);
+router.put('/users/:userId/cars/:carId', tokenValidator.verifyServerOrUserToken, appUserController.updateUserCar);
+
+/* FIN /users ROUTES ---------------------------------------------------------------------------------------------------- */
+
 
 module.exports = router;
 

@@ -1,5 +1,4 @@
 import React from 'react';
-import ReactDom from 'react-dom';
 
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 import RaisedButton from 'material-ui/RaisedButton';
@@ -7,50 +6,79 @@ import TextField from 'material-ui/TextField';
 import { Card, CardActions, CardHeader, CardText } from 'material-ui/Card';
 import FlatButton from 'material-ui/FlatButton';
 
+import axios from 'axios';
+
 import Header from './Header';
+//import mainConfig from '../config/main-config';
 
+/* FIN DE IMPORTS -------------------------------------------------------------------------------------- */
 
-/* ESTE FRAGMENTO DE CODIGO ES REQUERIDO PARA LOS EVENTOS DE TIPO TOUCH O CLICK EN COMPONENTES MATERIAL-UI */
-const injectTapEventPlugin = require('react-tap-event-plugin');
-injectTapEventPlugin();
-/* -------------------------------------------------------------------------------------------------------- */
-
-let messageDiv = document.getElementById('message');
-let message = messageDiv ? messageDiv.getAttribute('data-value') : null;
+const EMPTY_CALLBACK = () => { };
 
 const Login = React.createClass({
+    getInitialState: function () {
+        return {
+            username: '',
+            password: '',
+            errMsg: null,
+        };
+    },
+
+    getDefaultProps: function () {
+        return { onSubmit: EMPTY_CALLBACK };
+    },
+
     submitForm: function () {
-        console.log('Submiting form');
-        if (this.form) this.form.submit();
+        const data = { username: this.state.username, password: this.state.password, backoffice: true };
+        console.log('Subiendo:');
+        console.log(data);
+
+        axios.post('/api/v1/token', data)
+            .then(contents => {
+                console.log('Contenido:');
+                console.log(contents.data);
+                this.props.onSubmit(contents.data.token);
+            })
+            .catch(cause => {
+                console.error('Error');
+                this.setState({ errMsg: 'Credenciales invalidas' });
+            });
+    },
+
+    handleKeyPress: function (event) {
+        if (event.key == 'Enter') this.submitForm();
     },
 
     render: function () {
-        let msgElem = message ? <p style={{ color: 'red' }}>{message}</p> : <div />;
+        let msgElem = this.state.errMsg ? <p style={{ color: 'red' }} >{this.state.errMsg}</p> : <div />;
 
         return (
-            <div>
+            <div onKeyPress={this.handleKeyPress}>
                 <Header title="Shared server" />
                 {msgElem}
                 <MuiThemeProvider>
                     <Card>
                         <CardHeader
                             title="Iniciar sesion"
-                            subtitle="Usa una cuenta existente." />
+                            subtitle='Ingrese credenciales' />;
 
                         <CardText expandable={false}>
-                            <form method="POST" action="/login" ref={f => { this.form = f; }}>
-                                <TextField
-                                    name="email"
-                                    hint="email"
-                                    floatingLabelText="email" /><br />
+                            <TextField
+                                name="username"
+                                hint="username"
+                                floatingLabelText="username"
+                                value={this.state.username}
+                                onChange={e => this.setState({ username: e.target.value })} /><br />
 
-                                <TextField
-                                    name="password"
-                                    hintText="Password"
-                                    floatingLabelText="Password"
-                                    type="password" /><br />
-                            </form>
+                            <TextField
+                                name="password"
+                                hintText="Password"
+                                floatingLabelText="Password"
+                                type="password"
+                                value={this.state.password}
+                                onChange={e => this.setState({ password: e.target.value })} /><br />
                         </CardText>
+
                         <CardActions>
                             <FlatButton label="Iniciar sesion" onClick={this.submitForm} />
                         </CardActions>
@@ -62,7 +90,4 @@ const Login = React.createClass({
     }
 });
 
-ReactDom.render(
-    <Login />,
-    document.getElementById('root')
-);
+export default Login;

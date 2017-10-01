@@ -9,6 +9,7 @@ const logger = require('log4js').getLogger('ApplicationServer');
 /* CONSTANTES -------------------------------------------------------------------------------------- */
 
 const table = 'application_server';
+const idType = 'VARCHAR(64)';
 
 /* CODIGO -------------------------------------------------------------------------------------- */
 
@@ -37,13 +38,16 @@ function ApplicationServer(id, _ref, createdBy, createdTime, name, lastConnectio
     this.lastConnection = lastConnection;
 }
 
+ApplicationServer.table = table;
+ApplicationServer.idType = idType;
+
 /**
  * Crea una instancia de app server a partir de una fila de postgres.
  * 
  * @param {object} obj Propiedades / campos de la fila resultado de una query.
  * @return {ApplicationServer} Nueva instancia de app server.
  */
-ApplicationServer.fromRow = function (obj) {
+ApplicationServer.fromObj = function (obj) {
     if (obj) {
         const appServer = new ApplicationServer(
             obj.id,
@@ -57,9 +61,11 @@ ApplicationServer.fromRow = function (obj) {
     } else return null;
 };
 
-/* TODO : created_by TIENE QUE SER UNA REFERENCIA A UN BusinessUser?
-created_time / last_conn, TIENEN QUE SER DE TIPO Date EN POSTGRES? */
+function fromRows(rows = []) {
+    return rows.map(ApplicationServer.fromObj);
+}
 
+/* istanbul ignore next */
 ApplicationServer.insert = function (obj, callback) {
     const name = obj.name;
     const id = idGenerator.generateId(name);
@@ -72,82 +78,61 @@ ApplicationServer.insert = function (obj, callback) {
         VALUES ($1,$2,$3,$4,$5) RETURNING *`,
         [id, _ref, createdBy, name, createdTime], (err, res) => {
             if (err) return callback(err);
-            return callback(null, ApplicationServer.fromRow(res.rows[0]));
+            return callback(null, ApplicationServer.fromObj(res.rows[0]));
         });
 };
 
+/* istanbul ignore next */
 ApplicationServer.find = function (callback) {
     dbManager.query(`SELECT * FROM ${table}`, [], (err, res) => {
         if (err) return callback(err);
-        callback(null, res.rows.map(ApplicationServer.fromRow));
+        callback(null, fromRows(res.rows));
     });
 };
 
+/* istanbul ignore next */
 ApplicationServer.findById = function (serverId, callback) {
     console.log('BUSCANDO SERVER CON ID: ' + serverId);
     dbManager.query(`SELECT * FROM ${table} WHERE id=$1`, [serverId], (err, res) => {
         if (err) return callback(err);
         const rows = res.rows;
-        if (rows.length) return callback(null, ApplicationServer.fromRow(rows[0]));
+        if (rows.length) return callback(null, ApplicationServer.fromObj(rows[0]));
         return callback(null, null);
     });
 };
 
-ApplicationServer.createTable = function (callback) {
-    dbManager.query(`CREATE TABLE ${table} (
-        id VARCHAR(64) NOT NULL PRIMARY KEY,
-        _ref VARCHAR(256) NOT NULL,
-        created_by ${BusinessUser.idType} REFERENCES ${BusinessUser.table}(id) ON DELETE SET NULL,
-        created_time TIMESTAMP DEFAULT now(),
-        name VARCHAR(64) UNIQUE NOT NULL,
-        last_conn TIMESTAMP DEFAULT now())`, [], callback);
-};
-
-ApplicationServer.dropTable = function (callback) {
-    dbManager.query(`DROP TABLE ${table}`, [], err => {
-        if (err) logger.error(err);
-        callback();
-    });
-};
-
+/* istanbul ignore next */
 ApplicationServer.delete = function (server, callback) {
     const id = server.id || server;
     const sql = `DELETE FROM ${table} WHERE id=$1 RETURNING *`;
     dbManager.query(sql, [id], (err, res) => {
         if (err) return callback(err);
-        callback(null, ApplicationServer.fromRow(res.rows[0]));
+        callback(null, ApplicationServer.fromObj(res.rows[0]));
     });
 };
 
-
+/* istanbul ignore next */
 ApplicationServer.update = function (server, callback) {
-    const id = server.id;
-    const name = server.name || '';
-    const oldRef = server._ref;
+    const { id, name = '' } = server;
+    const newRef = hashServer(id, name);
 
-    const findSql = `SELECT * FROM ${table} WHERE id=$1 AND _ref=$2`;
-    dbManager.query(findSql, [id, oldRef], (err, res) => {
-        if (err) return callback(err);
+    const sql = `UPDATE ${table} SET name=$1,_ref=$2 WHERE id=$3 RETURNING *`;
 
-        const dbServer = res.rows[0];
-        if (!dbServer) {
-            err = new Error(`Ocurrio una colision al actualizar el servidor ${id}`);
-            err.type = 'COLLISION';
-            return callback(err);
-        }
-
-        const newRef = hashServer(id, name);
-        const updateSql = `UPDATE ${table} SET name=$1,_ref=$2 WHERE id=$3 RETURNING *`;
-        dbManager.query(updateSql, [name, newRef, id], (err, res) => {
-            if (err) return callback(err);
-
-            const dbServer = res.rows[0];
-            if (!dbServer) return callback(null, null);
-
-            server._ref = newRef;
+    dbManager.queryPromise(sql, [name, newRef, id])
+        .then(rows => {
+            if (rows[0]) server._ref = newRef;
             callback(null, server);
-        });
-    });
+        })
+        .catch(err => callback(err));
+};
+
+/* istanbul ignore next */
+ApplicationServer.updateLastConnection = function (server, callback) {
+    const id = server.id || server;
+    const sql = `UPDATE ${table} SET last_conn=now() WHERE id=$1 RETURNING *`;
+    dbManager.queryPromise(sql, [id])
+        .then(rows => callback(null, fromRows(rows)[0]))
+        .catch(err => callback(err));
 };
 
 ApplicationServer.withTimestampFields = function (server) {

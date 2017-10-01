@@ -1,9 +1,4 @@
-const dbManager = require('./db-manager');
 const logger = require('log4js').getLogger('Role');
-
-const table = 'role';
-const idType = 'VARCHAR(16)';
-
 
 const validRoles = ['admin', 'manager', 'user'];
 
@@ -14,36 +9,9 @@ const validRoles = ['admin', 'manager', 'user'];
  * @param {string} type Tipo de rol [admin||user||manager].
  * @return {Role} nuevo rol.
  */
-function Role(type) {
-    this.type = type;
+function Role(type = '') {
+    this.type = type.toLowerCase();
 }
-
-/**
- * Crea la tabla de roles de usuario de negocio.
- * @param {function} callback Funcion a invocar luego de crear la tabla.
- */
-Role.createTable = function (callback) {
-    dbManager.query(`CREATE TABLE ${table} (
-        type ${idType} PRIMARY KEY
-    )`, [], callback);
-};
-
-Role.dropTable = function (callback) {
-    dbManager.query(`DROP TABLE ${table}`, [], err => {
-        if (err) logger.error(err);
-        callback();
-    });
-};
-
-/**
- * Inserta un rol de usuario de negocio.
- * @param {string} rol a insertar.
- * @param {function} callback Funcion a invocar luego de insertar el rol.
- */
-Role.insert = function (role, callback) {
-    role = Role.fromObj(role).type;
-    dbManager.query(`INSERT INTO ${table} VALUES($1)`, [role], callback);
-};
 
 Role.fromObj = function (roleObj) {
     return new Role(roleObj.type || roleObj.role || roleObj);
@@ -66,8 +34,7 @@ Role.admin = function () {
  * @param {Array<Role>} roles Roles a convertir en un arreglo de strings.
  * @return {Array<string>} Arreglo de nombres de roles.
  */
-Role.asStrings = function (roles) {
-    roles = roles || [];
+Role.asStrings = function (roles = []) {
     const strings = [];
     roles.forEach(role => strings.push(role.type || role));
     return strings;
@@ -129,6 +96,17 @@ Role.isValid = function (role) {
     return validRoles.indexOf(type) >= 0;
 };
 
+/**
+ * Filtra y estandariza un conjunto de roles y los devuelve como strings.
+ * @param {Array<Role>} roles Conjunto de roles.
+ * @return {Array<string>} Ids de los roles en lowercase.
+ */
+Role.standarize = function (roles) {
+    roles = Role.filterValid(roles);
+    roles = Role.asStrings(roles);
+    return roles.map(role => role.toLowerCase());
+};
+
 Role.prototype.isManager = function () {
     return this.type.valueOf() == 'manager';
 };
@@ -144,8 +122,5 @@ Role.prototype.isAdmin = function () {
 Role.prototype.isValid = function () {
     return Role.isValid(this.type);
 };
-
-Role.table = table;
-Role.idType = idType;
 
 module.exports = Role;

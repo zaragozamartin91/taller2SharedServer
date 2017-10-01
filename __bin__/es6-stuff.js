@@ -1,5 +1,13 @@
-function destructure({x,y,z}) {
-    console.log(x,y,z);
+function transform(str) {
+    return 'trans-' + str;
 }
 
-destructure(null);
+const userObj = {
+    name: 'martin'
+};
+
+//let { name, surname = transform(name) } = userObj;
+let {newName: name} = userObj;
+ 
+//console.log(name, surname);
+console.log(name);

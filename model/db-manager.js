@@ -4,6 +4,7 @@ const modelConfig = require('./model-config');
 const { Pool } = require('pg');
 const EMPTY_RES = { isEmpty: true, rows: [] };
 
+/* istanbul ignore next */
 function buildPool() {
     console.log('CONSTRUYENDO POOL DE CONEXIONES DE BBDD');
 
@@ -40,16 +41,17 @@ const poolWrapper = {
 /**
  * Realiza una query en la BBDD.
  * @param {string} sql Query en sql usando placeholders (ej: SELECT FROM USER WHERE ID=$1).
- * @param {Array} values [OPCIONAL] Valores a reemplazar en los placeholders.
- * @param {Function} callback Funcion a invocar al finalizar la query.
+ * @param {Array} values Valores a reemplazar en los placeholders.
+ * @param {Function} callback Funcion a invocar al finalizar la query: (err,res) => {}.
  */
-exports.query = function (sql, values, callback) {
+/* istanbul ignore next */
+function query(sql, values, callback) {
     if (!values || typeof values == 'function') {
         throw new Error('No se indicaron valores de query (pasar [] en caso de no requerir asignar valores)');
     }
 
     poolWrapper.pool.connect((err, client, done) => {
-        if (err) return callback(err);
+        if (err) return callback(err, EMPTY_RES);
 
         client.query(sql, values || [], (err, res) => {
             done(); // done libera un cliente del pool
@@ -58,12 +60,33 @@ exports.query = function (sql, values, callback) {
             callback(err, res);
         });
     });
-};
+}
 
+/**
+ * Ejecuta una query como una promesa. Este tipo de query retorna filas en vez de objeto res.
+ * @param {string} sql Query en sql usando placeholders (ej: SELECT FROM USER WHERE ID=$1).
+ * @param {Array} values Valores a reemplazar en los placeholders.
+ * @return {Promise} Promesa de ejecucion de query.
+ */
+/* istanbul ignore next */
+function queryPromise(sql, values) {
+    return new Promise((resolve, reject) => {
+        query(sql, values, (err, { rows }) => {
+            if (err) reject(err);
+            else resolve(rows);
+        });
+    });
+}
+
+exports.query = query;
+exports.queryPromise = queryPromise;
+
+/* istanbul ignore next */
 exports.end = function () {
     poolWrapper.pool.end();
 };
 
+/* istanbul ignore next */
 exports.reset = function () {
     try {
         poolWrapper.pool.end();

@@ -1,7 +1,6 @@
 const mainConf = require('../config/main-config');
 const responseUtils = require('../utils/response-utils');
 const ApplicationServer = require('../model/ApplicationServer');
-const CollectionMetadata = require('../model/CollectionMetadata');
 const tokenManager = require('../utils/token-manager');
 const BusinessUser = require('../model/BusinessUser');
 const TokenModel = require('../model/Token');
@@ -9,14 +8,8 @@ const TokenModel = require('../model/Token');
 const logger = require('log4js').getLogger('server-controller');
 
 const apiVersion = mainConf.apiVersion;
-
-/**
- * Genera un token firmado a partir de un objeto de tipo servidor de aplicaciones.
- * @param {ApplicationServer} server servidor de aplicaciones a partir del cual generar el token.
- */
-function signServer(server) {
-    return tokenManager.signToken({ id: server.id });
-}
+const sendMsgCodeResponse = responseUtils.sendMsgCodeResponse;
+const buildMetadata = responseUtils.buildMetadata;
 
 exports.getServer = function (req, res) {
     getServer(req, res, server => {
@@ -28,8 +21,8 @@ exports.getServer = function (req, res) {
 function getServer(req, res, callback) {
     const serverId = req.params.serverId;
     ApplicationServer.findById(serverId, (err, server) => {
-        if (err) return responseUtils.sendMsgCodeResponse(res, `Error al obtener el server ${serverId}`, 500);
-        if (!server) return responseUtils.sendMsgCodeResponse(res, `Server ${serverId} no encontrado`, 404);
+        if (err) return sendMsgCodeResponse(res, `Error al obtener el server ${serverId}`, 500);
+        if (!server) return sendMsgCodeResponse(res, `Server ${serverId} no encontrado`, 404);
 
         callback(server);
     });
@@ -37,19 +30,11 @@ function getServer(req, res, callback) {
 
 exports.getServers = function (req, res) {
     ApplicationServer.find((err, srvs) => {
-        if (err) return responseUtils.sendMsgCodeResponse(res, 'Ocurrio un error al obtener los servers', 500);
+        if (err) return sendMsgCodeResponse(res, 'Ocurrio un error al obtener los servers', 500);
 
         const count = srvs.length;
         const total = count;
-        const metadata = new CollectionMetadata(
-            count,
-            total,
-            '',
-            '',
-            '',
-            '',
-            mainConf.apiVersion
-        );
+        const metadata = buildMetadata(count, total);
 
         const servers = srvs.map(ApplicationServer.withTimestampFields);
         res.send({ metadata, servers });
@@ -58,19 +43,19 @@ exports.getServers = function (req, res) {
 
 exports.postServer = function (req, res) {
     const servObj = req.body;
-    if (!servObj.name || !servObj.createdBy) return responseUtils.sendMsgCodeResponse(res, 'Faltan campos', 400);
+    if (!servObj.name || !servObj.createdBy) return sendMsgCodeResponse(res, 'Faltan campos', 400);
 
     ApplicationServer.insert(servObj, (err, result) => {
         if (err) {
             logger.error(err);
-            return responseUtils.sendMsgCodeResponse(res, 'Ocurrio un error al dar de alta el server', 500);
+            return sendMsgCodeResponse(res, 'Ocurrio un error al dar de alta el server', 500);
         }
 
         const metadata = mainConf.apiVersion;
         const server = result.withTimestampFields();
-        const token = signServer(server);
+        const token = tokenManager.signServer(server);
         TokenModel.insert(token, server.id, (err, dbtoken) => {
-            if (err) return responseUtils.sendMsgCodeResponse(res, 'Error al insertar el token del nuevo server', 500);
+            if (err) return sendMsgCodeResponse(res, 'Error al insertar el token del nuevo server', 500);
             res.send({ metadata, server, token });
         });
     });
@@ -78,31 +63,34 @@ exports.postServer = function (req, res) {
 
 exports.deleteServer = function (req, res) {
     const serverId = req.params.serverId;
-    if (!serverId) return responseUtils.sendMsgCodeResponse(res, 'No se indico un server a eliminar', 400);
+    if (!serverId) return sendMsgCodeResponse(res, 'No se indico un server a eliminar', 400);
 
     ApplicationServer.delete(serverId, (err, server) => {
-        if (err) return responseUtils.sendMsgCodeResponse(res, 'Ocurrio un error al eliminar el server', 500);
+        if (err) return sendMsgCodeResponse(res, 'Ocurrio un error al eliminar el server', 500);
         logger.debug(server);
-        if (!server) return responseUtils.sendMsgCodeResponse(res, 'No existe el servidor buscado', 404);
-        return responseUtils.sendMsgCodeResponse(res, 'Baja correcta', 200);
+        if (!server) return sendMsgCodeResponse(res, 'No existe el servidor buscado', 404);
+        return sendMsgCodeResponse(res, 'Baja correcta', 200);
     });
 };
 
 exports.updateServer = function (req, res) {
     const serverId = req.params.serverId;
-    if (!serverId) return responseUtils.sendMsgCodeResponse(res, 'No se indico un server a actualizar', 400);
+    if (!serverId) return sendMsgCodeResponse(res, 'No se indico un server a actualizar', 400);
 
     ApplicationServer.findById(serverId, (err, server) => {
-        if (!server) return responseUtils.sendMsgCodeResponse(res, 'No existe el servidor buscado', 404);
+        if (!server) return sendMsgCodeResponse(res, 'No existe el servidor buscado', 404);
+
+        const { name, _ref, oldRef = _ref } = req.body;
+        if (oldRef != server._ref) return sendMsgCodeResponse(res, 'Ocurrio una colision', 409);
 
         /* La actualizacion implica modificar el nombre del server. Si no se asigno un nombre nuevo en el body del request,
         entonces la actualizacion no tendra efecto */
-        server.name = req.body.name || server.name;
-        ApplicationServer.update(server, err => {
-            if (err) return responseUtils.sendMsgCodeResponse(res, 'Ocurrio un error al actualizar el server', 500);
+        server.name = name || server.name;
+        ApplicationServer.update(server, (err, updatedServer) => {
+            if (err) return sendMsgCodeResponse(res, 'Ocurrio un error al actualizar el server', 500);
 
             const metadata = { version: apiVersion };
-            res.send({ metadata, server: server.withTimestampFields() });
+            res.send({ metadata, server: updatedServer.withTimestampFields() });
         });
     });
 };
@@ -111,20 +99,68 @@ exports.resetToken = function (req, res) {
     getServer(req, res, server => {
         const serverId = server.id;
         TokenModel.invalidateTokensOwnedBy(serverId, (err, tokens) => {
-            if (err) return responseUtils.sendMsgCodeResponse(res, 'Error al invalidar tokens del servidor', 500);
+            if (err) return sendMsgCodeResponse(res, 'Error al invalidar tokens del servidor', 500);
 
             logger.debug('Tokens invalidados:');
             logger.debug(tokens);
 
-            const newToken = signServer(server);
+            const newToken = tokenManager.signServer(server);
             TokenModel.insert(newToken, serverId, (err, dbToken) => {
-                if (err) return responseUtils.sendMsgCodeResponse(res, 'Error al insertar nuevo token en server', 500);
+                if (err) return sendMsgCodeResponse(res, 'Error al insertar nuevo token en server', 500);
 
                 logger.debug(`Token asignado a ${serverId}:`);
                 logger.debug(dbToken);
                 const metadata = { version: apiVersion };
                 res.send({ metadata, server: server.withTimestampFields(), token: dbToken.withTimestampExpiration() });
             });
+        });
+    });
+};
+
+exports.renewToken = function (req, res) {
+    const token = req.body.token || req.query.token || req.header('x-token');
+
+    TokenModel.findToken(token, (err, dbToken) => {
+        if (err) return sendMsgCodeResponse(res, 'Error al validar el token', 500);
+        if (!dbToken) return sendMsgCodeResponse(res, 'No autorizado', 401);
+
+        /* Si el token existe en la BBDD entonces es valido. Pero puede estar expirado */
+        tokenManager.verifyToken(dbToken, (err, decoded) => {
+            /* Si ocurrio un error entonces el token habia expirado */
+            if (err) {
+                const owner = dbToken.owner;
+                ApplicationServer.findById(owner, (err, server) => {
+                    if (err) return sendMsgCodeResponse(res, 'Error al obtener el servidor', 500);
+                    if (!server) return sendMsgCodeResponse(res, 'El servidor ya no existe', 404);
+
+                    TokenModel.invalidateTokensOwnedBy(owner, err => {
+                        if (err) return sendMsgCodeResponse(res, 'Error al invalidar el viejo token', 500);
+
+                        const newToken = tokenManager.signServer(server);
+                        TokenModel.insert(newToken, owner, (err, newDbToken) => {
+                            if (err) return sendMsgCodeResponse(res, 'Error al renovar el token', 500);
+
+                            ApplicationServer.updateLastConnection(server, (err, updatedServer) => {
+                                const metadata = { version: apiVersion };
+                                const ping = { server: updatedServer.withTimestampFields(), token: newDbToken.withTimestampExpiration() };
+                                res.send({ metadata, ping });
+                            });
+                        });
+                    });
+                });
+            } else {
+                const serverId = decoded.id;
+                ApplicationServer.findById(serverId, (err, server) => {
+                    if (err) return sendMsgCodeResponse(res, 'Error al obtener el servidor', 500);
+                    if (!server) return sendMsgCodeResponse(res, 'El servidor ya no existe', 404);
+
+                    ApplicationServer.updateLastConnection(server, (err, updatedServer) => {
+                        const metadata = { version: apiVersion };
+                        const ping = { server: updatedServer.withTimestampFields(), token: dbToken.withTimestampExpiration().withoutOwner() };
+                        res.send({ metadata, ping });
+                    });
+                });
+            }
         });
     });
 };

@@ -1,74 +1,83 @@
 import React from 'react';
 import ReactDom from 'react-dom';
+import { HashRouter } from 'react-router-dom';
+import { Route } from 'react-router-dom';
 
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
-import AppBar from 'material-ui/AppBar';
-import Drawer from 'material-ui/Drawer';
-import MenuItem from 'material-ui/MenuItem';
 
 import axios from 'axios';
 
+import MainAppBar from './MainAppBar';
 import Index from './Index';
 import FormExample from './FormExample';
+import Login from './Login';
+import Users from './Users';
 
 /* ESTE FRAGMENTO DE CODIGO ES REQUERIDO PARA LOS EVENTOS DE TIPO TOUCH O CLICK EN COMPONENTES MATERIAL-UI */
-const injectTapEventPlugin = require('react-tap-event-plugin');
+import injectTapEventPlugin from 'react-tap-event-plugin';
 injectTapEventPlugin();
 /* -------------------------------------------------------------------------------------------------------- */
 
-/* PAGINAS USADAS PARA EL ENRUTAMIENTO */
-const PAGES = {
-    index: <Index />,
-    formExample: <FormExample />
-};
+console.log('Parseando cookie ' + document.cookie);
+const cookie = document.cookie || '';
+const cookieTokenStr = cookie.split('; ').find(s => s.startsWith('token='));
+const cookieToken = cookieTokenStr ? cookieTokenStr.replace('token=', '') : null;
 
 const MainApp = React.createClass({
     getInitialState: function () {
         return {
-            currPage: 'index',
-            drawerOpen: false,
-            songIndex: 0,
-            playlist: []
+            token: null,
+            user: null,
+            renderReady: false
         };
-    },
-
-    appBarLeftTap: function () {
-        let drawerOpen = this.state.drawerOpen;
-        this.setState({ drawerOpen: !drawerOpen });
-    },
-
-    /* Esta funcion se ejecutara cada vez que se solicite cambiar el estado de la barra. */
-    onDrawerRequestChange: function (open) {
-        this.setState({ drawerOpen: open });
-    },
-
-    gotoPage: function (page) {
-        console.log('GOING TO PAGE: ' + page);
-        this.setState({ currPage: page, drawerOpen: false });
     },
 
     componentDidMount: function () {
         /* SE CARGAN LAS CANCIONES DESPUES QUE EL COMPONENTE HAYA SIDO MONTADO */
-        console.log('MainApp DID MOUNT!');
+        console.log('MainApp MONTADA!');
+        /* Si se encuentra un token en las cookies entonces se setea el mismo y se obtiene el usuario
+        Caso contrario, se marca al componente como listo para renderizar */
+        if (cookieToken) this.setToken(cookieToken);
+        else this.setState({ renderReady: true });
+    },
+
+    setToken: function (token) {
+        token = token.token || token;
+        console.log('Seteando token: ' + token);
+        axios.get(`/api/v1/business-users/me?token=${token}`)
+            .then(contents => {
+                console.log(contents.data.businessUser);
+                this.setState({ token, user: contents.data.businessUser, renderReady: true });
+            })
+            .catch(cause => {
+                console.error(cause);
+            });
     },
 
     render: function () {
         console.log('RENDERING MainApp!');
-        let currentPage = PAGES[this.state.currPage];
 
+        if (!this.state.renderReady) return <span>Espere...</span>;
+
+        const token = this.state.token;
+        if (!token) return <Login onSubmit={this.setToken} />;
+
+        /* Si un usuario inicio sesion, renderizo la app normal */
         return (
             <MuiThemeProvider>
                 <div>
-                    <AppBar
-                        onLeftIconButtonTouchTap={this.appBarLeftTap}
-                        title="Shared server" />
+                    <MainAppBar onLogout={() => this.logoutForm.submit()} />
 
-                    <Drawer open={this.state.drawerOpen} docked={false} onRequestChange={this.onDrawerRequestChange} >
-                        <MenuItem onTouchTap={e => this.gotoPage('index')}>Principal</MenuItem>
-                        <MenuItem onTouchTap={e => this.gotoPage('formExample')}>Ejemplo formulario</MenuItem>
-                    </Drawer>
+                    <Route path="/index" component={Index} />
+                    <Route path="/form-example" component={FormExample} />
+                    <Route path="/users/list" component={() => <Users token={token} />} />
 
-                    {currentPage}
+                    <form
+                        action='/logout'
+                        method='POST'
+                        ref={f => this.logoutForm = f}
+                        style={{ display: 'hidden' }}>
+                    </form>
                 </div>
             </MuiThemeProvider>
         );
@@ -76,7 +85,9 @@ const MainApp = React.createClass({
 });
 
 ReactDom.render(
-    <MainApp />,
+    <HashRouter>
+        <MainApp />
+    </HashRouter>,
     document.getElementById('root')
 );
 

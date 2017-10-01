@@ -14,8 +14,9 @@ router.get(config.mainPath, (req, res) => {
     res.render('index', { title: 'Shared server' });
 });
 
-router.get('/login', (req, res) => {
-    res.render('login', { title: 'Iniciar sesion' });
+router.post('/logout', (req, res) => {
+    res.clearCookie('token');
+    res.redirect(config.mainPath);
 });
 
 module.exports = router;
