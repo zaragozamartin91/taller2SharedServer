@@ -1,7 +1,10 @@
 console.log('CONFIGURANDO DATABASE MANAGER');
 
 const modelConfig = require('./model-config');
-const { Pool } = require('pg');
+const pg = require('pg');
+pg.defaults.poolSize = 5;
+console.log('Pool size: ' + pg.defaults.poolSize);
+const Pool = pg.Pool;
 const EMPTY_RES = { isEmpty: true, rows: [] };
 
 /* istanbul ignore next */
