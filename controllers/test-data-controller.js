@@ -38,25 +38,25 @@ exports.createTestData = function (req, res) {
         callback => {
             logger.debug('Insertando usuario');
             BusinessUser.insert({
-                username: 'martin', password: 'pepe', name: 'martin',
-                surname: 'zaragoza', roles: ['manager', 'admin', 'user']
+                username: 'martin', password: 'pepe', name: 'Martin',
+                surname: 'Zaragoza', roles: ['manager', 'admin', 'user']
             }, () => callback());
         },
         callback => {
             logger.debug('Insertando usuario');
             BusinessUser.insert({
-                username: 'mateo', password: 'posting', name: 'mateo',
-                surname: 'zaragoza', roles: ['user', 'admin']
+                username: 'mateo', password: 'posting', name: 'Mateo',
+                surname: 'Zaragoza', roles: ['user', 'admin']
             }, () => callback());
         },
         callback => {
             logger.debug('Insertando usuario');
-            BusinessUser.insert({ username: 'hector', password: 'rules', name: 'hector', surname: 'zaragoza' }, () => callback());
+            BusinessUser.insert({ username: 'hector', password: 'rules', name: 'Hector', surname: 'Zaragoza' }, () => callback());
         },
         callback => {
             logger.debug('Agregando app server');
             BusinessUser.findByUsername('martin', (err, user) => {
-                ApplicationServer.insert({ name: 'oneApp', createdBy: user.id }, (err, server) => {
+                ApplicationServer.insert({ name: 'Llevame', createdBy: user.id }, (err, server) => {
                     console.log('Agregando token de servidor');
                     const token = tokenManager.signServer(server);
                     TokenModel.insert(token, server.id, err => {

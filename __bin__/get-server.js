@@ -7,7 +7,7 @@ const options = {
     'method': 'GET',
     'hostname': HOST,
     'port': '5000',
-    'path': '/api/v1/servers/omegaserver-76672?token=' + token,
+    'path': '/api/v1/servers/llevame?token=' + token,
     'headers': {
         'content-type': 'application/json',
         'cache-control': 'no-cache',

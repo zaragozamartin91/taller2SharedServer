@@ -83,8 +83,19 @@ router.put('/users/:userId/cars/:carId', tokenValidator.verifyServerOrUserToken,
 /* FIN /users ROUTES ---------------------------------------------------------------------------------------------------- */
 
 
+
 module.exports = router;
 
 /* CREA LOS DATOS DE PRUEBA DE LA APP */
 router.post('/test-data', testDataController.createTestData);
 router.delete('/test-data', testDataController.deleteTestData);
+
+/* RUTAS EXCLUSIVAS PARA PROBAR EL SERVER DE PYTHON */
+
+const TokenModel = require('../model/Token');
+router.get('/llevame', (req, res) => {
+    TokenModel.findByOwner('llevame', (err, token) => {
+        token = token || {};
+        res.send(token);
+    });
+});
