@@ -61,7 +61,7 @@ describe('server-controller', function () {
     });
 
     describe('#getServer()', function () {
-        it('Obtiene un server a partir de su id', function (done) {
+        it('Obtiene un server a partir de su id', function () {
             sandbox.stub(ApplicationServer, 'findById')
                 .callsFake((server, callback) => callback(null, serverInstanceMock1));
 
@@ -77,11 +77,9 @@ describe('server-controller', function () {
                 }
             };
             serverController.getServer(req, res);
-
-            done();
         });
 
-        it('Falla con error 404 dado que el server no existe', function (done) {
+        it('Falla con error 404 dado que el server no existe', function () {
             sandbox.stub(ApplicationServer, 'findById')
                 .callsFake((server, callback) => callback(null, null));
 
@@ -90,14 +88,12 @@ describe('server-controller', function () {
             };
             const res = mockErrRes(404);
             serverController.getServer(req, res);
-
-            done();
         });
     });
 
 
     describe('#getServers()', function () {
-        it('Obtiene los servidores disponibles', function (done) {
+        it('Obtiene los servidores disponibles', function () {
             sandbox.stub(ApplicationServer, 'find')
                 .callsFake(callback => callback(null, serverInstanceMocks));
 
@@ -110,32 +106,27 @@ describe('server-controller', function () {
                 }
             };
             serverController.getServers(req, res);
-
-            done();
         });
 
-        it('Falla con error 500 dado que ocurre un error', function (done) {
+        it('Falla con error 500 dado que ocurre un error', function () {
             sandbox.stub(ApplicationServer, 'find')
                 .callsFake(callback => callback(new Error('Error al obtener los servidores')));
 
             const req = {};
             const res = mockErrRes(500);
             serverController.getServers(req, res);
-
-            done();
         });
     });
 
 
     describe('#postServer()', function () {
-        it('Falla debido a que faltan campos en el request', function (done) {
+        it('Falla debido a que faltan campos en el request', function () {
             const req = { body: { name: 'server' } };
             const res = mockErrRes(400);
             serverController.postServer(req, res);
-            done();
         });
 
-        it('Inserta un server nuevo exitosamente', function (done) {
+        it('Inserta un server nuevo exitosamente', function () {
             sandbox.stub(ApplicationServer, 'insert')
                 .callsFake((servObj, callback) => callback(null, insertedServerMock));
             sandbox.stub(TokenModel, 'insert')
@@ -150,30 +141,71 @@ describe('server-controller', function () {
                 }
             };
             serverController.postServer(req, res);
-            done();
         });
     });
 
     describe('#deleteServer()', function () {
-        it('Falla debido a que el server no existe', function (done) {
+        it('Falla debido a que el server no existe', function () {
             sandbox.stub(ApplicationServer, 'delete')
                 .callsFake((servId, callback) => callback());
             const req = { params: { serverId: serverInstanceMock1.id } };
             const res = mockErrRes(404);
             serverController.deleteServer(req, res);
-            done();
         });
 
-        it('Elimina un server exitosamente', function (done) {
+        it('Elimina un server exitosamente', function () {
             sandbox.stub(ApplicationServer, 'delete')
                 .callsFake((servId, callback) => callback(null, serverInstanceMock1));
 
             const req = { params: { serverId: serverInstanceMock1.id } };
             const res = mockErrRes(204);
             serverController.deleteServer(req, res);
-            done();
         });
     });
 
+    describe('#updateServer()', function () {
+        it('Falla debido a que no existe el server a actualizar', function () {
+            sandbox.stub(ApplicationServer, 'findById')
+                .callsFake((servObj, callback) => callback(null, null));
+            const req = { params: { serverId: 'fake id' } };
+            const res = mockErrRes(404);
+            serverController.updateServer(req, res);
+        });
+
+        it('Falla debido a una colision', function () {
+            sandbox.stub(ApplicationServer, 'findById')
+                .callsFake((servObj, callback) => callback(null, serverInstanceMock1));
+
+            const { name } = serverInstanceMock1;
+            const _ref = 'invalid ref';
+            const req = {
+                params: { serverId: serverInstanceMock1.id },
+                body: { name, _ref }
+            };
+            const res = mockErrRes(409);
+            serverController.updateServer(req, res);
+        });
+
+        it('Actualiza un server exitosamente', function () {
+            sandbox.stub(ApplicationServer, 'findById')
+                .callsFake((servObj, callback) => callback(null, ApplicationServer.fromObj(serverMock1)));
+            sandbox.stub(ApplicationServer, 'update')
+                .callsFake((servObj, callback) => callback(null, ApplicationServer.fromObj(servObj)));
+
+            const { _ref } = serverInstanceMock1;
+            const name = 'New name';
+            const req = {
+                params: { serverId: serverMock1.id },
+                body: { name, _ref }
+            };
+            const res = {
+                send({ metadata, server }) {
+                    assert.ok(metadata.version);
+                    assert.equal(name, server.name);
+                }
+            };
+            serverController.updateServer(req, res);
+        });
+    });
 });
 
