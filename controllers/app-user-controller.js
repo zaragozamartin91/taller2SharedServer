@@ -49,8 +49,8 @@ function getUserView({ id, _ref, applicationOwner, type, cars, username, name, s
 
 exports.getUser = function (req, res) {
     findUserAndDo(req, (err, dbUser) => {
-        if (!dbUser) return sendMsgCodeResponse(res, 'El usuario no existe', 404);
         if (err) return sendMsgCodeResponse(res, 'Ocurrio un error al obtener los usuarios', 500);
+        if (!dbUser) return sendMsgCodeResponse(res, 'El usuario no existe', 404);
         const metadata = { version: apiVersion };
         const user = getUserView(dbUser);
         res.send({ metadata, user });

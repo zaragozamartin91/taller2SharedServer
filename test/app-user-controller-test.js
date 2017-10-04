@@ -192,9 +192,9 @@ describe('app-user-controller', function () {
         sandbox.restore();
     });
 
-    describe('getUsers', function () {
+    describe('#getUsers', function () {
         it('Obtiene los usuarios por aplicacion', function () {
-            const dbUsers = mockUsers();
+            const dbUsers = mockUsers1();
             sandbox.stub(ApplicationUser, 'findByApp')
                 .callsFake((serverId, callback) => callback(null, dbUsers));
 
@@ -202,10 +202,62 @@ describe('app-user-controller', function () {
             const res = {
                 send({ metadata, users }) {
                     assert.equal(dbUsers.length, metadata.total);
+                    assert.equal(users.length, metadata.total);
                 }
             };
 
             appUserController.getUsers(req, res);
+        });
+
+        it('Obtiene todos los usuarios de aplicacion', function () {
+            const dbUsers = [...mockUsers1(), ...mockUsers2()];
+            sandbox.stub(ApplicationUser, 'find')
+                .callsFake(callback => callback(null, dbUsers));
+
+            const req = {};
+            const res = {
+                send({ metadata, users }) {
+                    assert.equal(dbUsers.length, metadata.total);
+                    assert.equal(users.length, metadata.total);
+                }
+            };
+
+            appUserController.getUsers(req, res);
+        });
+    });
+
+    describe('#getUser', function () {
+        it('Falla debido a que el usuario no existe', function () {
+            sandbox.stub(ApplicationUser, 'findByIdAndApp')
+                .callsFake((userId, serverId, callback) => callback());
+
+            const req = { serverId: serverMock1.id, params: { userId: userMock1.id } };
+            const res = mockErrRes(404);
+            appUserController.getUser(req, res);
+        });
+
+        it('Falla por un error en al bbdd', function () {
+            sandbox.stub(ApplicationUser, 'findById')
+                .callsFake((userId, callback) => callback(new Error()));
+
+            const req = { params: { userId: userMock1.id } };
+            const res = mockErrRes(500);
+            appUserController.getUser(req, res);
+        });
+
+        it('Encuentra al usuario', function () {
+            const dbUser = ApplicationUser.fromObj(userMock1);
+            sandbox.stub(ApplicationUser, 'findById')
+                .callsFake((userId, callback) => callback(null, dbUser));
+
+            const req = { params: { userId: userMock1.id } };
+            const res = {
+                send({ metadata, user }) {
+                    assert.ok(metadata);
+                    assert.equal(dbUser.username, user.username);
+                }
+            };
+            appUserController.getUser(req, res);
         });
     });
 });
