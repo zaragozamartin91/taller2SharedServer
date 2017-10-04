@@ -50,6 +50,7 @@ function fromRows(rows) {
     return rows.map(Car.fromObj);
 }
 
+/* istanbul ignore next */
 Car.insert = function (carObj, callback) {
     const car = Car.fromObj(carObj);
     let { owner, properties } = car;
@@ -63,6 +64,7 @@ Car.insert = function (carObj, callback) {
     });
 };
 
+/* istanbul ignore next */
 Car.findByOwner = function (owner, callback) {
     const ownerId = owner.id || owner;
     const sql = `SELECT * FROM ${table} WHERE owner=$1`;

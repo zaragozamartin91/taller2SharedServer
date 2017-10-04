@@ -108,7 +108,7 @@ exports.resetToken = function (req, res) {
                 logger.debug(`Token asignado a ${serverId}:`);
                 logger.debug(dbToken);
                 const metadata = { version: apiVersion };
-                res.send({ metadata, server: server.withTimestampFields(), token: dbToken.withTimestampExpiration() });
+                res.send({ metadata, server: { server: server.withTimestampFields(), token: dbToken.withTimestampExpiration() } });
             });
         });
     });

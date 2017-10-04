@@ -77,9 +77,9 @@ TokenModel.invalidate = function (token, callback) {
 TokenModel.invalidateTokensOwnedBy = function (owner, callback) {
     const sql = `DELETE FROM ${table} WHERE owner=$1 RETURNING *`;
 
-    dbManager.query(sql, [owner], (err, res) => {
+    dbManager.query(sql, [owner], (err, {rows}) => {
         if (err) return callback(err);
-        const tokens = res.rows.map(row => fromObj(row));
+        const tokens = rows.map(row => fromObj(row));
         return callback(null, tokens);
     });
 };

@@ -41,6 +41,10 @@ const insertedServerMock = ApplicationServer.buildServer({
 
 const tokenMock1 = TokenModel.fromObj(tokenManager.signServer(insertedServerMock));
 
+function mockTokens() {
+    return [TokenModel.fromObj(tokenMock1)];
+}
+
 function mockErrRes(expectedCode) {
     return {
         status(code) { this.code = code; },
@@ -87,6 +91,15 @@ describe('server-controller', function () {
                 params: { serverId: serverMock1.id }
             };
             const res = mockErrRes(404);
+            serverController.getServer(req, res);
+        });
+
+        it('Falla con error 500 porque ocurre un error en la bbdd', function () {
+            sandbox.stub(ApplicationServer, 'findById')
+                .callsFake((server, callback) => callback(new Error('Error en la query')));
+
+            const req = { params: { serverId: serverMock1.id } };
+            const res = mockErrRes(500);
             serverController.getServer(req, res);
         });
     });
@@ -142,6 +155,27 @@ describe('server-controller', function () {
             };
             serverController.postServer(req, res);
         });
+
+        it('Falla debido a un error en al bbdd', function () {
+            sandbox.stub(ApplicationServer, 'insert')
+                .callsFake((servObj, callback) => callback(new Error('Error en la query')));
+
+            const req = { body: { name: 'server', createdBy: serverMock1.createdBy } };
+            const res = mockErrRes(500);
+            serverController.postServer(req, res);
+        });
+
+        it('Falla por un error al insertar el token', function () {
+            const dbServer = ApplicationServer.fromObj(serverMock1);
+            sandbox.stub(ApplicationServer, 'insert')
+                .callsFake((servObj, callback) => callback(null, dbServer));
+            sandbox.stub(TokenModel, 'insert')
+                .callsFake((token, servId, callback) => callback(new Error('Error en la query')));
+
+            const req = { body: { name: 'server', createdBy: serverMock1.createdBy } };
+            const res = mockErrRes(500);
+            serverController.postServer(req, res);
+        });
     });
 
     describe('#deleteServer()', function () {
@@ -150,6 +184,14 @@ describe('server-controller', function () {
                 .callsFake((servId, callback) => callback());
             const req = { params: { serverId: serverInstanceMock1.id } };
             const res = mockErrRes(404);
+            serverController.deleteServer(req, res);
+        });
+
+        it('Falla debido a un error en la bbdd', function () {
+            sandbox.stub(ApplicationServer, 'delete')
+                .callsFake((servId, callback) => callback(new Error('Error en la query')));
+            const req = { params: { serverId: serverInstanceMock1.id } };
+            const res = mockErrRes(500);
             serverController.deleteServer(req, res);
         });
 
@@ -206,6 +248,80 @@ describe('server-controller', function () {
             };
             serverController.updateServer(req, res);
         });
+
+        it('Falla por un error en la bbdd al ejecutar update', function () {
+            sandbox.stub(ApplicationServer, 'findById')
+                .callsFake((servObj, callback) => callback(null, ApplicationServer.fromObj(serverMock1)));
+            sandbox.stub(ApplicationServer, 'update')
+                .callsFake((servObj, callback) => callback(new Error()));
+
+            const { _ref } = serverInstanceMock1;
+            const req = {
+                params: { serverId: serverMock1.id },
+                body: { _ref }
+            };
+            const res = mockErrRes(500);
+            serverController.updateServer(req, res);
+        });
+    });
+
+    describe('#resetToken()', function () {
+        it('Invalida un token de servidor y genera uno nuevo', function () {
+            sandbox.stub(TokenModel, 'invalidateTokensOwnedBy')
+                .callsFake((serverId, callback) => callback(null, mockTokens()));
+            sandbox.stub(TokenModel, 'insert')
+                .callsFake((newToken, serverId, callback) => callback(null, newToken));
+
+            const dbServer = ApplicationServer.fromObj(serverMock1);
+            sandbox.stub(ApplicationServer, 'findById')
+                .callsFake((serverId, callback) => callback(null, dbServer));
+
+            const newToken = tokenManager.signServer(dbServer);
+
+            const req = { params: { serverId: serverMock1.id } };
+            const res = {
+                send({ metadata, server: { server, token } }) {
+                    assert.ok(metadata.version);
+                    assert.ok(server);
+                    assert.ok(token);
+                    assert.equal(newToken.token, token.token);
+                }
+            };
+
+            serverController.resetToken(req, res);
+        });
+    });
+
+    describe('#renewToken', function () {
+        it('No renueva un token si el mismo es valido', function () {
+            const dbToken = tokenManager.signServer(serverInstanceMock1);
+            sandbox.stub(TokenModel, 'findToken')
+                .callsFake((token, callback) => callback(null, dbToken));
+
+            const dbServer = ApplicationServer.fromObj(serverMock1);
+            sandbox.stub(ApplicationServer, 'findById')
+                .callsFake((serverId, callback) => callback(null, dbServer));
+
+            const now = new Date();
+            sandbox.stub(ApplicationServer, 'updateLastConnection')
+                .callsFake((serverId, callback) => {
+                    dbServer.lastConnection = now;
+                    callback(null, dbServer);
+                });
+
+            const req = { body: {}, query: { token: dbToken.token } };
+            const res = {
+                send({ metadata, ping: { server, token } }) {
+                    assert.ok(server);
+                    assert.ok(token.token);
+                    assert.equal(dbToken.expiresAt, token.expiresAt);
+                    assert.equal(now.getTime(), dbServer.lastConnection);
+                }
+            };
+
+            serverController.renewToken(req, res);
+        });
     });
 });
+
 
