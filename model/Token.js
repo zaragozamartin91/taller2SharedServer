@@ -31,8 +31,11 @@ function fromObj(tok) {
     return new TokenModel(token, expiresAt, owner);
 }
 
+TokenModel.fromObj = fromObj;
+
 TokenModel.table = table;
 
+/* istanbul ignore next */
 TokenModel.insert = function (token, owner, callback) {
     token = fromObj(token).withDateExpiration();
     const sql = `INSERT INTO ${table}(token,expiresAt,owner) VALUES($1,$2,$3) RETURNING *`;
@@ -41,6 +44,7 @@ TokenModel.insert = function (token, owner, callback) {
         (err, { rows }) => callback(err, fromObj(rows[0])));
 };
 
+/* istanbul ignore next */
 TokenModel.findToken = function (token, callback) {
     const tokenId = token.token || token;
     const sql = `SELECT * FROM ${table} WHERE token=$1`;
@@ -53,6 +57,7 @@ TokenModel.findToken = function (token, callback) {
  * @param {string} owner Id del apoderado del token.
  * @param {Function} callback Funcion a invocar luego de obtener el token.
  */
+/* istanbul ignore next */
 TokenModel.findByOwner = function (owner, callback) {
     const ownerId = owner.id || owner;
     const sql = `SELECT * FROM ${table} WHERE owner=$1 ORDER BY counter DESC LIMIT 1`;
@@ -60,6 +65,7 @@ TokenModel.findByOwner = function (owner, callback) {
         (err, { rows }) => callback(err, fromObj(rows[0])));
 };
 
+/* istanbul ignore next */
 TokenModel.invalidate = function (token, callback) {
     const tokenId = token.token || token;
     const sql = `DELETE FROM ${table} WHERE token=$1 RETURNING *`;
@@ -67,6 +73,7 @@ TokenModel.invalidate = function (token, callback) {
         (err, { rows }) => callback(err, fromObj(rows[0])));
 };
 
+/* istanbul ignore next */
 TokenModel.invalidateTokensOwnedBy = function (owner, callback) {
     const sql = `DELETE FROM ${table} WHERE owner=$1 RETURNING *`;
 
