@@ -499,6 +499,24 @@ describe('app-user-controller', function () {
             appUserController.updateUser(req, res);
         });
     });
+
+    describe('#getUserCars', function () {
+        it('Obtiene los autos del usuario', function () {
+            const dbUser = ApplicationUser.fromObj(userMock3);
+            sandbox.stub(ApplicationUser, 'findByIdAndApp')
+                .callsFake((userId, serverId, callback) => callback(null, dbUser));
+
+            const req = { serverId: dbUser.applicationOwner, params: { userId: dbUser.id } };
+            const res = {
+                send({ metadata, cars }) {
+                    assert.equal(dbUser.cars, cars);
+                    assert.equal(dbUser.cars.length, metadata.total);
+                }
+            };
+
+            appUserController.getUserCars(req, res);
+        });
+    });
 });
 
 
