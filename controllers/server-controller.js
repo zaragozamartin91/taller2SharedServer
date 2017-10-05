@@ -85,7 +85,6 @@ exports.updateServer = function (req, res) {
         server.name = name || server.name;
         ApplicationServer.update(server, (err, updatedServer) => {
             if (err) return sendMsgCodeResponse(res, 'Ocurrio un error al actualizar el server', 500);
-
             const metadata = { version: apiVersion };
             res.send({ metadata, server: updatedServer.withTimestampFields() });
         });

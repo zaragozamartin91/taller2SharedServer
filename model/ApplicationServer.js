@@ -119,16 +119,13 @@ ApplicationServer.delete = function (server, callback) {
 
 /* istanbul ignore next */
 ApplicationServer.update = function (server, callback) {
-    const { id, name = '' } = server;
+    const { id, createdBy, createdTime, name = '', lastConnection } = server;
     const newRef = hashServer(id, name);
 
     const sql = `UPDATE ${table} SET name=$1,_ref=$2 WHERE id=$3 RETURNING *`;
 
     dbManager.queryPromise(sql, [name, newRef, id])
-        .then(rows => {
-            if (rows[0]) server._ref = newRef;
-            callback(null, server);
-        })
+        .then(rows => callback(null, new ApplicationServer(id, newRef, createdBy, createdTime, name, lastConnection)))
         .catch(err => callback(err));
 };
 
