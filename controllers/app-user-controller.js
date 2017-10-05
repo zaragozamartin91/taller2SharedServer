@@ -175,18 +175,24 @@ function validateCarProperties(properties = []) {
     return res;
 }
 
+exports.validateCarProperties = validateCarProperties;
+
 exports.postUserCar = function (req, res) {
-    const userId = req.params.userId;
-    const carObj = req.body;
-    carObj.owner = userId;
-
-    const carPropsValidation = validateCarProperties(carObj.properties);
-    if (!carPropsValidation.valid) return sendMsgCodeResponse(res, carPropsValidation.msg, 400);
-
-    Car.insert(carObj, (err, car) => {
+    findUserAndDo(req, (err, user) => {
         if (err) return sendMsgCodeResponse(res, 'Ocurrio un error al insertar el auto', 500);
-        const metadata = { version: apiVersion };
-        res.send({ metadata, car });
+        if (!user) return sendMsgCodeResponse(res, 'No existe el usuario', 404);
+        const userId = user.id;
+        const carObj = req.body;
+        carObj.owner = userId;
+
+        const carPropsValidation = validateCarProperties(carObj.properties);
+        if (!carPropsValidation.valid) return sendMsgCodeResponse(res, carPropsValidation.msg, 400);
+
+        Car.insert(carObj, (err, car) => {
+            if (err) return sendMsgCodeResponse(res, 'Ocurrio un error al insertar el auto', 500);
+            const metadata = { version: apiVersion };
+            res.send({ metadata, car });
+        });
     });
 };
 

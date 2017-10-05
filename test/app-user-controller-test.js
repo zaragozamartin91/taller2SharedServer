@@ -4,6 +4,7 @@ const appUserController = require('../controllers/app-user-controller');
 const dbManager = require('../model/db-manager');
 const ApplicationServer = require('../model/ApplicationServer');
 const ApplicationUser = require('../model/ApplicationUser');
+const Car = require('../model/Car');
 const TokenModel = require('../model/Token');
 const tokenManager = require('../utils/token-manager');
 const sinon = require('sinon');
@@ -51,6 +52,22 @@ const userMock1 = {
         {
             'currency': 'dolar',
             'value': 6789.1
+        }
+    ]
+};
+
+const carMock1 = {
+    'id': 1,
+    '_ref': '81b29f5aaa5570552e6a5e124fb4ec42b1c0d4ff',
+    'owner': 'mzaragoza',
+    'properties': [
+        {
+            'name': 'model',
+            'value': 'renault'
+        },
+        {
+            'name': 'year',
+            'value': 2001
         }
     ]
 };
@@ -515,6 +532,122 @@ describe('app-user-controller', function () {
             };
 
             appUserController.getUserCars(req, res);
+        });
+
+        it('Falla por un error en la bbdd', function () {
+            const dbUser = ApplicationUser.fromObj(userMock3);
+            sandbox.stub(ApplicationUser, 'findByIdAndApp')
+                .callsFake((userId, serverId, callback) => callback(new Error()));
+
+            const req = { serverId: dbUser.applicationOwner, params: { userId: dbUser.id } };
+            const res = mockErrRes(500);
+            appUserController.getUserCars(req, res);
+        });
+
+        it('Falla porque el usuario no existe', function () {
+            const dbUser = ApplicationUser.fromObj(userMock3);
+            sandbox.stub(ApplicationUser, 'findByIdAndApp')
+                .callsFake((userId, serverId, callback) => callback());
+
+            const req = { serverId: dbUser.applicationOwner, params: { userId: dbUser.id } };
+            const res = mockErrRes(404);
+            appUserController.getUserCars(req, res);
+        });
+    });
+
+    describe('#validateCarProperties', function () {
+        it('Falla debido a que las propiedades del auto son invalidas', function () {
+            {
+                const properties = [{ name: 'Name', value: 'Ford' }, { name: 'year' }];
+                const validation = appUserController.validateCarProperties(properties);
+                assert.ok(!validation.valid);
+            }
+
+            {
+                const properties = [{ name: 'Name', value: 'Ford' }, { value: 1994 }];
+                const validation = appUserController.validateCarProperties(properties);
+                assert.ok(!validation.valid);
+            }
+        });
+
+        it('Verifica que las propiedades del auto son validas', function () {
+            const properties = [{ name: 'Name', value: 'Ford' }, { name: 'year', value: 1991 }];
+            const validation = appUserController.validateCarProperties(properties);
+            assert.ok(validation.valid);
+        });
+    });
+
+    describe('#postUserCar', function () {
+        it('Da de alta el auto de un usuario', function () {
+            const dbUser = ApplicationUser.fromObj(userMock3);
+            sandbox.stub(ApplicationUser, 'findByIdAndApp')
+                .callsFake((userId, serverId, callback) => callback(null, dbUser));
+            const dbCar = Car.fromObj(carMock1);
+            sandbox.stub(Car, 'insert')
+                .callsFake((carObj, callback) => callback(null, dbCar));
+
+            const req = { serverId: dbUser.applicationOwner, params: { userId: dbUser.id }, body: carMock1 };
+            const res = {
+                send({ metadata, car }) {
+                    assert.ok(metadata.version);
+                    assert.equal(dbCar, car);
+                }
+            };
+
+            appUserController.postUserCar(req, res);
+        });
+
+        it('Falla por un error en la bbdd', function () {
+            const dbUser = ApplicationUser.fromObj(userMock3);
+            sandbox.stub(ApplicationUser, 'findByIdAndApp')
+                .callsFake((userId, serverId, callback) => callback(new Error()));
+
+            const req = { serverId: dbUser.applicationOwner, params: { userId: dbUser.id }, body: carMock1 };
+            const res = mockErrRes(500);
+            appUserController.postUserCar(req, res);
+        });
+
+        it('Falla porque el usuario no existe', function () {
+            const dbUser = ApplicationUser.fromObj(userMock3);
+            sandbox.stub(ApplicationUser, 'findByIdAndApp')
+                .callsFake((userId, serverId, callback) => callback());
+
+            const req = { serverId: dbUser.applicationOwner, params: { userId: dbUser.id }, body: carMock1 };
+            const res = mockErrRes(404);
+            appUserController.postUserCar(req, res);
+        });
+    });
+
+
+    describe('#deleteUserCar', function () {
+        it('Elimina el auto de un usuario', function () {
+            const dbCar = Car.fromObj(carMock1);
+            dbCar.delete = function (callback) {
+                callback(null, dbCar);
+            };
+            const dbUser = ApplicationUser.fromObj(userMock1);
+            dbUser.cars[0] = dbCar;
+            sandbox.stub(ApplicationUser, 'findByIdAndApp')
+                .callsFake((userId, serverId, callback) => callback(null, dbUser));
+
+            const req = { serverId: dbUser.applicationOwner, params: { userId: dbUser.id, carId: dbCar.id }, body: carMock1 };
+            const res = mockErrRes(204);
+            appUserController.deleteUserCar(req, res);
+        });
+
+        it('Falla porque el auto no existe', function () {
+            const dbCar = Car.fromObj(carMock1);
+            dbCar.delete = function (callback) {
+                callback(null, dbCar);
+            };
+            const dbUser = ApplicationUser.fromObj(userMock1);
+            dbUser.cars[0] = dbCar;
+            sandbox.stub(ApplicationUser, 'findByIdAndApp')
+                .callsFake((userId, serverId, callback) => callback(null, dbUser));
+
+            const req = { serverId: dbUser.applicationOwner, params: { userId: dbUser.id, carId: 9999 }, body: carMock1 };
+            const res = mockErrRes(404);
+            appUserController.deleteUserCar(req, res);
         });
     });
 });
