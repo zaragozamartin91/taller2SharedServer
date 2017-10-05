@@ -649,6 +649,26 @@ describe('app-user-controller', function () {
             const res = mockErrRes(404);
             appUserController.deleteUserCar(req, res);
         });
+
+        it('Falla porque el usuario no existe', function () {
+            const dbUser = ApplicationUser.fromObj(userMock1);
+            sandbox.stub(ApplicationUser, 'findByIdAndApp')
+                .callsFake((userId, serverId, callback) => callback());
+
+            const req = { serverId: dbUser.applicationOwner, params: { userId: dbUser.id, carId: 9999 }, body: carMock1 };
+            const res = mockErrRes(404);
+            appUserController.deleteUserCar(req, res);
+        });
+
+        it('Falla porque ocurre un error en la bbdd', function () {
+            const dbUser = ApplicationUser.fromObj(userMock1);
+            sandbox.stub(ApplicationUser, 'findByIdAndApp')
+                .callsFake((userId, serverId, callback) => callback(new Error()));
+
+            const req = { serverId: dbUser.applicationOwner, params: { userId: dbUser.id, carId: 9999 }, body: carMock1 };
+            const res = mockErrRes(500);
+            appUserController.deleteUserCar(req, res);
+        });
     });
 });
 
