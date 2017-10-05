@@ -193,6 +193,14 @@ describe('app-user-controller', function () {
     });
 
     describe('#getUsers', function () {
+        it('Falla porque ocurre un error en la bbdd', function () {
+            sandbox.stub(ApplicationUser, 'findByApp')
+                .callsFake((serverId, callback) => callback(new Error()));
+            const req = { serverId: serverMock1.id };
+            const res = mockErrRes(500);
+            appUserController.getUsers(req, res);
+        });
+
         it('Obtiene los usuarios por aplicacion', function () {
             const dbUsers = mockUsers1();
             sandbox.stub(ApplicationUser, 'findByApp')
@@ -255,9 +263,240 @@ describe('app-user-controller', function () {
                 send({ metadata, user }) {
                     assert.ok(metadata);
                     assert.equal(dbUser.username, user.username);
+                    assert.ok(appUserController.getUserView(dbUser), user);
                 }
             };
             appUserController.getUser(req, res);
+        });
+    });
+
+    describe('#validatePostUserForm', function () {
+        it('valida el formulario de alta de usuario', function () {
+            {
+                let { type, username, password = 'Pass', firstName = 'Martin', lastName = 'Zaragoza', country, email, birthdate } = userMock1;
+                assert.ok(appUserController.validatePostUserForm({ type, username, password, firstName, lastName, country, email, birthdate }).valid);
+            }
+
+            {
+                let { type, username, password = undefined, firstName = 'Martin', lastName = 'Zaragoza', country, email, birthdate } = userMock1;
+                assert.ok(!appUserController.validatePostUserForm({ type, username, password, firstName, lastName, country, email, birthdate }).valid);
+            }
+
+            {
+                let { type, username, password = 'pass', firstName = 'Martin', lastName = 'Zaragoza', country, email, birthdate } = userMock1;
+                email = 'mzaragoza@como@estas.com';
+                assert.ok(!appUserController.validatePostUserForm({ type, username, password, firstName, lastName, country, email, birthdate }).valid);
+            }
+
+            {
+                let { type, username, password = 'pass', firstName = 'Martin', lastName = 'Zaragoza', country, email, birthdate } = userMock1;
+                birthdate = '1994-10-33';
+                assert.ok(!appUserController.validatePostUserForm({ type, username, password, firstName, lastName, country, email, birthdate }).valid);
+            }
+        });
+    });
+
+    describe('#postUser', function () {
+        it('Falla por no ingresar todos los campos necesarios', function () {
+            const req = {};
+            const res = mockErrRes(400);
+            appUserController.postUser(req, res);
+        });
+
+        it('Falla por un error en la bbdd', function () {
+            sandbox.stub(ApplicationUser, 'insert')
+                .callsFake((user, callback) => callback(new Error()));
+
+            let { type, username, password = 'Pass', firstName = 'Martin', lastName = 'Zaragoza', country, email, birthdate } = userMock1;
+            const req = { body: { type, username, password, firstName, lastName, country, email, birthdate } };
+            const res = mockErrRes(500);
+            appUserController.postUser(req, res);
+        });
+
+        it('Inserta un usuario correctamente', function () {
+            const dbUser = ApplicationUser.fromObj(userMock1);
+            sandbox.stub(ApplicationUser, 'insert')
+                .callsFake((user, callback) => callback(null, dbUser));
+
+            let { type, username, password = 'pass', firstName = dbUser.name, lastName = dbUser.surname, country, email, birthdate } = dbUser;
+            const req = { body: { type, username, password, firstName, lastName, country, email, birthdate } };
+            const res = {
+                status(code) { this.code = code; },
+                send({ metadata, user }) {
+                    assert.ok(metadata.version);
+                    assert.equal(201, this.code);
+                    assert.ok(user);
+                    assert.ok(appUserController.getUserView(dbUser), user);
+                }
+            };
+            appUserController.postUser(req, res);
+        });
+    });
+
+    describe('#deleteUser', function () {
+        it('Falla por un error en la bbdd al buscar el usuario', function () {
+            sandbox.stub(ApplicationUser, 'findById')
+                .callsFake((user, callback) => callback(new Error()));
+
+            const req = { params: { userId: userMock1.id } };
+            const res = mockErrRes(500);
+            appUserController.deleteUser(req, res);
+        });
+
+        it('Falla por no encontrar el usuario', function () {
+            sandbox.stub(ApplicationUser, 'findById')
+                .callsFake((user, callback) => callback(null, null));
+
+            const req = { params: { userId: userMock1.id } };
+            const res = mockErrRes(404);
+            appUserController.deleteUser(req, res);
+        });
+
+        it('Elimina correctamente al usuario', function () {
+            const dbUser = ApplicationUser.fromObj(userMock1);
+            sandbox.stub(ApplicationUser, 'findById')
+                .callsFake((user, callback) => callback(null, dbUser));
+            sandbox.stub(ApplicationUser, 'delete')
+                .callsFake((user, callback) => callback(null, dbUser));
+
+            const req = { params: { userId: dbUser.id } };
+            const res = mockErrRes(204);
+            appUserController.deleteUser(req, res);
+        });
+
+        it('Falla porque ocurre un error en la bbdd al eliminar', function () {
+            const dbUser = ApplicationUser.fromObj(userMock1);
+            sandbox.stub(ApplicationUser, 'findById')
+                .callsFake((user, callback) => callback(null, dbUser));
+            sandbox.stub(ApplicationUser, 'delete')
+                .callsFake((user, callback) => callback(new Error()));
+
+            const req = { params: { userId: dbUser.id } };
+            const res = mockErrRes(500);
+            appUserController.deleteUser(req, res);
+        });
+    });
+
+    describe('#validateUser', function () {
+        it('Falla por falta de parametros', function () {
+            {
+                const [username, password, facebookAuthToken] = [userMock1.username];
+                const req = { body: { username, password, facebookAuthToken } };
+                const res = mockErrRes(400);
+                appUserController.validateUser(req, res);
+            }
+            {
+                const [username, password, facebookAuthToken] = [undefined, 'pass'];
+                const req = { body: { username, password, facebookAuthToken } };
+                const res = mockErrRes(400);
+                appUserController.validateUser(req, res);
+            }
+        });
+
+        it('Falla por un error en la bbdd', function () {
+            const [username, facebookAuthToken] = [userMock1.username, '123456'];
+            sandbox.stub(ApplicationUser, 'findByUsernameAndApp')
+                .callsFake((username, serverId, callback) => callback(new Error()));
+
+            const req = { body: { username, facebookAuthToken }, serverId: serverMock1.id };
+            const res = mockErrRes(500);
+            appUserController.validateUser(req, res);
+        });
+
+        it('Falla por un error en la bbdd', function () {
+            const [username, password] = [userMock1.username, '123456'];
+            sandbox.stub(ApplicationUser, 'findByUsernameAndApp')
+                .callsFake((username, serverId, callback) => callback());
+
+            const req = { body: { username, password }, serverId: serverMock1.id };
+            const res = mockErrRes(404);
+            appUserController.validateUser(req, res);
+        });
+
+        it('Falla la validacion del usuario', function () {
+            const [username, password] = [userMock1.username, '123456'];
+            const dbUser = ApplicationUser.fromObj(userMock1);
+            dbUser.password = 'different password';
+            sandbox.stub(ApplicationUser, 'findByUsernameAndApp')
+                .callsFake((username, serverId, callback) => callback(null, dbUser));
+
+            const req = { body: { username, password }, serverId: serverMock1.id };
+            const res = mockErrRes(401);
+            appUserController.validateUser(req, res);
+        });
+
+        it('Valida el usuario correctamente', function () {
+            const [username, password] = [userMock1.username, '123456'];
+            const dbUser = ApplicationUser.fromObj(userMock1);
+            dbUser.password = password;
+            sandbox.stub(ApplicationUser, 'findByUsernameAndApp')
+                .callsFake((username, serverId, callback) => callback(null, dbUser));
+
+            const req = { body: { username, password }, serverId: serverMock1.id };
+            const res = {
+                send({ metadata, user }) {
+                    assert.ok(metadata.version);
+                    let eq = JSON.stringify(appUserController.getUserView(dbUser)) == JSON.stringify(user);
+                    assert.ok(eq);
+                }
+            };
+            appUserController.validateUser(req, res);
+        });
+    });
+
+    describe('#updateUser', function () {
+        it('Falla dado que el usuario no existe', function () {
+            const dbUser = ApplicationUser.fromObj(userMock1);
+            sandbox.stub(ApplicationUser, 'findById')
+                .callsFake((user, callback) => callback());
+
+            const req = { params: { userId: dbUser.id } };
+            const res = mockErrRes(404);
+            appUserController.updateUser(req, res);
+        });
+
+        it('Falla dado por una colision', function () {
+            const dbUser = ApplicationUser.fromObj(userMock1);
+            sandbox.stub(ApplicationUser, 'findById')
+                .callsFake((user, callback) => callback(null, dbUser));
+
+            let { _ref, type, username, password, fb, firstName = dbUser.name, lastName = dbUser.surname, country, email, birthdate, images } = dbUser;
+            _ref = 'different ref';
+
+            const req = {
+                params: { userId: dbUser.id },
+                body: { _ref, type, username, password, fb, firstName, lastName, country, email, birthdate, images }
+            };
+            const res = mockErrRes(409);
+            appUserController.updateUser(req, res);
+        });
+
+        it('Actualiza correctamente al usuario', function () {
+            const dbUser = ApplicationUser.fromObj(userMock1);
+            sandbox.stub(ApplicationUser, 'findById')
+                .callsFake((user, callback) => callback(null, dbUser));
+
+            let { _ref, type, username, password, fb, firstName, lastName, country, email, birthdate, images } = dbUser;
+            firstName = 'Different name';
+            lastName = 'Different last name';
+            country = 'Brasil';
+            images = [];
+
+            dbUser.update = function (callback) {
+                callback(null, dbUser);
+            };
+
+            const req = {
+                params: { userId: dbUser.id },
+                body: { _ref, type, username, password, fb, firstName, lastName, country, email, birthdate, images }
+            };
+            const res = {
+                send({ metadata, user }) {
+                    assert.ok(metadata.version);
+                    assert.equal(JSON.stringify(appUserController.getUserView(dbUser)), JSON.stringify(user));
+                }
+            };
+            appUserController.updateUser(req, res);
         });
     });
 });

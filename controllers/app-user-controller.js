@@ -47,6 +47,8 @@ function getUserView({ id, _ref, applicationOwner, type, cars, username, name, s
     return { id, _ref, applicationOwner, type, cars, username, name, surname, country, email, birthdate, images, balance };
 }
 
+exports.getUserView = getUserView;
+
 exports.getUser = function (req, res) {
     findUserAndDo(req, (err, dbUser) => {
         if (err) return sendMsgCodeResponse(res, 'Ocurrio un error al obtener los usuarios', 500);
@@ -68,6 +70,8 @@ function validatePostUserForm({ type, username, password, firstName, lastName, c
     if (!dataValidator.validateDate(birthdate)) return { valid: false, msg: 'Fecha de necimiento invalida' };
     return { valid: true };
 }
+
+exports.validatePostUserForm = validatePostUserForm;
 
 exports.postUser = function (req, res) {
     const userObj = req.body || {};
@@ -96,7 +100,6 @@ exports.deleteUser = function (req, res) {
 
         user.delete((err, deleted) => {
             if (err) return sendMsgCodeResponse(res, 'Error al eliminar el usuario', 500);
-            if (!deleted) return sendMsgCodeResponse(res, 'El usuario no fue eliminado', 404);
             sendMsgCodeResponse(res, 'Baja correcta', 204);
         });
     });
@@ -109,7 +112,7 @@ exports.validateUser = function (req, res) {
     const serverId = req.serverId;
     ApplicationUser.findByUsernameAndApp(username, serverId, (err, dbUser) => {
         if (err) return sendMsgCodeResponse(res, 'Error al obtener el usuario', 500);
-        if (!dbUser) return sendMsgCodeResponse(res, 'El usuario no existe', 401);
+        if (!dbUser) return sendMsgCodeResponse(res, 'El usuario no existe', 404);
 
         const isValid = dbUser.validate(password, facebookAuthToken);
         if (!isValid) return sendMsgCodeResponse(res, 'Las credenciales son invalidas', 401);
@@ -147,7 +150,7 @@ exports.updateUser = function (req, res) {
         user.update(err => {
             if (err) return sendMsgCodeResponse(res, 'Ocurrio un error al actualizar el usuario', 500);
             const metadata = { version: apiVersion };
-            res.send({ metadata, user });
+            res.send({ metadata, user: getUserView(user) });
         });
     });
 };
