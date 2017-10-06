@@ -5,32 +5,69 @@ import RaisedButton from 'material-ui/RaisedButton';
 import TextField from 'material-ui/TextField';
 import { Card, CardActions, CardHeader, CardText } from 'material-ui/Card';
 import FlatButton from 'material-ui/FlatButton';
+import Dialog from 'material-ui/Dialog';
 import Snackbar from 'material-ui/Snackbar';
 
 import axios from 'axios';
 
 import Header from './Header';
-//import mainConfig from '../config/main-config';
 
 /* FIN DE IMPORTS -------------------------------------------------------------------------------------- */
 
 const EMPTY_CALLBACK = () => { };
 
+function DeleteUserDialog(props) {
+    function deleteUser() {
+        const userId = props.user.id;
+        axios.delete(`/api/v1/business-users/${userId}?token=${props.token}`)
+            .then(contents => {
+                console.log(contents.data);
+                props.onSuccess();
+            })
+            .catch(cause => {
+                console.error(cause);
+                props.onError();
+            });
+    }
+
+    const actions = [
+        <FlatButton
+            label="Cancelar"
+            primary={true}
+            onClick={props.onClose}
+        />,
+        <FlatButton
+            label="Eliminar"
+            primary={true}
+            onClick={deleteUser}
+        />,
+    ];
+
+    return (
+        <Dialog
+            title={`Eliminar usuario ${props.user.id}`}
+            actions={actions}
+            modal={true}
+            open={props.open}>
+            Desea eliminar al usuario?
+        </Dialog>
+    );
+}
+
 const Users = React.createClass({
-    getDefaultProps: function () {
-        return {
-            token: ''
-        };
+    getDefaultProps() {
+        return { token: '' };
     },
 
-    getInitialState: function () {
+    getInitialState() {
         return {
             users: [],
             errSnackbarOpen: false,
+            openDeleteDialogs: {}
         };
     },
 
-    componentDidMount: function () {
+    componentDidMount() {
         console.log('token: ' + this.props.token);
         axios.get(`/api/v1/business-users?token=${this.props.token}`)
             .then(contents => {
@@ -41,19 +78,56 @@ const Users = React.createClass({
             })
             .catch(cause => {
                 console.error(cause);
-                this.openErrSnackbar();
+                this.openErrSnackbar('Error al obtener los usuarios');
             });
     },
 
-    openErrSnackbar: function () {
-        this.setState({ errSnackbarOpen: true });
+    openErrSnackbar(msg) {
+        console.log('Abriendo snack bar');
+        this.setState({ errSnackbarOpen: true, errSnackbarMessage: msg });
     },
 
-    handleErrSnackbarRequestClose: function () {
+    handleErrSnackbarRequestClose() {
         this.setState({ errSnackbarOpen: false });
     },
 
-    render: function () {
+    isDeleteDialogOpen(user) {
+        const userId = user.id || user;
+        return this.state.openDeleteDialogs[userId] == true;
+    },
+
+    closeDeleteDialog(user) {
+        const self = this;
+        return function () {
+            const userId = user.id || user;
+            const openDeleteDialogs = self.state.openDeleteDialogs;
+            openDeleteDialogs[userId] = false;
+            self.setState({ openDeleteDialogs });
+        };
+    },
+
+    removeUser(user) {
+        const self = this;
+        return function () {
+            const userId = user.id || user;
+            const users = self.state.users.filter(u => u.id != userId);
+            const openDeleteDialogs = self.state.openDeleteDialogs;
+            openDeleteDialogs[userId] = false;
+            self.setState({ openDeleteDialogs, users });
+        };
+    },
+
+    openDeleteDialog(user) {
+        const self = this;
+        return function () {
+            const userId = user.id || user;
+            const openDeleteDialogs = self.state.openDeleteDialogs;
+            openDeleteDialogs[userId] = true;
+            self.setState({ openDeleteDialogs });
+        };
+    },
+
+    render() {
         const userCards = this.state.users.map(user => (
             <Card style={{ marginTop: '15px' }}>
                 <CardHeader
@@ -66,9 +140,16 @@ const Users = React.createClass({
                     Roles: {JSON.stringify(user.roles)} <br />
                 </CardText>
                 <CardActions>
-                    <FlatButton label="Eliminar" />
+                    <FlatButton label="Eliminar" onClick={this.openDeleteDialog(user)} />
                     <FlatButton label="Editar" />
                 </CardActions>
+                <DeleteUserDialog
+                    user={user}
+                    token={this.props.token}
+                    open={this.isDeleteDialogOpen(user)}
+                    onSuccess={this.removeUser(user)}
+                    onClose={this.closeDeleteDialog(user)}
+                    onError={() => this.openErrSnackbar(`Error al eliminar el usuario ${user.id}`)} />
             </Card>
         ));
 
@@ -77,7 +158,7 @@ const Users = React.createClass({
                 {userCards}
                 <Snackbar
                     open={this.state.errSnackbarOpen}
-                    message="Error al obtener los usuarios"
+                    message={this.state.errSnackbarMessage}
                     autoHideDuration={3000}
                     onRequestClose={this.handleErrSnackbarRequestClose}
                 />
