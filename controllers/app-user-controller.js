@@ -68,6 +68,7 @@ function validatePostUserForm({ type, username, password, firstName, lastName, c
     if (!type || !username || !password || !firstName || !lastName || !country || !email || !birthdate) return { valid: false, msg: 'No fueron ingresados todos los parametros' };
     if (!dataValidator.validateEmail(email)) return { valid: false, msg: 'Email invalido' };
     if (!dataValidator.validateDate(birthdate)) return { valid: false, msg: 'Fecha de necimiento invalida' };
+    if (!ApplicationUser.validateType(type)) return { valid: false, msg: 'Tipo de cliente invalido' };
     return { valid: true };
 }
 
@@ -83,6 +84,7 @@ exports.postUser = function (req, res) {
     userObj.name = userObj.firstName;
     userObj.surname = userObj.lastName;
     userObj.birthdate = moment(userObj.birthdate).toDate();
+    userObj.type = userObj.type.toLowerCase();
 
     ApplicationUser.insert(userObj, (err, dbUser) => {
         if (err) return sendMsgCodeResponse(res, 'Ocurrio un error al dar de alta el usuario', 500);
@@ -131,7 +133,11 @@ exports.updateUser = function (req, res) {
         const oldRef = _ref;
         if (user._ref != oldRef) return sendMsgCodeResponse(res, 'Ocurrio una colision', 409);
 
-        user.type = type || user.type;
+        if (type) {
+            console.log('VALIDANDO TIPO ' + type);
+            if (!ApplicationUser.validateType(type)) return sendMsgCodeResponse(res, 'El tipo es invalido', 400);
+            user.type = type.toLowerCase();
+        }
         user.username = username || user.username;
         user.password = password || user.password;
         user.fb = fb || user.fb;

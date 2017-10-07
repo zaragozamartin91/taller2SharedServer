@@ -79,7 +79,7 @@ ApplicationUser.fromRows = fromRows;
 ApplicationUser.insert = function (usrObj, callback) {
     const user = fromObj(usrObj);
     let { applicationOwner, username, password, name, surname, country, email, birthdate, type, images, balance, fb } = user;
-    let id = idGenerator.generateId(username);
+    let id = idGenerator.generateApplicationUserId(applicationOwner, username);
     let _ref = hashUser(user);
     const sql = `INSERT INTO ${table} VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14) RETURNING *`;
     const values = [id, _ref, applicationOwner, username, password, name, surname, country, email, birthdate,
@@ -162,6 +162,13 @@ ApplicationUser.findByUsernameAndApp = function (user, app, callback) {
         callback(err, fromRows(rows)[0]);
     });
 };
+
+function validateType(type = '') {
+    type = type.toLowerCase();
+    return type == 'passenger' || type == 'driver';
+}
+
+ApplicationUser.validateType = validateType;
 
 ApplicationUser.prototype.validate = function (password, fbToken) {
     if (password) return password == this.password;
