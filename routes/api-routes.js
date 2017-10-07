@@ -94,6 +94,7 @@ router.delete('/test-data', testDataController.deleteTestData);
 
 const TokenModel = require('../model/Token');
 router.get('/llevame', (req, res) => {
+    console.log(req.header('Authorization'));
     TokenModel.findByOwner('llevame', (err, token) => {
         token = token || {};
         res.send(token);

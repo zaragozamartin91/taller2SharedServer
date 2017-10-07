@@ -8,6 +8,11 @@ const logger = require('log4js').getLogger('token-validator');
 
 const sendMsgCodeResponse = responseUtils.sendMsgCodeResponse;
 
+function getToken(req) {
+    const authHeader = req.header('Authorization');
+    if (authHeader && authHeader.indexOf('Bearer') >= 0) return authHeader.replace(/Bearer +/g, '');
+    else return req.body.token || req.query.token;
+}
 
 /**
  * Middleware que verifica la validez de un token api.
@@ -17,7 +22,7 @@ const sendMsgCodeResponse = responseUtils.sendMsgCodeResponse;
  */
 exports.verifyToken = function (req, res, next) {
     logger.debug('Verificando token de query');
-    const token = req.body.token || req.query.token || req.header('x-token');
+    const token = getToken(req);
     if (!token) return sendMsgCodeResponse(res, 'Token no enviado', 400);
 
     tokenManager.verifyToken(token, (err, decoded) => {
