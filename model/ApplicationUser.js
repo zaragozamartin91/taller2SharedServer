@@ -75,6 +75,7 @@ function fromRows(rows) {
 ApplicationUser.fromRows = fromRows;
 
 // TODO : GUARDAR EL PASSWORD ENCRIPTADO
+/* istanbul ignore next */
 ApplicationUser.insert = function (usrObj, callback) {
     const user = fromObj(usrObj);
     let { applicationOwner, username, password, name, surname, country, email, birthdate, type, images, balance, fb } = user;
@@ -95,6 +96,7 @@ ApplicationUser.insert = function (usrObj, callback) {
  * @param {string} whereClause Sentencia where.
  * @return {string} Sql a invocar en una query.
  */
+/* istanbul ignore next */
 function buildFindQuery(whereClause) {
     whereClause = whereClause || '';
     const sql = `select u.*,${carTable}.id as carid, ${carTable}._ref as car_ref,${carTable}.properties as carproperties 
@@ -103,6 +105,7 @@ function buildFindQuery(whereClause) {
     return `${sql} ${whereClause}`;
 }
 
+/* istanbul ignore next */
 ApplicationUser.find = function (callback) {
     const sql = buildFindQuery();
     dbManager.query(sql, [], (err, { rows }) => {
@@ -111,6 +114,7 @@ ApplicationUser.find = function (callback) {
     });
 };
 
+/* istanbul ignore next */
 ApplicationUser.findById = function (user, callback) {
     const userId = user.id || user;
     const sql = buildFindQuery('where u.id=$1');
@@ -120,6 +124,7 @@ ApplicationUser.findById = function (user, callback) {
     });
 };
 
+/* istanbul ignore next */
 ApplicationUser.findByApp = function (app, callback) {
     const appId = app.id || app;
     const sql = buildFindQuery('where u.applicationowner=$1');
@@ -129,6 +134,7 @@ ApplicationUser.findByApp = function (app, callback) {
     });
 };
 
+/* istanbul ignore next */
 ApplicationUser.findByIdAndApp = function (user, app, callback) {
     const userId = user.id || user;
     const appId = app.id || app;
@@ -139,12 +145,14 @@ ApplicationUser.findByIdAndApp = function (user, app, callback) {
     });
 };
 
+/* istanbul ignore next */
 ApplicationUser.delete = function (user, callback) {
     const userId = user.id || user;
     const sql = `DELETE FROM ${table} WHERE id=$1 RETURNING *`;
     dbManager.query(sql, [userId], (err, { rows }) => callback(err, fromObj(rows[0])));
 };
 
+/* istanbul ignore next */
 ApplicationUser.findByUsernameAndApp = function (user, app, callback) {
     const username = user.username || user;
     const appId = app.id || app;

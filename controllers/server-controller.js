@@ -13,7 +13,7 @@ const buildMetadata = responseUtils.buildMetadata;
 
 exports.getServer = function (req, res) {
     getServer(req, res, server => {
-        const metadata = apiVersion;
+        const metadata = { version: apiVersion };
         res.send({ metadata, server: server.withTimestampFields() });
     });
 };
@@ -51,31 +51,28 @@ exports.postServer = function (req, res) {
             return sendMsgCodeResponse(res, 'Ocurrio un error al dar de alta el server', 500);
         }
 
-        const metadata = mainConf.apiVersion;
+        const metadata = { version: apiVersion };
         const server = result.withTimestampFields();
         const token = tokenManager.signServer(server);
         TokenModel.insert(token, server.id, (err, dbtoken) => {
             if (err) return sendMsgCodeResponse(res, 'Error al insertar el token del nuevo server', 500);
-            res.send({ metadata, server, token });
+            res.send({ metadata, server: { server, token } });
         });
     });
 };
 
 exports.deleteServer = function (req, res) {
     const serverId = req.params.serverId;
-    if (!serverId) return sendMsgCodeResponse(res, 'No se indico un server a eliminar', 400);
 
     ApplicationServer.delete(serverId, (err, server) => {
         if (err) return sendMsgCodeResponse(res, 'Ocurrio un error al eliminar el server', 500);
-        logger.debug(server);
         if (!server) return sendMsgCodeResponse(res, 'No existe el servidor buscado', 404);
-        return sendMsgCodeResponse(res, 'Baja correcta', 200);
+        return sendMsgCodeResponse(res, 'Baja correcta', 204);
     });
 };
 
 exports.updateServer = function (req, res) {
     const serverId = req.params.serverId;
-    if (!serverId) return sendMsgCodeResponse(res, 'No se indico un server a actualizar', 400);
 
     ApplicationServer.findById(serverId, (err, server) => {
         if (!server) return sendMsgCodeResponse(res, 'No existe el servidor buscado', 404);
@@ -88,7 +85,6 @@ exports.updateServer = function (req, res) {
         server.name = name || server.name;
         ApplicationServer.update(server, (err, updatedServer) => {
             if (err) return sendMsgCodeResponse(res, 'Ocurrio un error al actualizar el server', 500);
-
             const metadata = { version: apiVersion };
             res.send({ metadata, server: updatedServer.withTimestampFields() });
         });
@@ -111,7 +107,7 @@ exports.resetToken = function (req, res) {
                 logger.debug(`Token asignado a ${serverId}:`);
                 logger.debug(dbToken);
                 const metadata = { version: apiVersion };
-                res.send({ metadata, server: server.withTimestampFields(), token: dbToken.withTimestampExpiration() });
+                res.send({ metadata, server: { server: server.withTimestampFields(), token: dbToken.withTimestampExpiration() } });
             });
         });
     });

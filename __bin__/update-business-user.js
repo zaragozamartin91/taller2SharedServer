@@ -2,7 +2,7 @@ const http = require('http');
 
 const HOST = process.env.HOST || 'localhost';
 const token = process.env.TOKEN;
-const userId = 'mzaragoza-46967';
+const userId = 'martin';
 
 const options = {
     'method': 'PUT',
@@ -11,8 +11,7 @@ const options = {
     'path': '/api/v1/business-users/' + userId + '?token=' + token,
     'headers': {
         'content-type': 'application/json',
-        'cache-control': 'no-cache',
-        'postman-token': 'f57c9856-660a-1e63-e583-97158e227be8'
+        'cache-control': 'no-cache'
     }
 };
 
@@ -30,10 +29,11 @@ const req = http.request(options, function (res) {
 });
 
 req.write(JSON.stringify({
+    _ref:'883bc664f425882ac4d81f68a71d90b1a6627b27',
     username: 'mzaragoza',
     password: 'pepe',
     name: 'Martin',
-    surname: 'Zaragoza',
-    roles: ['admin']
+    surname: 'ZARAGOZA',
+    roles: ['admin','MANAGER','uSer']
 }));
 req.end();

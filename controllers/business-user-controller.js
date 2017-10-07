@@ -72,11 +72,10 @@ function updateUser(userId, req, res) {
         user.surname = surname || user.surname;
         user.roles = roles || user.roles;
 
-        BusinessUser.update(user, err => {
+        BusinessUser.update(user, (err, updatedUser) => {
             if (err) return sendMsgCodeResponse(res, 'Error al actualizar el usuario', 500);
-
             const metadata = { version: apiVersion };
-            res.send({ metadata, businessUser: user.withStringRoles() });
+            res.send({ metadata, businessUser: updatedUser });
         });
     });
 }

@@ -179,11 +179,8 @@ BusinessUser.update = function (user, callback) {
 
     dbManager.query(sql, values, err => {
         /* Si no hay error, actualizo el valor de _ref */
-        if (!err) {
-            user._ref = newRef;
-            user.roles = okRoles;
-        }
-        callback(err, user);
+        if (err) return callback(err);
+        callback(null, new BusinessUser(id, newRef, username, password, name, surname, okRoles));
     });
 };
 

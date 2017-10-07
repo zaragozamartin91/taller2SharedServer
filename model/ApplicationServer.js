@@ -55,7 +55,7 @@ ApplicationServer.fromObj = function (obj) {
             obj.createdBy || obj.created_by,
             new Date(obj.createdTime || obj.created_time),
             obj.name,
-            new Date(obj.lastConn || obj.last_conn)
+            new Date(obj.lastConn || obj.last_conn || obj.lastConnection)
         );
         return appServer;
     } else return null;
@@ -65,13 +65,19 @@ function fromRows(rows = []) {
     return rows.map(ApplicationServer.fromObj);
 }
 
-/* istanbul ignore next */
-ApplicationServer.insert = function (obj, callback) {
-    const name = obj.name;
+function buildServer({ name, createdBy, created_by }) {
     const id = idGenerator.generateId(name);
     const _ref = hashServer(id, name);
-    const createdBy = obj.createdBy || obj.created_by;
     const createdTime = new Date();
+    return new ApplicationServer(id, _ref, created_by || createdBy, createdTime, name, createdTime);
+}
+
+ApplicationServer.buildServer = buildServer;
+
+/* istanbul ignore next */
+ApplicationServer.insert = function (obj, callback) {
+    const server = buildServer(obj);
+    const { id, _ref, createdBy, createdTime, name } = server;
 
     dbManager.query(`INSERT INTO ${table} 
         (id,_ref,created_by,name,created_time)
@@ -113,16 +119,13 @@ ApplicationServer.delete = function (server, callback) {
 
 /* istanbul ignore next */
 ApplicationServer.update = function (server, callback) {
-    const { id, name = '' } = server;
+    const { id, createdBy, createdTime, name = '', lastConnection } = server;
     const newRef = hashServer(id, name);
 
     const sql = `UPDATE ${table} SET name=$1,_ref=$2 WHERE id=$3 RETURNING *`;
 
     dbManager.queryPromise(sql, [name, newRef, id])
-        .then(rows => {
-            if (rows[0]) server._ref = newRef;
-            callback(null, server);
-        })
+        .then(rows => callback(null, new ApplicationServer(id, newRef, createdBy, createdTime, name, lastConnection)))
         .catch(err => callback(err));
 };
 
