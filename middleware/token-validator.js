@@ -10,7 +10,9 @@ const sendMsgCodeResponse = responseUtils.sendMsgCodeResponse;
 
 function getToken(req) {
     const authHeader = req.header('Authorization');
-    if (authHeader && authHeader.indexOf('Bearer') >= 0) return authHeader.replace(/Bearer +/g, '');
+    if (authHeader && authHeader.toLowerCase().indexOf('bearer') >= 0) {
+        return authHeader.replace(/Bearer +/ig, '');
+    }
     else return req.body.token || req.query.token;
 }
 

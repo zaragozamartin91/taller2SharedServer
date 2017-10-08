@@ -20,15 +20,15 @@ const EMPTY_CALLBACK = () => { };
 function DeleteUserDialog(props) {
     function deleteUser() {
         const userId = props.user.id;
-        axios.delete(`/api/v1/business-users/${userId}?token=${props.token}`)
-            .then(contents => {
-                console.log(contents.data);
-                props.onSuccess();
-            })
-            .catch(cause => {
-                console.error(cause);
-                props.onError();
-            });
+        axios.delete(`/api/v1/business-users/${userId}`, {
+            headers: { 'Authorization': `Bearer ${props.token}` }
+        }).then(contents => {
+            console.log(contents.data);
+            props.onSuccess();
+        }).catch(cause => {
+            console.error(cause);
+            props.onError();
+        });
     }
 
     const actions = [
