@@ -16,6 +16,7 @@ import Header from './Header';
 
 const EMPTY_CALLBACK = () => { };
 
+
 function DeleteUserDialog(props) {
     function deleteUser() {
         const userId = props.user.id;
@@ -49,7 +50,7 @@ function DeleteUserDialog(props) {
             actions={actions}
             modal={true}
             open={props.open}>
-            Desea eliminar al usuario?
+            Desea eliminar el usuario?
         </Dialog>
     );
 }
@@ -67,8 +68,7 @@ const Users = React.createClass({
         };
     },
 
-    componentDidMount() {
-        console.log('token: ' + this.props.token);
+    loadUsers() {
         axios.get(`/api/v1/business-users?token=${this.props.token}`)
             .then(contents => {
                 const users = contents.data.businessUser;
@@ -80,6 +80,11 @@ const Users = React.createClass({
                 console.error(cause);
                 this.openErrSnackbar('Error al obtener los usuarios');
             });
+    },
+
+    componentDidMount() {
+        console.log('token: ' + this.props.token);
+        this.loadUsers();
     },
 
     openErrSnackbar(msg) {
@@ -103,17 +108,6 @@ const Users = React.createClass({
             const openDeleteDialogs = self.state.openDeleteDialogs;
             openDeleteDialogs[userId] = false;
             self.setState({ openDeleteDialogs });
-        };
-    },
-
-    removeUser(user) {
-        const self = this;
-        return function () {
-            const userId = user.id || user;
-            const users = self.state.users.filter(u => u.id != userId);
-            const openDeleteDialogs = self.state.openDeleteDialogs;
-            openDeleteDialogs[userId] = false;
-            self.setState({ openDeleteDialogs, users });
         };
     },
 
@@ -147,7 +141,7 @@ const Users = React.createClass({
                     user={user}
                     token={this.props.token}
                     open={this.isDeleteDialogOpen(user)}
-                    onSuccess={this.removeUser(user)}
+                    onSuccess={this.loadUsers}
                     onClose={this.closeDeleteDialog(user)}
                     onError={() => this.openErrSnackbar(`Error al eliminar el usuario ${user.id}`)} />
             </Card>
