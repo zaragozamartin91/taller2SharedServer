@@ -84,7 +84,8 @@ router.put('/users/:userId/cars/:carId', tokenValidator.verifyServerOrUserToken,
 /* FIN /users ROUTES ---------------------------------------------------------------------------------------------------- */
 
 /* /paymethods ROUTES ------------------------------------------------------------------------------------------------------- */
-router.get('/paymethods', paymethodsController.getPaymethods);
+router.use('/paymethods', tokenValidator.verifyToken);
+router.get('/paymethods', tokenValidator.verifyServerOrUserToken ,paymethodsController.getPaymethods);
 /* FIN /paymethods ROUTES ------------------------------------------------------------------------------------------------------- */
 
 module.exports = router;
