@@ -6,6 +6,7 @@ const businessUsersController = require('../controllers/business-user-controller
 const appUserController = require('../controllers/app-user-controller');
 
 const testDataController = require('../controllers/test-data-controller');
+const paymethodsController = require('../controllers/paymethods-controller');
 
 const router = express.Router();
 
@@ -82,7 +83,9 @@ router.put('/users/:userId/cars/:carId', tokenValidator.verifyServerOrUserToken,
 
 /* FIN /users ROUTES ---------------------------------------------------------------------------------------------------- */
 
-
+/* /paymethods ROUTES ------------------------------------------------------------------------------------------------------- */
+router.get('/paymethods', paymethodsController.getPaymethods);
+/* FIN /paymethods ROUTES ------------------------------------------------------------------------------------------------------- */
 
 module.exports = router;
 
