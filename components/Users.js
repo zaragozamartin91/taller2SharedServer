@@ -16,6 +16,63 @@ import Header from './Header';
 
 const EMPTY_CALLBACK = () => { };
 
+const EditUserCard = React.createClass({
+    getDefaultProps() {
+        return {
+            user: {},
+            token: ''
+        };
+    },
+
+    componentWillMount() {
+        const { username, name, surname, password, roles, _ref } = this.props.user;
+        this.setState({ username, name, surname, password, roles, _ref });
+    },
+
+    updateUser() {
+        const userId = this.props.user.id;
+        const { username, name, surname, password, roles, _ref } = this.state;
+        const body = { username, name, surname, password, roles, _ref };
+        const config = { headers: { 'Authorization': `Bearer ${this.props.token}` } };
+        axios.put(`/api/v1/business-users/${userId}`, body, config)
+            .then(contents => {
+                console.log(contents.data);
+                this.props.onSuccess();
+            }).catch(cause => {
+                console.error(cause);
+                this.props.onError();
+            });
+    },
+
+    render() {
+        const user = this.props.user;
+        return (
+            <Card style={{ marginTop: '15px' }}>
+                <CardHeader
+                    title='Editar usuario'
+                    subtitle={user.username}
+                />
+                <CardText>
+                    <TextField
+                        name="username"
+                        hint="username"
+                        floatingLabelText="username"
+                        value={this.state.username}
+                        onChange={e => this.setState({ username: e.target.value })} /><br />
+                    <TextField
+                        name="Nombre"
+                        hint="Nombre"
+                        floatingLabelText="Nombre"
+                        value={this.state.name}
+                        onChange={e => this.setState({ name: e.target.value })} /><br />
+                </CardText>
+                <CardActions>
+                    <FlatButton label="Cancelar" onClick={this.props.onClose} />
+                    <FlatButton label="Actualizar" onClick={this.updateUser} />
+                </CardActions>
+            </Card>);
+    }
+});
 
 function DeleteUserDialog(props) {
     function deleteUser() {
@@ -64,7 +121,8 @@ const Users = React.createClass({
         return {
             users: [],
             errSnackbarOpen: false,
-            openDeleteDialogs: {}
+            updatingUser: null,
+            deletingUser: null
         };
     },
 
@@ -96,18 +154,10 @@ const Users = React.createClass({
         this.setState({ errSnackbarOpen: false });
     },
 
-    isDeleteDialogOpen(user) {
-        const userId = user.id || user;
-        return this.state.openDeleteDialogs[userId] == true;
-    },
-
     closeDeleteDialog(user) {
         const self = this;
         return function () {
-            const userId = user.id || user;
-            const openDeleteDialogs = self.state.openDeleteDialogs;
-            openDeleteDialogs[userId] = false;
-            self.setState({ openDeleteDialogs });
+            self.setState({ deletingUser: null });
         };
     },
 
@@ -115,13 +165,67 @@ const Users = React.createClass({
         const self = this;
         return function () {
             const userId = user.id || user;
-            const openDeleteDialogs = self.state.openDeleteDialogs;
-            openDeleteDialogs[userId] = true;
-            self.setState({ openDeleteDialogs });
+            self.setState({ deletingUser: userId });
+        };
+    },
+
+    closeEditCard(user) {
+        const self = this;
+        return function () {
+            self.setState({ updatingUser: null });
+        };
+    },
+
+    openEditCard(user) {
+        const self = this;
+        return function () {
+            const userId = user.id || user;
+            self.setState({ updatingUser: userId });
+        };
+    },
+
+    handleUserDeleteSuccess(user) {
+        const self = this;
+        return function () {
+            self.closeDeleteDialog(user)();
+            self.loadUsers();
+        };
+    },
+
+    handleUserEditSuccess(user) {
+        const self = this;
+        return function () {
+            self.closeEditDialog(user)();
+            self.loadUsers();
         };
     },
 
     render() {
+        let editUserCard = null;
+        if (this.state.updatingUser) {
+            const user = this.state.users.find(u => u.id == this.state.updatingUser);
+            editUserCard = <EditUserCard
+                user={user}
+                token={this.props.token}
+                onClose={this.closeEditCard(user)}
+                onSuccess={this.handleUserEditSuccess(user)}
+                onError={() => this.openErrSnackbar(`Error al actualizar el usuario ${user.id}`)}
+            />;
+        }
+
+        let deleteUserDialog = null;
+        if (this.state.deletingUser) {
+            console.log('Creando dialogo de eliminacion');
+            const user = this.state.users.find(u => u.id == this.state.deletingUser);
+            deleteUserDialog = <DeleteUserDialog
+                user={user}
+                token={this.props.token}
+                open={true}
+                onSuccess={this.handleUserDeleteSuccess(user)}
+                onClose={this.closeDeleteDialog(user)}
+                onError={() => this.openErrSnackbar(`Error al eliminar el usuario ${user.id}`)} />;
+        }
+
         const userCards = this.state.users.map(user => (
             <Card style={{ marginTop: '15px' }}>
                 <CardHeader
@@ -135,21 +239,16 @@ const Users = React.createClass({
                 </CardText>
                 <CardActions>
                     <FlatButton label="Eliminar" onClick={this.openDeleteDialog(user)} />
-                    <FlatButton label="Editar" />
+                    <FlatButton label="Editar" onClick={this.openEditCard(user)} />
                 </CardActions>
-                <DeleteUserDialog
-                    user={user}
-                    token={this.props.token}
-                    open={this.isDeleteDialogOpen(user)}
-                    onSuccess={this.loadUsers}
-                    onClose={this.closeDeleteDialog(user)}
-                    onError={() => this.openErrSnackbar(`Error al eliminar el usuario ${user.id}`)} />
             </Card>
         ));
 
+        const mainElem = editUserCard || deleteUserDialog || userCards;
+
         return (
             <div>
-                {userCards}
+                {mainElem}
                 <Snackbar
                     open={this.state.errSnackbarOpen}
                     message={this.state.errSnackbarMessage}
