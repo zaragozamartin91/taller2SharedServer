@@ -290,6 +290,20 @@ describe('server-controller', function () {
 
             serverController.resetToken(req, res);
         });
+
+        it('Falla por un error en la bbdd', function () {
+            sandbox.stub(TokenModel, 'invalidateTokensOwnedBy')
+                .callsFake((serverId, callback) => callback(new Error()));
+
+            const dbServer = ApplicationServer.fromObj(serverMock1);
+            sandbox.stub(ApplicationServer, 'findById')
+                .callsFake((serverId, callback) => callback(null, dbServer));
+
+            const req = { params: { serverId: serverMock1.id } };
+            const res = mockErrRes(500);
+
+            serverController.resetToken(req, res);
+        });
     });
 
     describe('#renewToken', function () {
