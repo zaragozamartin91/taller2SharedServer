@@ -4,6 +4,7 @@ import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 import RaisedButton from 'material-ui/RaisedButton';
 import TextField from 'material-ui/TextField';
 import { Card, CardActions, CardHeader, CardText } from 'material-ui/Card';
+import Checkbox from 'material-ui/Checkbox';
 import FlatButton from 'material-ui/FlatButton';
 import Dialog from 'material-ui/Dialog';
 import Snackbar from 'material-ui/Snackbar';
@@ -22,6 +23,24 @@ const EditUserCard = React.createClass({
             user: {},
             token: ''
         };
+    },
+
+    removeRole(role) {
+        const roles = this.state.roles.filter(r => r != role);
+        this.setState({ roles });
+    },
+
+    addRole(role) {
+        this.state.roles.push(role);
+        this.setState({ roles: this.state.roles });
+    },
+
+    toggleRole(role) {
+        return () => this.hasRole(role) ? this.removeRole(role) : this.addRole(role);
+    },
+
+    hasRole(role) {
+        return this.state.roles.indexOf(role) >= 0;
     },
 
     componentWillMount() {
@@ -45,12 +64,18 @@ const EditUserCard = React.createClass({
     },
 
     render() {
-        const user = this.props.user;
+        const roles = this.state.roles;
+        const checkBoxes = [
+            <Checkbox label='user' checked={this.hasRole('user')} onClick={this.toggleRole('user')} />,
+            <Checkbox label='admin' checked={this.hasRole('admin')} onClick={this.toggleRole('admin')} />,
+            <Checkbox label='manager' checked={this.hasRole('manager')} onClick={this.toggleRole('manager')} />,
+        ];
+
         return (
             <Card style={{ marginTop: '15px' }}>
                 <CardHeader
                     title='Editar usuario'
-                    subtitle={user.username}
+                    subtitle={this.state.username}
                 />
                 <CardText>
                     <TextField
@@ -65,6 +90,15 @@ const EditUserCard = React.createClass({
                         floatingLabelText="Nombre"
                         value={this.state.name}
                         onChange={e => this.setState({ name: e.target.value })} /><br />
+                    <TextField
+                        name="password"
+                        hintText="Password"
+                        floatingLabelText="Password"
+                        type="password"
+                        value={this.state.password}
+                        onChange={e => this.setState({ password: e.target.value })} /><br />
+
+                    {checkBoxes}
                 </CardText>
                 <CardActions>
                     <FlatButton label="Cancelar" onClick={this.props.onClose} />
@@ -195,7 +229,7 @@ const Users = React.createClass({
     handleUserEditSuccess(user) {
         const self = this;
         return function () {
-            self.closeEditDialog(user)();
+            self.closeEditCard(user)();
             self.loadUsers();
         };
     },

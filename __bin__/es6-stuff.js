@@ -11,5 +11,5 @@ function foo({ request: { res: { statusCode = 500 } = {} } = {} } = {}) {
     console.log(statusCode);
 }
 
-const cause = { request: {  } };
+const cause = { request: {} };
 foo(cause);
