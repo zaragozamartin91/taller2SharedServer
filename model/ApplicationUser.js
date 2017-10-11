@@ -202,6 +202,16 @@ ApplicationUser.prototype.update = function (callback) {
     });
 };
 
+ApplicationUser.prototype.isPassenger = function(){ 
+    const usrType = this.type || '';
+    return usrType.toLowerCase() == 'passenger';
+};
+
+ApplicationUser.prototype.isDriver = function(){ 
+    const usrType = this.type || '';
+    return usrType.toLowerCase() == 'driver';
+};
+
 ApplicationUser.prototype.delete = function (callback) {
     ApplicationUser.delete(this.id, callback);
 };

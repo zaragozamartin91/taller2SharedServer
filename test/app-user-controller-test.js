@@ -638,6 +638,17 @@ describe('app-user-controller', function () {
             const res = mockErrRes(404);
             appUserController.postUserCar(req, res);
         });
+
+        it('Falla porque el usuario no es conductor', function () {
+            const dbUser = ApplicationUser.fromObj(userMock2);
+            sandbox.stub(ApplicationUser, 'findByIdAndApp')
+                .callsFake((userId, serverId, callback) => callback(null, dbUser));
+
+            const req = { serverId: dbUser.applicationOwner, params: { userId: dbUser.id }, body: carMock1 };
+            const res = mockErrRes(400);
+
+            appUserController.postUserCar(req, res);
+        });
     });
 
 

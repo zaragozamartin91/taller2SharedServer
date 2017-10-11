@@ -191,6 +191,8 @@ exports.postUserCar = function (req, res) {
     findUserAndDo(req, (err, user) => {
         if (err) return sendMsgCodeResponse(res, 'Ocurrio un error al insertar el auto', 500);
         if (!user) return sendMsgCodeResponse(res, 'No existe el usuario', 404);
+        if (!user.isDriver()) return sendMsgCodeResponse(res, 'El usuario no es chofer', 400);
+        
         const userId = user.id;
         const carObj = req.body;
         carObj.owner = userId;
