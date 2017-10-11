@@ -76,7 +76,7 @@ const userMock2 = {
     'id': 'quelopario',
     '_ref': '6b868e317825e0ecbac97721009f91907eb7aa65',
     'applicationOwner': 'llevame',
-    'type': 'client',
+    'type': 'passenger',
     'cars': [],
     'username': 'quelopario',
     'name': 'Hector',
@@ -145,7 +145,7 @@ const userMock4 = {
     'id': 'rhuber',
     '_ref': 'd3949166201df5b084887c6cedcb70c936dc5ce7',
     'applicationOwner': 'supertaxi',
-    'type': 'client',
+    'type': 'passenger',
     'cars': [],
     'username': 'rhuber',
     'name': 'Rolando',
@@ -513,6 +513,26 @@ describe('app-user-controller', function () {
                     assert.equal(JSON.stringify(appUserController.getUserView(dbUser)), JSON.stringify(user));
                 }
             };
+            appUserController.updateUser(req, res);
+        });
+
+        it('Falla porque el tipo de usuario es invalido', function () {
+            const dbUser = ApplicationUser.fromObj(userMock1);
+            sandbox.stub(ApplicationUser, 'findById')
+                .callsFake((user, callback) => callback(null, dbUser));
+
+            let { _ref, type, username, password, fb, firstName, lastName, country, email, birthdate, images } = dbUser;
+            type = 'nonexistent type';
+
+            dbUser.update = function (callback) {
+                callback(null, dbUser);
+            };
+
+            const req = {
+                params: { userId: dbUser.id },
+                body: { _ref, type, username, password, fb, firstName, lastName, country, email, birthdate, images }
+            };
+            const res = mockErrRes(400);
             appUserController.updateUser(req, res);
         });
     });
