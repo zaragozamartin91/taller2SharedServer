@@ -109,10 +109,11 @@ exports.deleteUser = function (req, res) {
 
 exports.validateUser = function (req, res) {
     const { username, password, facebookAuthToken } = req.body;
-    if (!username || (!password && !facebookAuthToken)) return sendMsgCodeResponse(res, 'Parametros faltantes', 400);
+    if (!facebookAuthToken && (!username || !password)) return sendMsgCodeResponse(res, 'Parametros faltantes', 400);
 
     const serverId = req.serverId;
-    ApplicationUser.findByUsernameAndApp(username, serverId, (err, dbUser) => {
+
+    function callback(err, dbUser) {
         if (err) return sendMsgCodeResponse(res, 'Error al obtener el usuario', 500);
         if (!dbUser) return sendMsgCodeResponse(res, 'El usuario no existe', 404);
 
@@ -122,7 +123,10 @@ exports.validateUser = function (req, res) {
         const metadata = { version: apiVersion };
         const user = getUserView(dbUser);
         res.send({ metadata, user });
-    });
+    }
+
+    if (username) return ApplicationUser.findByUsernameAndApp(username, serverId, callback);
+    else return ApplicationUser.findByFbToken(facebookAuthToken, serverId, callback);
 };
 
 exports.updateUser = function (req, res) {

@@ -163,6 +163,16 @@ ApplicationUser.findByUsernameAndApp = function (user, app, callback) {
     });
 };
 
+ApplicationUser.findByFbToken = function (fbtoken, app, callback) {
+    const sql = buildFindQuery('WHERE u.applicationowner=$1');
+    dbManager.queryPromise(sql, [app])
+        .then(rows => {
+            const users = fromRows(rows);
+            const user = users.find(user => user.fb.authToken == fbtoken);
+            callback(null, user);
+        }).catch(callback);
+};
+
 function validateType(type = '') {
     type = type.toLowerCase();
     return type == 'passenger' || type == 'driver';
