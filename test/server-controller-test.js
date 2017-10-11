@@ -323,7 +323,12 @@ describe('server-controller', function () {
                     callback(null, dbServer);
                 });
 
-            const req = { body: {}, query: { token: dbToken.token } };
+            const req = {
+                body: {}, query: { token: dbToken.token },
+                header: function (type) {
+                    return dbToken.token;
+                }
+            };
             const res = {
                 send({ metadata, ping: { server, token } }) {
                     assert.ok(server);

@@ -3,18 +3,13 @@ const responseUtils = require('../utils/response-utils');
 const BusinessUser = require('../model/BusinessUser');
 const Role = require('../model/Role');
 const TokenModel = require('../model/Token');
+const requestTokenGetter = require('../utils/request-token-getter');
 const logger = require('log4js').getLogger('token-validator');
 
 
 const sendMsgCodeResponse = responseUtils.sendMsgCodeResponse;
 
-function getToken(req) {
-    const authHeader = req.header('Authorization');
-    if (authHeader && authHeader.toLowerCase().indexOf('bearer') >= 0) {
-        return authHeader.replace(/Bearer +/ig, '');
-    }
-    else return req.body.token || req.query.token;
-}
+const getToken = requestTokenGetter.getToken;
 
 /**
  * Middleware que verifica la validez de un token api.

@@ -10,6 +10,9 @@ const logger = require('log4js').getLogger('server-controller');
 const apiVersion = mainConf.apiVersion;
 const sendMsgCodeResponse = responseUtils.sendMsgCodeResponse;
 const buildMetadata = responseUtils.buildMetadata;
+const requestTokenGetter = require('../utils/request-token-getter');
+
+const getToken = requestTokenGetter.getToken;
 
 exports.getServer = function (req, res) {
     getServer(req, res, server => {
@@ -114,7 +117,7 @@ exports.resetToken = function (req, res) {
 };
 
 exports.renewToken = function (req, res) {
-    const token = req.body.token || req.query.token || req.header('x-token');
+    const token = getToken(req);
 
     TokenModel.findToken(token, (err, dbToken) => {
         if (err) return sendMsgCodeResponse(res, 'Error al validar el token', 500);
@@ -129,7 +132,7 @@ exports.renewToken = function (req, res) {
                     if (err) return sendMsgCodeResponse(res, 'Error al obtener el servidor', 500);
                     if (!server) return sendMsgCodeResponse(res, 'El servidor ya no existe', 404);
 
-                    TokenModel.invalidateTokensOwnedBy(owner, err => {
+                    TokenModel.invalidate(dbToken, err => {
                         if (err) return sendMsgCodeResponse(res, 'Error al invalidar el viejo token', 500);
 
                         const newToken = tokenManager.signServer(server);
