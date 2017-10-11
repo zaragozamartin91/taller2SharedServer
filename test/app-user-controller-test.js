@@ -608,9 +608,11 @@ describe('app-user-controller', function () {
 
             const req = { serverId: dbUser.applicationOwner, params: { userId: dbUser.id }, body: carMock1 };
             const res = {
+                status(code) { this.code = code; },
                 send({ metadata, car }) {
                     assert.ok(metadata.version);
                     assert.equal(dbCar, car);
+                    assert.equal(201, this.code);
                 }
             };
 

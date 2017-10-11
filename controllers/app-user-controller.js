@@ -201,6 +201,7 @@ exports.postUserCar = function (req, res) {
         Car.insert(carObj, (err, car) => {
             if (err) return sendMsgCodeResponse(res, 'Ocurrio un error al insertar el auto', 500);
             const metadata = { version: apiVersion };
+            res.status(201);
             res.send({ metadata, car });
         });
     });
