@@ -6,11 +6,19 @@ describe('id-generator', function () {
     });
 
     describe('#generateId()', function () {
-        it('genera un id pseudoaleatorio a partir de un prefijo', function () {
+        it('genera un id estandarizado', function () {
             const prefix = 'Some Prefix';
             const id = idGenerator.generateId(prefix);
 
             assert.equal('someprefix', id);
+        });
+    });
+
+    describe('#generateApplicationUserId()', function () {
+        it('genera un id para usuarios de aplicacion', function () {
+            const applicationOwner = 'llevame';
+            const username = 'M Zaragoza';
+            assert.equal('llevame-mzaragoza', idGenerator.generateApplicationUserId(applicationOwner, username));
         });
     });
 

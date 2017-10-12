@@ -43,7 +43,8 @@ describe('business-user-controller', function () {
     });
 
     describe('#postUser()', function () {
-        it('dar de alta un usuario correctamente', function (done) {
+        it('dar de alta un usuario correctamente', function () {
+            sandbox.stub(BusinessUser, 'findByUsername').callsFake((username, callback) => callback(null, null));
             sandbox.stub(BusinessUser, 'insert').callsFake((usrObj, callback) => {
                 const user = BusinessUser.fromObj(usrObj);
                 user._ref = BusinessUser.hashUser(user);
@@ -55,7 +56,21 @@ describe('business-user-controller', function () {
                 send: ({ metadata, businessUser }) => {
                     assert.ok(metadata);
                     assert.ok(businessUser);
-                    done();
+                }
+            };
+            businessUserController.postUser(req, res);
+        });
+
+        it('falla porque existe un usuario duplicado', function () {
+            const dbUser = BusinessUser.fromObj(usrObjMock1);
+            sandbox.stub(BusinessUser, 'findByUsername').callsFake((username, callback) => callback(null, dbUser));
+
+            const req = { body: usrObjMock1 };
+            const res = {
+                status(code) { this.code = code; },
+                send({ code, message }) {
+                    assert.equal(400, code);
+                    assert.ok(message);
                 }
             };
             businessUserController.postUser(req, res);

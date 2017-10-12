@@ -14,5 +14,10 @@ function generateId(prefix) {
 //    return `${prefix}-${Math.floor(Math.random() * limit).toString()}`;
 //}
 
+function generateApplicationUserId(applicationOwner, username) {
+    return `${applicationOwner}-${generateId(username)}`;
+}
+
 exports.generateId = generateId;
+exports.generateApplicationUserId = generateApplicationUserId;
 //exports.defaultPrefix = defaultPrefix;
