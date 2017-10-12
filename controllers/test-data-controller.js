@@ -102,7 +102,7 @@ exports.createTestData = function (req, res) {
                             'Argentina',
                             'quelopario@gmail.com',
                             moment('1960-09-18').toDate(),
-                            'client',
+                            'passenger',
                             ['https://www.postgresql.org/docs/9.6/static/datatype-json.html', 'https://docs.google.com/document/d/1Ekd8ohj2WdSd5gg4_s4SGvP3P65CLb69U4-5fMBab4o/'],
                             [{ currency: 'peso', value: 5000 }, { currency: 'euro', value: 45678.98 }]
                         ];
@@ -166,7 +166,7 @@ exports.createTestData = function (req, res) {
                             'Argentina',
                             'rhuber@gmail.com',
                             moment('1993-10-01').toDate(),
-                            'client',
+                            'passenger',
                             ['https://www.postgresql.org/docs/9.6/static/datatype-json.html', 'https://docs.google.com/document/d/1Ekd8ohj2WdSd5gg4_s4SGvP3P65CLb69U4-5fMBab4o/'],
                             [{ currency: 'peso', value: 1111 }]
                         ];
