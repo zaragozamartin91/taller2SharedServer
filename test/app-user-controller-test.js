@@ -321,6 +321,8 @@ describe('app-user-controller', function () {
         });
 
         it('Falla por un error en la bbdd', function () {
+            sandbox.stub(ApplicationUser, 'findByUsernameAndApp')
+                .callsFake((username, app, callback) => callback(null, null));
             sandbox.stub(ApplicationUser, 'insert')
                 .callsFake((user, callback) => callback(new Error()));
 
@@ -330,7 +332,21 @@ describe('app-user-controller', function () {
             appUserController.postUser(req, res);
         });
 
+        it('Falla porque el usuario ya existe', function () {
+            sandbox.stub(ApplicationUser, 'findByUsernameAndApp')
+                .callsFake((username, app, callback) => callback(null, ApplicationUser.fromObj(userMock1)));
+            sandbox.stub(ApplicationUser, 'insert')
+                .callsFake((user, callback) => callback(new Error()));
+
+            let { type, username, password = 'Pass', firstName = 'Martin', lastName = 'Zaragoza', country, email, birthdate } = userMock1;
+            const req = { body: { type, username, password, firstName, lastName, country, email, birthdate } };
+            const res = mockErrRes(400);
+            appUserController.postUser(req, res);
+        });
+
         it('Inserta un usuario correctamente', function () {
+            sandbox.stub(ApplicationUser, 'findByUsernameAndApp')
+                .callsFake((username, app, callback) => callback(null, null));
             const dbUser = ApplicationUser.fromObj(userMock1);
             sandbox.stub(ApplicationUser, 'insert')
                 .callsFake((user, callback) => callback(null, dbUser));

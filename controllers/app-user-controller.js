@@ -86,12 +86,17 @@ exports.postUser = function (req, res) {
     userObj.birthdate = moment(userObj.birthdate).toDate();
     userObj.type = userObj.type.toLowerCase();
 
-    ApplicationUser.insert(userObj, (err, dbUser) => {
-        if (err) return sendMsgCodeResponse(res, 'Ocurrio un error al dar de alta el usuario', 500);
-        const metadata = { version: apiVersion };
-        const user = getUserView(dbUser);
-        res.status(201);
-        res.send({ metadata, user });
+    ApplicationUser.findByUsernameAndApp(userObj.username, req.serverId, (err, user) => {
+        if (err) return sendMsgCodeResponse(res, 'Ocurrio un error al buscar usuarios duplicados', 500);
+        if (user) return sendMsgCodeResponse(res, 'Usuario duplicado', 400);
+
+        ApplicationUser.insert(userObj, (err, dbUser) => {
+            if (err) return sendMsgCodeResponse(res, 'Ocurrio un error al dar de alta el usuario', 500);
+            const metadata = { version: apiVersion };
+            const user = getUserView(dbUser);
+            res.status(201);
+            res.send({ metadata, user });
+        });
     });
 };
 
@@ -192,7 +197,7 @@ exports.postUserCar = function (req, res) {
         if (err) return sendMsgCodeResponse(res, 'Ocurrio un error al insertar el auto', 500);
         if (!user) return sendMsgCodeResponse(res, 'No existe el usuario', 404);
         if (!user.isDriver()) return sendMsgCodeResponse(res, 'El usuario no es chofer', 400);
-        
+
         const userId = user.id;
         const carObj = req.body;
         carObj.owner = userId;

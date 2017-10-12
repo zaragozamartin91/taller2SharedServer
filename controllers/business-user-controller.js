@@ -19,21 +19,23 @@ function invalidInsertFields(user) {
 }
 
 exports.postUser = function (req, res) {
-    const username = req.body.username;
-    const password = req.body.password;
-    const name = req.body.name;
-    const surname = req.body.surname;
-    const roles = req.body.roles;
-
+    const { username, password, name, surname, roles } = req.body;
     const userObj = { username, password, name, surname, roles };
 
     if (invalidInsertFields(userObj)) return sendMsgCodeResponse(res, 'Faltan parametros', 400);
 
-    BusinessUser.insert(userObj, (err, usr) => {
-        if (err) return sendMsgCodeResponse(res, 'Error al insertar usuario', 500);
+    BusinessUser.findByUsername(username, (err, user) => {
+        if (err) return sendMsgCodeResponse(res, 'Ocurrio un error al buscar usuarios duplicados', 500);
+        if (user) return sendMsgCodeResponse(res, 'Usuario duplicado', 400);
 
-        const metadata = { version: apiVersion };
-        res.send({ metadata, businessUser: usr.withStringRoles() });
+        console.log(user);
+
+        BusinessUser.insert(userObj, (err, usr) => {
+            if (err) return sendMsgCodeResponse(res, 'Error al insertar usuario', 500);
+
+            const metadata = { version: apiVersion };
+            res.send({ metadata, businessUser: usr.withStringRoles() });
+        });
     });
 };
 

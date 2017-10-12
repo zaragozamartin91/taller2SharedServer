@@ -48,7 +48,16 @@ const EditUserCard = React.createClass({
         this.setState({ username, name, surname, password, roles, _ref });
     },
 
+    checkFields() {
+        const { username, name, surname, password } = this.state;
+        if (!username || !name || !surname || !password) return { ok: false, msg: 'Parametros incompletos' };
+        return { ok: true };
+    },
+
     updateUser() {
+        const fieldsCheck = this.checkFields();
+        if (!fieldsCheck.ok) return this.openErrSnackbar(fieldsCheck.msg);
+
         const userId = this.props.user.id;
         const { username, name, surname, password, roles, _ref } = this.state;
         const body = { username, name, surname, password, roles, _ref };
@@ -90,6 +99,12 @@ const EditUserCard = React.createClass({
                         floatingLabelText="Nombre"
                         value={this.state.name}
                         onChange={e => this.setState({ name: e.target.value })} /><br />
+                    <TextField
+                        name="Apellido"
+                        hint="Apellido"
+                        floatingLabelText="Apellido"
+                        value={this.state.surname}
+                        onChange={e => this.setState({ surname: e.target.value })} /><br />
                     <TextField
                         name="password"
                         hintText="Password"
@@ -223,6 +238,7 @@ const Users = React.createClass({
         return function () {
             self.closeDeleteDialog(user)();
             self.loadUsers();
+            self.openErrSnackbar('Usuario eliminado');
         };
     },
 
@@ -231,6 +247,7 @@ const Users = React.createClass({
         return function () {
             self.closeEditCard(user)();
             self.loadUsers();
+            self.openErrSnackbar('Usuario actualizado');
         };
     },
 
