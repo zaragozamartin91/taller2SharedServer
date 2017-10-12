@@ -90,7 +90,8 @@ describe('business-user-controller', function () {
             businessUserController.postUser(req, res);
         });
 
-        it('falla dar de alta por error en la bbdd', function (done) {
+        it('falla dar de alta por error en la bbdd', function () {
+            sandbox.stub(BusinessUser, 'findByUsername').callsFake((username, callback) => callback(null, null));
             sandbox.stub(BusinessUser, 'insert').callsFake((usrObj, callback) => {
                 callback(new Error('Falla al introducir el usuario'));
             });
@@ -101,7 +102,6 @@ describe('business-user-controller', function () {
                 send({ code, message }) {
                     assert.equal(500, code);
                     assert.ok(message);
-                    done();
                 }
             };
             businessUserController.postUser(req, res);
