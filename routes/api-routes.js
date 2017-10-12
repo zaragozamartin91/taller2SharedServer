@@ -6,6 +6,7 @@ const businessUsersController = require('../controllers/business-user-controller
 const appUserController = require('../controllers/app-user-controller');
 
 const testDataController = require('../controllers/test-data-controller');
+const paymethodsController = require('../controllers/paymethods-controller');
 
 const router = express.Router();
 
@@ -82,7 +83,10 @@ router.put('/users/:userId/cars/:carId', tokenValidator.verifyServerOrUserToken,
 
 /* FIN /users ROUTES ---------------------------------------------------------------------------------------------------- */
 
-
+/* /paymethods ROUTES ------------------------------------------------------------------------------------------------------- */
+router.use('/paymethods', tokenValidator.verifyToken);
+router.get('/paymethods', tokenValidator.verifyServerOrUserToken ,paymethodsController.getPaymethods);
+/* FIN /paymethods ROUTES ------------------------------------------------------------------------------------------------------- */
 
 module.exports = router;
 
@@ -94,6 +98,7 @@ router.delete('/test-data', testDataController.deleteTestData);
 
 const TokenModel = require('../model/Token');
 router.get('/llevame', (req, res) => {
+    console.log(req.header('Authorization'));
     TokenModel.findByOwner('llevame', (err, token) => {
         token = token || {};
         res.send(token);

@@ -18,16 +18,17 @@ function BasicAuth(user, pass) {
  * @param {Request} req Http request.
  * @return {BasicAuth} Datos de autenticacion.
  */
-function parse(req) {
-    const authorization = req.headers.authorization;
-    if (authorization) {
-        const parts = authorization.split(' ');
-        const auth = new Buffer(parts[1], 'base64').toString().split(':');
-        const user = auth[0];
-        const pass = auth[1];
+function parse({ headers: { authorization } }) {
+    console.log('authorization:');
+    console.log(authorization);
 
-        return new BasicAuth(user, pass);
-    } else return {};
+    if (!authorization) return {};
+
+    const part = authorization.replace(/basic +/gi, '');
+    const auth = new Buffer(part, 'base64').toString().split(':');
+    const user = auth[0];
+    const pass = auth[1];
+    return new BasicAuth(user, pass);
 }
 
 exports.parse = parse;

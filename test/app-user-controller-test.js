@@ -76,7 +76,7 @@ const userMock2 = {
     'id': 'quelopario',
     '_ref': '6b868e317825e0ecbac97721009f91907eb7aa65',
     'applicationOwner': 'llevame',
-    'type': 'client',
+    'type': 'passenger',
     'cars': [],
     'username': 'quelopario',
     'name': 'Hector',
@@ -145,7 +145,7 @@ const userMock4 = {
     'id': 'rhuber',
     '_ref': 'd3949166201df5b084887c6cedcb70c936dc5ce7',
     'applicationOwner': 'supertaxi',
-    'type': 'client',
+    'type': 'passenger',
     'cars': [],
     'username': 'rhuber',
     'name': 'Rolando',
@@ -321,6 +321,8 @@ describe('app-user-controller', function () {
         });
 
         it('Falla por un error en la bbdd', function () {
+            sandbox.stub(ApplicationUser, 'findByUsernameAndApp')
+                .callsFake((username, app, callback) => callback(null, null));
             sandbox.stub(ApplicationUser, 'insert')
                 .callsFake((user, callback) => callback(new Error()));
 
@@ -330,7 +332,21 @@ describe('app-user-controller', function () {
             appUserController.postUser(req, res);
         });
 
+        it('Falla porque el usuario ya existe', function () {
+            sandbox.stub(ApplicationUser, 'findByUsernameAndApp')
+                .callsFake((username, app, callback) => callback(null, ApplicationUser.fromObj(userMock1)));
+            sandbox.stub(ApplicationUser, 'insert')
+                .callsFake((user, callback) => callback(new Error()));
+
+            let { type, username, password = 'Pass', firstName = 'Martin', lastName = 'Zaragoza', country, email, birthdate } = userMock1;
+            const req = { body: { type, username, password, firstName, lastName, country, email, birthdate } };
+            const res = mockErrRes(400);
+            appUserController.postUser(req, res);
+        });
+
         it('Inserta un usuario correctamente', function () {
+            sandbox.stub(ApplicationUser, 'findByUsernameAndApp')
+                .callsFake((username, app, callback) => callback(null, null));
             const dbUser = ApplicationUser.fromObj(userMock1);
             sandbox.stub(ApplicationUser, 'insert')
                 .callsFake((user, callback) => callback(null, dbUser));
@@ -515,6 +531,26 @@ describe('app-user-controller', function () {
             };
             appUserController.updateUser(req, res);
         });
+
+        it('Falla porque el tipo de usuario es invalido', function () {
+            const dbUser = ApplicationUser.fromObj(userMock1);
+            sandbox.stub(ApplicationUser, 'findById')
+                .callsFake((user, callback) => callback(null, dbUser));
+
+            let { _ref, type, username, password, fb, firstName, lastName, country, email, birthdate, images } = dbUser;
+            type = 'nonexistent type';
+
+            dbUser.update = function (callback) {
+                callback(null, dbUser);
+            };
+
+            const req = {
+                params: { userId: dbUser.id },
+                body: { _ref, type, username, password, fb, firstName, lastName, country, email, birthdate, images }
+            };
+            const res = mockErrRes(400);
+            appUserController.updateUser(req, res);
+        });
     });
 
     describe('#getUserCars', function () {
@@ -588,9 +624,11 @@ describe('app-user-controller', function () {
 
             const req = { serverId: dbUser.applicationOwner, params: { userId: dbUser.id }, body: carMock1 };
             const res = {
+                status(code) { this.code = code; },
                 send({ metadata, car }) {
                     assert.ok(metadata.version);
                     assert.equal(dbCar, car);
+                    assert.equal(201, this.code);
                 }
             };
 
@@ -614,6 +652,17 @@ describe('app-user-controller', function () {
 
             const req = { serverId: dbUser.applicationOwner, params: { userId: dbUser.id }, body: carMock1 };
             const res = mockErrRes(404);
+            appUserController.postUserCar(req, res);
+        });
+
+        it('Falla porque el usuario no es conductor', function () {
+            const dbUser = ApplicationUser.fromObj(userMock2);
+            sandbox.stub(ApplicationUser, 'findByIdAndApp')
+                .callsFake((userId, serverId, callback) => callback(null, dbUser));
+
+            const req = { serverId: dbUser.applicationOwner, params: { userId: dbUser.id }, body: carMock1 };
+            const res = mockErrRes(400);
+
             appUserController.postUserCar(req, res);
         });
     });

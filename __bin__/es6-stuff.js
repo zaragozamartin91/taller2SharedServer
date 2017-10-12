@@ -1,13 +1,15 @@
-function transform(str) {
-    return 'trans-' + str;
+const p = Promise.resolve('pepe');
+p.then(contents => {
+    console.log(contents);
+    return Promise.resolve('posting');
+}).then(contents => {
+    console.log(contents);
+});
+
+// cause.request.res.statusCode
+function foo({ request: { res: { statusCode = 500 } = {} } = {} } = {}) {
+    console.log(statusCode);
 }
 
-const userObj = {
-    name: 'martin'
-};
-
-//let { name, surname = transform(name) } = userObj;
-let {newName: name} = userObj;
- 
-//console.log(name, surname);
-console.log(name);
+const cause = { request: {} };
+foo(cause);

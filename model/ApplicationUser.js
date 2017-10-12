@@ -79,7 +79,7 @@ ApplicationUser.fromRows = fromRows;
 ApplicationUser.insert = function (usrObj, callback) {
     const user = fromObj(usrObj);
     let { applicationOwner, username, password, name, surname, country, email, birthdate, type, images, balance, fb } = user;
-    let id = idGenerator.generateId(username);
+    let id = idGenerator.generateApplicationUserId(applicationOwner, username);
     let _ref = hashUser(user);
     const sql = `INSERT INTO ${table} VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14) RETURNING *`;
     const values = [id, _ref, applicationOwner, username, password, name, surname, country, email, birthdate,
@@ -163,6 +163,23 @@ ApplicationUser.findByUsernameAndApp = function (user, app, callback) {
     });
 };
 
+ApplicationUser.findByFbToken = function (fbtoken, app, callback) {
+    const sql = buildFindQuery('WHERE u.applicationowner=$1');
+    dbManager.queryPromise(sql, [app])
+        .then(rows => {
+            const users = fromRows(rows);
+            const user = users.find(user => user.fb.authToken == fbtoken);
+            callback(null, user);
+        }).catch(callback);
+};
+
+function validateType(type = '') {
+    type = type.toLowerCase();
+    return type == 'passenger' || type == 'driver';
+}
+
+ApplicationUser.validateType = validateType;
+
 ApplicationUser.prototype.validate = function (password, fbToken) {
     if (password) return password == this.password;
     const authToken = this.fb.authToken;
@@ -183,6 +200,16 @@ ApplicationUser.prototype.update = function (callback) {
         if (!err) user._ref = newRef;
         callback(err, user);
     });
+};
+
+ApplicationUser.prototype.isPassenger = function(){ 
+    const usrType = this.type || '';
+    return usrType.toLowerCase() == 'passenger';
+};
+
+ApplicationUser.prototype.isDriver = function(){ 
+    const usrType = this.type || '';
+    return usrType.toLowerCase() == 'driver';
 };
 
 ApplicationUser.prototype.delete = function (callback) {

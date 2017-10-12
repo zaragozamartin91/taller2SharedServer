@@ -68,6 +68,7 @@ function validatePostUserForm({ type, username, password, firstName, lastName, c
     if (!type || !username || !password || !firstName || !lastName || !country || !email || !birthdate) return { valid: false, msg: 'No fueron ingresados todos los parametros' };
     if (!dataValidator.validateEmail(email)) return { valid: false, msg: 'Email invalido' };
     if (!dataValidator.validateDate(birthdate)) return { valid: false, msg: 'Fecha de necimiento invalida' };
+    if (!ApplicationUser.validateType(type)) return { valid: false, msg: 'Tipo de cliente invalido' };
     return { valid: true };
 }
 
@@ -83,13 +84,19 @@ exports.postUser = function (req, res) {
     userObj.name = userObj.firstName;
     userObj.surname = userObj.lastName;
     userObj.birthdate = moment(userObj.birthdate).toDate();
+    userObj.type = userObj.type.toLowerCase();
 
-    ApplicationUser.insert(userObj, (err, dbUser) => {
-        if (err) return sendMsgCodeResponse(res, 'Ocurrio un error al dar de alta el usuario', 500);
-        const metadata = { version: apiVersion };
-        const user = getUserView(dbUser);
-        res.status(201);
-        res.send({ metadata, user });
+    ApplicationUser.findByUsernameAndApp(userObj.username, req.serverId, (err, user) => {
+        if (err) return sendMsgCodeResponse(res, 'Ocurrio un error al buscar usuarios duplicados', 500);
+        if (user) return sendMsgCodeResponse(res, 'Usuario duplicado', 400);
+
+        ApplicationUser.insert(userObj, (err, dbUser) => {
+            if (err) return sendMsgCodeResponse(res, 'Ocurrio un error al dar de alta el usuario', 500);
+            const metadata = { version: apiVersion };
+            const user = getUserView(dbUser);
+            res.status(201);
+            res.send({ metadata, user });
+        });
     });
 };
 
@@ -107,10 +114,11 @@ exports.deleteUser = function (req, res) {
 
 exports.validateUser = function (req, res) {
     const { username, password, facebookAuthToken } = req.body;
-    if (!username || (!password && !facebookAuthToken)) return sendMsgCodeResponse(res, 'Parametros faltantes', 400);
+    if (!facebookAuthToken && (!username || !password)) return sendMsgCodeResponse(res, 'Parametros faltantes', 400);
 
     const serverId = req.serverId;
-    ApplicationUser.findByUsernameAndApp(username, serverId, (err, dbUser) => {
+
+    function callback(err, dbUser) {
         if (err) return sendMsgCodeResponse(res, 'Error al obtener el usuario', 500);
         if (!dbUser) return sendMsgCodeResponse(res, 'El usuario no existe', 404);
 
@@ -120,7 +128,10 @@ exports.validateUser = function (req, res) {
         const metadata = { version: apiVersion };
         const user = getUserView(dbUser);
         res.send({ metadata, user });
-    });
+    }
+
+    if (username) return ApplicationUser.findByUsernameAndApp(username, serverId, callback);
+    else return ApplicationUser.findByFbToken(facebookAuthToken, serverId, callback);
 };
 
 exports.updateUser = function (req, res) {
@@ -131,7 +142,11 @@ exports.updateUser = function (req, res) {
         const oldRef = _ref;
         if (user._ref != oldRef) return sendMsgCodeResponse(res, 'Ocurrio una colision', 409);
 
-        user.type = type || user.type;
+        if (type) {
+            console.log('VALIDANDO TIPO ' + type);
+            if (!ApplicationUser.validateType(type)) return sendMsgCodeResponse(res, 'El tipo es invalido', 400);
+            user.type = type.toLowerCase();
+        }
         user.username = username || user.username;
         user.password = password || user.password;
         user.fb = fb || user.fb;
@@ -181,6 +196,8 @@ exports.postUserCar = function (req, res) {
     findUserAndDo(req, (err, user) => {
         if (err) return sendMsgCodeResponse(res, 'Ocurrio un error al insertar el auto', 500);
         if (!user) return sendMsgCodeResponse(res, 'No existe el usuario', 404);
+        if (!user.isDriver()) return sendMsgCodeResponse(res, 'El usuario no es chofer', 400);
+
         const userId = user.id;
         const carObj = req.body;
         carObj.owner = userId;
@@ -191,6 +208,7 @@ exports.postUserCar = function (req, res) {
         Car.insert(carObj, (err, car) => {
             if (err) return sendMsgCodeResponse(res, 'Ocurrio un error al insertar el auto', 500);
             const metadata = { version: apiVersion };
+            res.status(201);
             res.send({ metadata, car });
         });
     });
