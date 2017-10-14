@@ -138,7 +138,7 @@ exports.updateUser = function (req, res) {
     findUserAndDo(req, (err, user) => {
         if (!user) return sendMsgCodeResponse(res, 'El usuario no existe', 404);
 
-        const { _ref, type, username, password, fb, firstName, lastName, country, email, birthdate, images } = req.body;
+        const { _ref, type, username, password, fb, firstName, lastName, country, email, birthdate, images, balance } = req.body;
         const oldRef = _ref;
         if (user._ref != oldRef) return sendMsgCodeResponse(res, 'Ocurrio una colision', 409);
 
@@ -161,6 +161,7 @@ exports.updateUser = function (req, res) {
             else user.birthdate = moment(birthdate).toDate();
         }
         user.images = images || user.images;
+        user.balance = balance || user.balance;
 
         user.update(err => {
             if (err) return sendMsgCodeResponse(res, 'Ocurrio un error al actualizar el usuario', 500);

@@ -6,7 +6,7 @@ const Car = require('./Car');
 const logger = require('log4js').getLogger('ApplicationUser');
 const flow = require('nimble');
 
-const table = 'app_user';
+const table = 'app_users';
 const DEFAULT_NAME = 'UNKNOWN';
 const DEFAULT_SURNAME = 'UNKNOWN';
 const DEFAULT_BALANCE_CURR = 'PESOS';
@@ -191,9 +191,9 @@ ApplicationUser.prototype.update = function (callback) {
     const newRef = hashUser(user);
 
     const sql = `UPDATE ${table} SET type=$1, username=$2, password=$3, fb=$4, name=$5, 
-        surname=$6, country=$7, email=$8, birthdate=$9, images=$10, _ref=$11 WHERE id=$12 RETURNING *`;
-    const { type, username, password, fb, name, surname, country, email, birthdate, images, id } = user;
-    const values = [type, username, password, JSON.stringify(fb), name, surname, country, email, birthdate, JSON.stringify(images), newRef, id];
+        surname=$6, country=$7, email=$8, birthdate=$9, images=$10, _ref=$11, balance=$12 WHERE id=$13 RETURNING *`;
+    const { type, username, password, fb, name, surname, country, email, birthdate, images, id, balance } = user;
+    const values = [type, username, password, JSON.stringify(fb), name, surname, country, email, birthdate, JSON.stringify(images), newRef, JSON.stringify(balance) ,id];
 
     dbManager.query(sql, values, err => {
         /* Si no hay error, actualizo el valor de _ref */
@@ -202,12 +202,12 @@ ApplicationUser.prototype.update = function (callback) {
     });
 };
 
-ApplicationUser.prototype.isPassenger = function(){ 
+ApplicationUser.prototype.isPassenger = function () {
     const usrType = this.type || '';
     return usrType.toLowerCase() == 'passenger';
 };
 
-ApplicationUser.prototype.isDriver = function(){ 
+ApplicationUser.prototype.isDriver = function () {
     const usrType = this.type || '';
     return usrType.toLowerCase() == 'driver';
 };
