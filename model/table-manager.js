@@ -4,6 +4,7 @@ const ApplicationServer = require('./ApplicationServer');
 const ApplicationUser = require('./ApplicationUser');
 const Car = require('./Car');
 const TokenModel = require('./Token');
+const Trip = require('./Trip');
 
 const dbManager = require('./db-manager');
 const logger = require('log4js').getLogger('table-manager');
@@ -114,6 +115,8 @@ exports.dropApplicationUserTable = function (callback) {
     });
 };
 
+// Car -------------------------------------------------------------------------------------------------------
+
 exports.createCarTable = function (callback) {
     const sql = `CREATE TABLE ${Car.table} (
         id SERIAL PRIMARY KEY,
@@ -133,4 +136,39 @@ exports.dropCarTable = function (callback) {
         if (err) logger.error(err);
         callback();
     });
+};
+
+// Trip -------------------------------------------------------------------------------------------------------
+
+exports.createTripTable = function (callback) {
+    const sql = `CREATE TABLE ${Trip.TABLE} (
+        id SERIAL PRIMARY KEY, 
+        applicationOwner ${ApplicationServer.idType} REFERENCES ${ApplicationServer.table}(id) ON DELETE CASCADE , 
+        driver ${ApplicationUser.idType} REFERENCES ${ApplicationUser.table}(id) ON DELETE CASCADE, 
+        passenger ${ApplicationUser.idType} REFERENCES ${ApplicationUser.table}(id) ON DELETE CASCADE, 
+        start JSON DEFAULT '{}', 
+        end JSON DEFAULT '{}', 
+        totalTime INTEGER DEFAULT 0, 
+        waitTime INTEGER DEFAULT 0, 
+        travelTime INTEGER DEFAULT 0, 
+        distance INTEGER DEFAULT 0, 
+        route JSON DEFAULT '[]', 
+        cost JSON DEFAULT '{}',
+        paymethod JSON DEFAULT '{}
+    )`;
+    dbManager.queryPromise(sql, [])
+        .then(() => callback())
+        .catch(cause => {
+            logger.error(cause);
+            callback();
+        });
+};
+
+exports.dropTripTable = function (callback) {
+    dbManager.queryPromise(`DROP TABLE ${Trip.TABLE}`, [])
+        .then(() => callback())
+        .catch(cause => {
+            logger.error(cause);
+            callback();
+        });
 };

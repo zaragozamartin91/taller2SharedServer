@@ -5,6 +5,7 @@ const Role = require('../model/Role');
 const TokenModel = require('../model/Token');
 const ApplicationUser = require('../model/ApplicationUser');
 const Car = require('../model/Car');
+const Trip = require('../model/Trip');
 
 const tableManager = require('../model/table-manager');
 const tokenManager = require('../utils/token-manager');
@@ -34,6 +35,10 @@ exports.createTestData = function (req, res) {
         callback => {
             logger.debug('Creando tabla de autos');
             tableManager.createCarTable(() => callback());
+        },
+        callback => {
+            logger.debug('Creando tabla de viajes');
+            tableManager.createTripTable(() => callback());
         },
         callback => {
             logger.debug('Insertando usuario');
@@ -183,6 +188,40 @@ exports.createTestData = function (req, res) {
         },
 
         callback => {
+            const p1 = new Promise(resolve => ApplicationUser.findByUsernameAndApp('mzaragoza', 'llevame', (err, user) => resolve(user)));
+            const p2 = new Promise(resolve => ApplicationUser.findByUsernameAndApp('quelopario', 'llevame', (err, user) => resolve(user)));
+            Promise.all([p1, p2]).then(([user1, user2]) => {
+                const driver = user1.isDriver() ? user1 : user2;
+                const passenger = user1.isPassenger() ? user1 : user2;
+                const start = {
+                    'address': { 'street': 'Sto domingo 1180', 'location': { 'lat': -34.497956, 'lon': -58.534823 } },
+                    'timestamp': moment().toDate().getTime()
+                };
+                const end = {
+                    'address': { 'street': 'Av. Cordoba 673', 'location': { 'lat': -34.598282, 'lon': -58.376498 } },
+                    'timestamp': moment().add(35, 'm').toDate().getTime()
+                };
+                const route = [];
+                const cost = {
+                    'currency': 'PESO',
+                    'value': 123.25
+                };
+                const paymethod = {
+                    'paymethod': 'card',
+                    'parameters': {
+                        'ccvv': 539,
+                        'expiration_month': 12,
+                        'expiration_year': 18,
+                        'number': '0225123465479875',
+                        'type': 'Visa'
+                    }
+                };
+                const tripObj = new Trip(null, 'llevame', driver.id, passenger.id, start, end, 60 * 35, 60 * 5, 60 * 30, 2500, route, cost, paymethod);
+            });
+
+        },
+
+        callback => {
             logger.debug('Fin');
             res.send({ code: 200, message: 'Todos los datos creados!' });
         }
@@ -210,6 +249,10 @@ exports.deleteTestData = function (req, res) {
         callback => {
             logger.debug('Eliminando tabla de usuarios de negocio');
             tableManager.dropBusinessUserTable(() => callback());
+        },
+        callback => {
+            logger.debug('Eliminando tabla de viajes');
+            tableManager.dropTripTable(() => callback());
         },
         callback => {
             logger.debug('Fin');
