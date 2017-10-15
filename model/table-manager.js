@@ -140,21 +140,22 @@ exports.dropCarTable = function (callback) {
 
 // Trip -------------------------------------------------------------------------------------------------------
 
+/* NOTA: LOS NOMBRES DE COLUMNA start Y end SON INVALIDOS, POR LO CUAL SE ASIGNAN LOS NOMBRES DE COLUMNA
+_start Y _end. */
 exports.createTripTable = function (callback) {
     const sql = `CREATE TABLE ${Trip.TABLE} (
         id SERIAL PRIMARY KEY, 
         applicationOwner ${ApplicationServer.idType} REFERENCES ${ApplicationServer.table}(id) ON DELETE CASCADE , 
         driver ${ApplicationUser.idType} REFERENCES ${ApplicationUser.table}(id) ON DELETE CASCADE, 
         passenger ${ApplicationUser.idType} REFERENCES ${ApplicationUser.table}(id) ON DELETE CASCADE, 
-        start JSON DEFAULT '{}', 
-        end JSON DEFAULT '{}', 
+        _start JSON DEFAULT '{}', 
+        _end JSON DEFAULT '{}', 
         totalTime INTEGER DEFAULT 0, 
         waitTime INTEGER DEFAULT 0, 
         travelTime INTEGER DEFAULT 0, 
         distance INTEGER DEFAULT 0, 
         route JSON DEFAULT '[]', 
-        cost JSON DEFAULT '{}',
-        paymethod JSON DEFAULT '{}
+        cost JSON DEFAULT '{}'
     )`;
     dbManager.queryPromise(sql, [])
         .then(() => callback())

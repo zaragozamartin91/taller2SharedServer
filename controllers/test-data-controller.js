@@ -206,17 +206,13 @@ exports.createTestData = function (req, res) {
                     'currency': 'PESO',
                     'value': 123.25
                 };
-                const paymethod = {
-                    'paymethod': 'card',
-                    'parameters': {
-                        'ccvv': 539,
-                        'expiration_month': 12,
-                        'expiration_year': 18,
-                        'number': '0225123465479875',
-                        'type': 'Visa'
-                    }
-                };
-                const tripObj = new Trip(null, 'llevame', driver.id, passenger.id, start, end, 60 * 35, 60 * 5, 60 * 30, 2500, route, cost, paymethod);
+                const tripObj = new Trip(null, 'llevame', driver.id, passenger.id, start, end, 60 * 35, 60 * 5, 60 * 30, 2500, route, cost);
+
+                console.log('Insertando viaje');
+                Trip.insert(tripObj, (err, dbTrip) => {
+                    if (err) console.error(err);
+                    callback();
+                });
             });
 
         },
@@ -230,6 +226,10 @@ exports.createTestData = function (req, res) {
 
 exports.deleteTestData = function (req, res) {
     flow.series([
+        callback => {
+            logger.debug('Eliminando tabla de viajes');
+            tableManager.dropTripTable(() => callback());
+        },
         callback => {
             logger.debug('Eliminando tabla de autos');
             tableManager.dropCarTable(() => callback());
@@ -249,10 +249,6 @@ exports.deleteTestData = function (req, res) {
         callback => {
             logger.debug('Eliminando tabla de usuarios de negocio');
             tableManager.dropBusinessUserTable(() => callback());
-        },
-        callback => {
-            logger.debug('Eliminando tabla de viajes');
-            tableManager.dropTripTable(() => callback());
         },
         callback => {
             logger.debug('Fin');
