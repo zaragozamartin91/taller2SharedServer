@@ -68,6 +68,13 @@ Trip.insert = function (tripObj, callback) {
         .catch(cause => callback(cause));
 };
 
+Trip.find = function (callback) {
+    const sql = `SELECT * FROM ${TABLE}`;
+    dbManager.queryPromise(sql, [])
+        .then(rows => callback(null, fromRows(rows)))
+        .catch(cause => callback(cause));
+};
+
 Trip.findByUser = function (user, callback) {
     const userId = user.id || user;
     const sql = `SELECT * FROM ${TABLE} WHERE driver=$1 OR passenger=$1`;

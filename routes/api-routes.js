@@ -93,6 +93,7 @@ router.get('/paymethods', tokenValidator.verifyServerOrRoleToken('user'), paymet
 /* /trips ROUTES ------------------------------------------------------------------------------------------------------- */
 router.use('/trips', tokenValidator.verifyToken);
 router.get('/trips/:tripId', tokenValidator.verifyServerOrRoleToken('user'), tripsController.getTrip);
+router.get('/trips', tokenValidator.verifyServerOrRoleToken('user'), tripsController.getTrips);
 
 /* FIN /trips ROUTES ------------------------------------------------------------------------------------------------------- */
 

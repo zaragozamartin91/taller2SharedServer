@@ -1,9 +1,16 @@
 const Trip = require('../model/Trip');
 const responseUtils = require('../utils/response-utils');
 const mainConf = require('../config/main-config');
+const dataValidator = require('../utils/data-validator');
 
 const sendMsgCodeResponse = responseUtils.sendMsgCodeResponse;
 const apiVersion = mainConf.apiVersion;
+
+/* FIN DE IMPORTS ----------------------------------------------------------------------------------------------------- */
+
+function buildMetadata(count, total = count) {
+    return { count, total, 'next': '', 'prev': '', 'first': '', 'last': '', 'version': apiVersion };
+}
 
 /**
  * Busca un viaje en la BBDD y realiza una accion con el viaje encontrado.
@@ -30,3 +37,33 @@ function getTrip(req, res) {
 }
 
 exports.getTrip = getTrip;
+
+function getTrips(req, res) {
+    Trip.find((err, trips) => {
+        if (err) return sendMsgCodeResponse(res, 'Error en la BBDD al obtener los viajes', 500);
+        const metadata = buildMetadata(trips.length);
+        res.send({ metadata, trips });
+    });
+}
+
+exports.getTrips = getTrips;
+
+function postTrip(req, res) {
+    const serverId = req.serverId;
+    const { trip, paymethod } = req.body;
+
+    const tripValidation = dataValidator.validateTrip(trip);
+
+    if (!tripValidation.valid) return sendMsgCodeResponse(res, tripValidation.msg, 400);
+
+    const { totalTime, waitTime, travelTime } = trip;
+    trip.totalTime = totalTime || waitTime + travelTime;
+
+    Trip.insert(trip, (err, dbTrip) => {
+        if (err) return sendMsgCodeResponse(res, 'Error en la BBDD al insertar el viaje', 500);
+        const metadata = { version: apiVersion };
+        res.send({ metadata, trip: dbTrip });
+    });
+}
+
+exports.postTrip = postTrip;
