@@ -49,15 +49,16 @@ function getTrips(req, res) {
 exports.getTrips = getTrips;
 
 function postTrip(req, res) {
-    const serverId = req.serverId;
     const { trip, paymethod } = req.body;
-
     const tripValidation = dataValidator.validateTrip(trip);
 
     if (!tripValidation.valid) return sendMsgCodeResponse(res, tripValidation.msg, 400);
 
     const { totalTime, waitTime, travelTime } = trip;
     trip.totalTime = totalTime || waitTime + travelTime;
+
+    const serverId = req.serverId;
+    trip.applicationOwner = serverId;
 
     Trip.insert(trip, (err, dbTrip) => {
         if (err) return sendMsgCodeResponse(res, 'Error en la BBDD al insertar el viaje', 500);

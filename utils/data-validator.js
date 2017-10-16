@@ -18,16 +18,16 @@ exports.validateDate = validateDate;
 
 function validatePoint({ address: { street, location: { lat, lon } }, timestamp }) {
     if (typeof street != 'string') return { valid: false, msg: 'Calle invalida' };
-    if (typeof lat != 'number') return { valid: false, msg: 'Latitud invalida' };
-    if (typeof lon != 'number') return { valid: false, msg: 'Longitud invalida' };
-    if (typeof timestamp != 'number') return { valid: false, msg: 'Timestamp de direccion invalido' };
+    if (typeof lat != 'number') return { valid: false, msg: 'Latitud de inicio/fin invalida' };
+    if (typeof lon != 'number') return { valid: false, msg: 'Longitud de inicio/fin invalida' };
+    if (typeof timestamp != 'number') return { valid: false, msg: 'Timestamp de inicio/fin invalido' };
 
     return { valid: true };
 }
 
 function validateRouteItem({ location: { lat, lon }, timestamp }) {
-    if (typeof lat != 'number') return { valid: false, msg: 'Latitud de ruta invalida' };
-    if (typeof lon != 'number') return { valid: false, msg: 'Longitud de ruta invalida' };
+    if (typeof lat != 'number') return { valid: false, msg: 'Latitud de item de ruta invalida' };
+    if (typeof lon != 'number') return { valid: false, msg: 'Longitud de item de ruta invalida' };
     if (typeof timestamp != 'number') return { valid: false, msg: 'Timestamp de item de ruta invalido' };
 
     return { valid: true };

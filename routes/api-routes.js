@@ -94,6 +94,7 @@ router.get('/paymethods', tokenValidator.verifyServerOrRoleToken('user'), paymet
 router.use('/trips', tokenValidator.verifyToken);
 router.get('/trips/:tripId', tokenValidator.verifyServerOrRoleToken('user'), tripsController.getTrip);
 router.get('/trips', tokenValidator.verifyServerOrRoleToken('user'), tripsController.getTrips);
+router.post('/trips', tokenValidator.verifyServerToken, tripsController.postTrip);
 
 /* FIN /trips ROUTES ------------------------------------------------------------------------------------------------------- */
 
