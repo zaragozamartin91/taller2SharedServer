@@ -62,6 +62,7 @@ function verifyServerToken(req, res, next) {
         if (err) return sendMsgCodeResponse(res, `Ocurrio un error al verificar el token de ${serverId}`, 500);
         if (token) {
             req.serverId = serverId;
+            logger.debug(`Token de server ${serverId} identificado`);
             return next();
         }
         logger.debug('Token no encontrado en registro de tokens de app servers');
@@ -79,9 +80,10 @@ function verifyServerOrUserToken(req, res, next) {
     BusinessUser.hasRole(userId, role, (err, hasRole) => {
         if (hasRole) {
             req.userId = userId;
+            logger.debug(`Token de usuario ${userId} identificado`);
             return next();
         }
-        logger.debug(`usuario ${userId} NO ES ${role}`);
+
         return verifyServerToken(req, res, next);
     });
 }

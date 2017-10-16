@@ -7,6 +7,7 @@ const appUserController = require('../controllers/app-user-controller');
 
 const testDataController = require('../controllers/test-data-controller');
 const paymethodsController = require('../controllers/paymethods-controller');
+const tripsController = require('../controllers/trips-controller');
 
 const router = express.Router();
 
@@ -85,8 +86,15 @@ router.put('/users/:userId/cars/:carId', tokenValidator.verifyServerOrUserToken,
 
 /* /paymethods ROUTES ------------------------------------------------------------------------------------------------------- */
 router.use('/paymethods', tokenValidator.verifyToken);
-router.get('/paymethods', tokenValidator.verifyServerOrUserToken ,paymethodsController.getPaymethods);
+router.get('/paymethods', tokenValidator.verifyServerOrUserToken, paymethodsController.getPaymethods);
 /* FIN /paymethods ROUTES ------------------------------------------------------------------------------------------------------- */
+
+
+/* /trips ROUTES ------------------------------------------------------------------------------------------------------- */
+router.use('/trips', tokenValidator.verifyToken);
+router.get('/trips/:tripId', tokenValidator.verifyServerOrUserToken, tripsController.getTrip);
+
+/* FIN /trips ROUTES ------------------------------------------------------------------------------------------------------- */
 
 module.exports = router;
 
