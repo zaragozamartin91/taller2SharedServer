@@ -80,7 +80,7 @@ Trip.findById = function (trip, callback) {
     const tripId = trip.id || trip;
     const sql = `SELECT * FROM ${TABLE} WHERE id=$1`;
     dbManager.queryPromise(sql, [tripId])
-        .then(rows => callback(null, fromRows(rows)))
+        .then(([tripRow]) => callback(null, fromObj(tripRow)))
         .catch(cause => callback(cause));
 };
 
