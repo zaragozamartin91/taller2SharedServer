@@ -173,13 +173,6 @@ ApplicationUser.findByFbToken = function (fbtoken, app, callback) {
         }).catch(callback);
 };
 
-function validateType(type = '') {
-    type = type.toLowerCase();
-    return type == 'passenger' || type == 'driver';
-}
-
-ApplicationUser.validateType = validateType;
-
 ApplicationUser.prototype.validate = function (password, fbToken) {
     if (password) return password == this.password;
     const authToken = this.fb.authToken;

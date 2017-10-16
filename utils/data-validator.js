@@ -14,7 +14,31 @@ function validateDate(date, format = 'YYYY-MM-DD') {
 exports.validateEmail = validateEmail;
 exports.validateDate = validateDate;
 
-/* VALIDACION DE OBJETOS DE TIPO VIAJE ------------------------------------------------------------------------------- */
+/* VALIDACION DE USUARIOS DE APLICACION ------------------------------------------------------------------------------------------------------------------- */
+
+function validateAppUserType(type = '') {
+    type = type.toLowerCase();
+    return type == 'passenger' || type == 'driver';
+}
+
+exports.validateAppUserType = validateAppUserType;
+
+/**
+ * Valida un formulario de usuario.
+ * @param {any} userObj Formulario de usuario. 
+ * @return {any} Objeto con formato {valid,msg}
+ */
+function validateAppUser({ type, username, password, firstName, lastName, country, email, birthdate }) {
+    if (!type || !username || !password || !firstName || !lastName || !country || !email || !birthdate) return { valid: false, msg: 'No fueron ingresados todos los parametros' };
+    if (!validateEmail(email)) return { valid: false, msg: 'Email invalido' };
+    if (!validateDate(birthdate)) return { valid: false, msg: 'Fecha de necimiento invalida' };
+    if (!validateAppUserType(type)) return { valid: false, msg: 'Tipo de cliente invalido' };
+    return { valid: true };
+}
+
+exports.validateAppUser = validateAppUser;
+
+/* VALIDACION DE OBJETOS DE TIPO VIAJE ------------------------------------------------------------------------------------------------------------------- */
 
 function validatePoint({ address: { street, location: { lat, lon } }, timestamp }) {
     if (typeof street != 'string') return { valid: false, msg: 'Calle invalida' };

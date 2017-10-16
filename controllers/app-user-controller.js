@@ -59,19 +59,8 @@ exports.getUser = function (req, res) {
     });
 };
 
-/**
- * Valida un formulario de usuario.
- * @param {any} userObj Formulario de usuario. 
- * @return {any} Objeto con formato {valid,msg}
- */
-function validatePostUserForm({ type, username, password, firstName, lastName, country, email, birthdate }) {
-    if (!type || !username || !password || !firstName || !lastName || !country || !email || !birthdate) return { valid: false, msg: 'No fueron ingresados todos los parametros' };
-    if (!dataValidator.validateEmail(email)) return { valid: false, msg: 'Email invalido' };
-    if (!dataValidator.validateDate(birthdate)) return { valid: false, msg: 'Fecha de necimiento invalida' };
-    if (!ApplicationUser.validateType(type)) return { valid: false, msg: 'Tipo de cliente invalido' };
-    return { valid: true };
-}
 
+const validatePostUserForm = dataValidator.validateAppUser;
 exports.validatePostUserForm = validatePostUserForm;
 
 exports.postUser = function (req, res) {
@@ -144,7 +133,7 @@ exports.updateUser = function (req, res) {
 
         if (type) {
             console.log('VALIDANDO TIPO ' + type);
-            if (!ApplicationUser.validateType(type)) return sendMsgCodeResponse(res, 'El tipo es invalido', 400);
+            if (!dataValidator.validateAppUserType(type)) return sendMsgCodeResponse(res, 'Tipo de usuario invalido', 400);
             user.type = type.toLowerCase();
         }
         user.username = username || user.username;
