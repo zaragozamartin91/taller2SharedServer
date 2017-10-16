@@ -70,22 +70,22 @@ function verifyServerToken(req, res, next) {
     });
 }
 
-function verifyServerOrUserToken(req, res, next) {
-    const decodedToken = req.decodedToken;
-    const userId = decodedToken.id;
-    if (!userId) return sendMsgCodeResponse(res, 'No autorizado', 401);
+function verifyServerOrRoleToken(role) {
+    return function (req, res, next) {
+        const decodedToken = req.decodedToken;
+        const userId = decodedToken.id;
+        if (!userId) return sendMsgCodeResponse(res, 'No autorizado', 401);
 
-    const role = 'user';
+        BusinessUser.hasRole(userId, role, (err, hasRole) => {
+            if (hasRole) {
+                req.userId = userId;
+                logger.debug(`Token de usuario ${userId} identificado`);
+                return next();
+            }
 
-    BusinessUser.hasRole(userId, role, (err, hasRole) => {
-        if (hasRole) {
-            req.userId = userId;
-            logger.debug(`Token de usuario ${userId} identificado`);
-            return next();
-        }
-
-        return verifyServerToken(req, res, next);
-    });
+            return verifyServerToken(req, res, next);
+        });
+    };
 }
 
 exports.verifyRoleToken = verifyRoleToken;
@@ -95,4 +95,4 @@ exports.verifyAdminToken = verifyRoleToken(Role.admin());
 exports.verifyUserToken = verifyRoleToken(Role.user());
 
 exports.verifyServerToken = verifyServerToken;
-exports.verifyServerOrUserToken = verifyServerOrUserToken;
+exports.verifyServerOrRoleToken = verifyServerOrRoleToken;

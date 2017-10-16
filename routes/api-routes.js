@@ -69,30 +69,30 @@ router.get('/business-users/:userId', tokenValidator.verifyUserToken, businessUs
 
 router.use('/users', tokenValidator.verifyToken);
 
-router.get('/users', tokenValidator.verifyServerOrUserToken, appUserController.getUsers);
-router.get('/users/:userId', tokenValidator.verifyServerOrUserToken, appUserController.getUser);
+router.get('/users', tokenValidator.verifyServerOrRoleToken('user'), appUserController.getUsers);
+router.get('/users/:userId', tokenValidator.verifyServerOrRoleToken('user'), appUserController.getUser);
 router.post('/users', tokenValidator.verifyServerToken, appUserController.postUser);
-router.delete('/users/:userId', tokenValidator.verifyServerOrUserToken, appUserController.deleteUser);
+router.delete('/users/:userId', tokenValidator.verifyServerOrRoleToken('manager'), appUserController.deleteUser);
 router.post('/users/validate', tokenValidator.verifyServerToken, appUserController.validateUser);
 router.put('/users/:userId', tokenValidator.verifyServerToken, appUserController.updateUser);
 
-router.get('/users/:userId/cars', tokenValidator.verifyServerOrUserToken, appUserController.getUserCars);
-router.post('/users/:userId/cars', tokenValidator.verifyServerOrUserToken, appUserController.postUserCar);
-router.delete('/users/:userId/cars/:carId', tokenValidator.verifyServerOrUserToken, appUserController.deleteUserCar);
-router.get('/users/:userId/cars/:carId', tokenValidator.verifyServerOrUserToken, appUserController.getUserCar);
-router.put('/users/:userId/cars/:carId', tokenValidator.verifyServerOrUserToken, appUserController.updateUserCar);
+router.get('/users/:userId/cars', tokenValidator.verifyServerOrRoleToken('user'), appUserController.getUserCars);
+router.post('/users/:userId/cars', tokenValidator.verifyServerToken, appUserController.postUserCar);
+router.delete('/users/:userId/cars/:carId', tokenValidator.verifyServerOrRoleToken('manager'), appUserController.deleteUserCar);
+router.get('/users/:userId/cars/:carId', tokenValidator.verifyServerOrRoleToken('user'), appUserController.getUserCar);
+router.put('/users/:userId/cars/:carId', tokenValidator.verifyServerToken, appUserController.updateUserCar);
 
 /* FIN /users ROUTES ---------------------------------------------------------------------------------------------------- */
 
 /* /paymethods ROUTES ------------------------------------------------------------------------------------------------------- */
 router.use('/paymethods', tokenValidator.verifyToken);
-router.get('/paymethods', tokenValidator.verifyServerOrUserToken, paymethodsController.getPaymethods);
+router.get('/paymethods', tokenValidator.verifyServerOrRoleToken('user'), paymethodsController.getPaymethods);
 /* FIN /paymethods ROUTES ------------------------------------------------------------------------------------------------------- */
 
 
 /* /trips ROUTES ------------------------------------------------------------------------------------------------------- */
 router.use('/trips', tokenValidator.verifyToken);
-router.get('/trips/:tripId', tokenValidator.verifyServerOrUserToken, tripsController.getTrip);
+router.get('/trips/:tripId', tokenValidator.verifyServerOrRoleToken('user'), tripsController.getTrip);
 
 /* FIN /trips ROUTES ------------------------------------------------------------------------------------------------------- */
 
