@@ -1,5 +1,7 @@
 const ApplicationUser = require('../model/ApplicationUser');
 const Car = require('../model/Car');
+const Trip = require('../model/Trip');
+
 const mainConf = require('../config/main-config');
 const logger = require('log4js').getLogger('app-user-controller');
 const responseUtils = require('../utils/response-utils');
@@ -254,6 +256,20 @@ exports.updateUserCar = function (req, res) {
             if (err) return sendMsgCodeResponse(res, 'Ocurrio un error al actualizar el auto', 500);
             const metadata = { version: apiVersion };
             res.send({ metadata, car });
+        });
+    });
+};
+
+
+exports.getUserTrips = function (req, res) {
+    findUserAndDo(req, (err, user) => {
+        if (err) return sendMsgCodeResponse(res, 'Error en la BBDD al obtener el usuario', 500);
+        if (!user) return sendMsgCodeResponse(res, 'No existe el usuario', 404);
+
+        Trip.findByUser(user, (err, trips) => {
+            if (err) return sendMsgCodeResponse(res, 'Error en la BBDD al obtener los viajes', 500);
+            const metadata = buildMetadata(trips.length);
+            res.send({ metadata, trips });
         });
     });
 };

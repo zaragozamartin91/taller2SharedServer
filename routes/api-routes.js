@@ -76,11 +76,14 @@ router.delete('/users/:userId', tokenValidator.verifyServerOrRoleToken('manager'
 router.post('/users/validate', tokenValidator.verifyServerToken, appUserController.validateUser);
 router.put('/users/:userId', tokenValidator.verifyServerToken, appUserController.updateUser);
 
+router.get('/users/:userId/trips', tokenValidator.verifyServerOrRoleToken('user'), appUserController.getUserTrips);
+
 router.get('/users/:userId/cars', tokenValidator.verifyServerOrRoleToken('user'), appUserController.getUserCars);
 router.post('/users/:userId/cars', tokenValidator.verifyServerToken, appUserController.postUserCar);
 router.delete('/users/:userId/cars/:carId', tokenValidator.verifyServerOrRoleToken('manager'), appUserController.deleteUserCar);
 router.get('/users/:userId/cars/:carId', tokenValidator.verifyServerOrRoleToken('user'), appUserController.getUserCar);
 router.put('/users/:userId/cars/:carId', tokenValidator.verifyServerToken, appUserController.updateUserCar);
+
 
 /* FIN /users ROUTES ---------------------------------------------------------------------------------------------------- */
 
