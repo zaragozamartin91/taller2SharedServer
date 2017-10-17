@@ -18,27 +18,31 @@ exports.createTestData = function (req, res) {
     flow.series([
         callback => {
             logger.debug('Creando tabla de tokens');
-            tableManager.createTokenTable(() => callback());
+            tableManager.createTokensTable(() => callback());
         },
         callback => {
             logger.debug('Creando tabla de usuarios de negocio');
-            tableManager.createBusinessUserTable(() => callback());
+            tableManager.createBusinessUsersTable(() => callback());
         },
         callback => {
             logger.debug('Creando tabla de servers');
-            tableManager.createApplicationServerTable(() => callback());
+            tableManager.createApplicationServersTable(() => callback());
         },
         callback => {
             logger.debug('Creando tabla de usuarios de aplicacion');
-            tableManager.createApplicationUserTable(() => callback());
+            tableManager.createApplicationUsersTable(() => callback());
         },
         callback => {
             logger.debug('Creando tabla de autos');
-            tableManager.createCarTable(() => callback());
+            tableManager.createCarsTable(() => callback());
         },
         callback => {
             logger.debug('Creando tabla de viajes');
-            tableManager.createTripTable(() => callback());
+            tableManager.createTripsTable(() => callback());
+        },
+        callback => {
+            logger.debug('Creando tabla de reglas');
+            tableManager.createRulesTable(() => callback());
         },
         callback => {
             logger.debug('Insertando usuario');
@@ -228,27 +232,31 @@ exports.deleteTestData = function (req, res) {
     flow.series([
         callback => {
             logger.debug('Eliminando tabla de viajes');
-            tableManager.dropTripTable(() => callback());
+            tableManager.dropTripsTable(() => callback());
         },
         callback => {
             logger.debug('Eliminando tabla de autos');
-            tableManager.dropCarTable(() => callback());
+            tableManager.dropCarsTable(() => callback());
         },
         callback => {
             logger.debug('Eliminando tabla de usuarios de aplicacion');
-            tableManager.dropApplicationUserTable(() => callback());
+            tableManager.dropApplicationUsersTable(() => callback());
         },
         callback => {
             logger.debug('Eliminando tabla de tokens');
-            tableManager.dropTokenTable(() => callback());
+            tableManager.dropTokensTable(() => callback());
         },
         callback => {
             logger.debug('Eliminando tabla de servers');
-            tableManager.dropApplicationServerTable(() => callback());
+            tableManager.dropApplicationServersTable(() => callback());
         },
         callback => {
             logger.debug('Eliminando tabla de usuarios de negocio');
-            tableManager.dropBusinessUserTable(() => callback());
+            tableManager.dropBusinessUsersTable(() => callback());
+        },
+        callback => {
+            logger.debug('Eliminando tabla de reglas');
+            tableManager.dropRulesTable(() => callback());
         },
         callback => {
             logger.debug('Fin');

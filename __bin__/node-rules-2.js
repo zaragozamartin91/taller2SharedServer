@@ -10,53 +10,66 @@ you can raise an issue on the repo which we will help out.
 //define the rules
 const rules = [{
     'condition': function (R) {
-        // regla de viajes largos
-        R.when(this && (this.distance > 5000));
+        R.when(this && (this.transactionTotal < 500));
     },
     'consequence': function (R) {
-        this.operations.push(a => a * 1.1);
-        console.log(this.amount);
+        this.operations.push(v => v * 1.1);
         R.next();
     }
 }, {
     'condition': function (R) {
-        // regla de jubilados
-        R.when(this && (this.age > 60));
+        R.when(this && (this.cardType == 'visa'));
     },
     'consequence': function (R) {
-        this.operations.push(a => a * 0.8);
-        console.log(this.amount);
-        R.next();
-    }
-}, {
-    'condition': function (R) {
-        // regla de tarjetas
-        R.when(this && (this.card == 'visa'));
-    },
-    'consequence': function (R) {
-        this.operations.push(a => a * 0.9);
-        console.log(this.amount);
+        this.operations.push(v => v * 0.8);
         R.next();
     }
 }];
 
-const distance = 4000;
-const amount = distance * 0.05;
-const card = 'master';
-const age = 50;
-const operations = [];
-
 //sample fact to run the rules on	
-const fact = { amount, distance, card, age, operations };
+const fact = {
+    name: 'user4',
+    application: 'MOB2',
+    transactionTotal: 600,
+    cardType: 'visa',
+    operations: [],
+    age: 62
+};
 
 //initialize the rule engine
 const ruleEngine = new RuleEngine(rules);
 //Now pass the fact on to the rule engine for results
 ruleEngine.execute(fact, function (result) {
-    let finalAmount = result.amount;
-    result.operations.forEach(operation => {
-        finalAmount = operation(finalAmount);
-    });
-    console.log(finalAmount);
+    let amount = result.transactionTotal;
+    result.operations.forEach(op => amount = op(amount));
+    console.log('Total: ' + amount);
 });
 
+/* usando toJSON es posible exportar rules */
+let store = ruleEngine.toJSON();
+console.log('STORE:');
+console.log(store);
+
+/* de esta manera es posible agregar una rule. */
+const newRule = {
+    condition: `function(R) {
+        R.when(this && this.age > 60);
+    }`,
+    consequence: `function (R) {
+        this.operations.push(v => v * 0.8);
+        R.stop();
+    }`,
+    on: true
+};
+store.push(newRule);
+
+/* De esta manera creamos un motor de reglas a partir de un json */
+const R1 = new RuleEngine();
+R1.fromJSON(store);
+
+//Now pass the fact on to the rule engine for results
+R1.execute(fact, function (result) {
+    let amount = result.transactionTotal;
+    result.operations.forEach(op => amount = op(amount));
+    console.log('Total: ' + amount);
+});
