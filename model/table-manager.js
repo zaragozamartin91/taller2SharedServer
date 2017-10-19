@@ -181,7 +181,7 @@ exports.createRulesTable = function (callback) {
     const sql = `CREATE TABLE ${Rule.TABLE} (
         id SERIAL PRIMARY KEY, 
         _ref VARCHAR(128) NOT NULL,
-        language VARCHAR(32) DEFAULT 'node-rules/javascript',
+        language VARCHAR(32) DEFAULT '${Rule.DEFAULT_LANGUAGE}',
         author ${BusinessUser.idType} REFERENCES ${BusinessUser.table}(id) ON DELETE SET NULL,
         message VARCHAR(128),
         timestamp TIMESTAMP DEFAULT now(),

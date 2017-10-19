@@ -6,6 +6,7 @@ const TokenModel = require('../model/Token');
 const ApplicationUser = require('../model/ApplicationUser');
 const Car = require('../model/Car');
 const Trip = require('../model/Trip');
+const Rule = require('../model/Rule');
 
 const tableManager = require('../model/table-manager');
 const tokenManager = require('../utils/token-manager');
@@ -222,6 +223,35 @@ exports.createTestData = function (req, res) {
         },
 
         callback => {
+            console.log('Insertando regla');
+            const newRule = {
+                condition: `function(R) {
+                    R.when(this && this.age > 60);
+                }`,
+                consequence: `function (R) {
+                    this.operations.push(v => v * 0.8);
+                    R.stop();
+                }`,
+                on: true
+            };
+
+            const ruleObj = {
+                'lastCommit': {
+                    'author': 'martin',
+                    'message': 'New rule',
+                },
+                'blob': newRule,
+                'active': true
+            };
+
+            Rule.insert(ruleObj, (err, dbRule) => {
+                if (err) console.error(err);
+                else console.log('Regla ' + dbRule.id + ' insertada!');
+                callback();
+            });
+        },
+
+        callback => {
             logger.debug('Fin');
             res.send({ code: 200, message: 'Todos los datos creados!' });
         }
@@ -251,12 +281,12 @@ exports.deleteTestData = function (req, res) {
             tableManager.dropApplicationServersTable(() => callback());
         },
         callback => {
-            logger.debug('Eliminando tabla de usuarios de negocio');
-            tableManager.dropBusinessUsersTable(() => callback());
-        },
-        callback => {
             logger.debug('Eliminando tabla de reglas');
             tableManager.dropRulesTable(() => callback());
+        },
+        callback => {
+            logger.debug('Eliminando tabla de usuarios de negocio');
+            tableManager.dropBusinessUsersTable(() => callback());
         },
         callback => {
             logger.debug('Fin');

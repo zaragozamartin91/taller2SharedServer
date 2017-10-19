@@ -4,6 +4,9 @@ const hasher = require('../utils/hasher');
 const TABLE = 'rules';
 exports.TABLE = TABLE;
 
+const DEFAULT_LANGUAGE = 'node-rules/javascript';
+exports.DEFAULT_LANGUAGE = DEFAULT_LANGUAGE;
+
 /*
 id SERIAL PRIMARY KEY, 
 _ref VARCHAR(128) NOT NULL,
@@ -16,7 +19,7 @@ active BOOLEAN */
 function Rule(id, _ref, language, lastCommit, blob, active = false) {
     this.id = id;
     this._ref = _ref;
-    this.language = language;
+    this.language = language || DEFAULT_LANGUAGE;
     this.lastCommit = lastCommit;
     this.blob = blob;
     this.active = active;
@@ -49,9 +52,11 @@ function asRow(ruleObj) {
 
 function insert(ruleObj, callback) {
     const ruleRow = asRow(ruleObj);
-    const { language, blob, active, author, message } = ruleRow;
+    const { language = DEFAULT_LANGUAGE, blob, active = true, author, message = '' } = ruleRow;
     const _ref = hashRule(ruleRow);
-    const values = [_ref, language, JSON.stringify(blob), active, author, message];
+
+    const blobValue = typeof blob == 'string' ? blob : JSON.stringify(blob);
+    const values = [_ref, language, blobValue, active, author, message];
 
     const sql = `INSERT INTO ${TABLE}(_ref, language, blob, active, author, message)
         VALUES ($1,$2,$3,$4,$5,$6) RETURNING *`;
