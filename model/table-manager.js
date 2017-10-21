@@ -156,7 +156,8 @@ exports.createTripsTable = function (callback) {
         travelTime INTEGER DEFAULT 0, 
         distance INTEGER DEFAULT 0, 
         route JSON DEFAULT '[]', 
-        cost JSON DEFAULT '{}'
+        cost JSON DEFAULT '{}',
+        date TIMESTAMP DEFAULT NOW()
     )`;
     dbManager.queryPromise(sql, [])
         .then(() => callback())

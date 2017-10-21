@@ -28,6 +28,3 @@ exports.postRule = function (req, res) {
     });
 };
 
-exports.estimate = function(req, res) {
-    
-};
