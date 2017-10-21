@@ -58,8 +58,7 @@ const newRule = {
     consequence: `function (R) {
         this.operations.push(v => v * 0.8);
         R.stop();
-    }`,
-    on: true
+    }`
 };
 store.push(newRule);
 
