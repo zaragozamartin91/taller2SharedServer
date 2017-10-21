@@ -37,6 +37,10 @@ function fromObj(ruleObj) {
     return new Rule(id, _ref, language, lastCommit, blob, active);
 }
 
+function fromRows(rows = []) {
+    return rows.map(fromObj);
+}
+
 /**
  * Aplana un objeto regla / lo convierte en una fila similar a la tabla de reglas.
  * @param {any} ruleObj Objeto regla.
@@ -67,3 +71,12 @@ function insert(ruleObj, callback) {
 }
 
 exports.insert = insert;
+
+function findActive(callback) {
+    const sql = `SELECT * FROM ${TABLE} WHERE active=$1`;
+    dbManager.queryPromise(sql, [true])
+        .then(rules => callback(null, fromRows(rules)))
+        .catch(callback);
+}
+
+exports.findActive = findActive;

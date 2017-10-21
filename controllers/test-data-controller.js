@@ -7,6 +7,7 @@ const ApplicationUser = require('../model/ApplicationUser');
 const Car = require('../model/Car');
 const Trip = require('../model/Trip');
 const Rule = require('../model/Rule');
+const ruleHandler = require('../utils/rule-handler');
 
 const tableManager = require('../model/table-manager');
 const tokenManager = require('../utils/token-manager');
@@ -223,30 +224,30 @@ exports.createTestData = function (req, res) {
         },
 
         callback => {
-            console.log('Insertando regla');
-            const newRule = {
-                condition: `function(R) {
-                    R.when(this && this.age > 60);
-                }`,
-                consequence: `function (R) {
-                    this.operations.push(v => v * 0.8);
-                    R.stop();
-                }`,
-                on: true
-            };
+            console.log('Insertando reglas');
+            const jsonRules = ruleHandler.toJson(ruleHandler.BASE_RULES);
 
-            const ruleObj = {
-                'lastCommit': {
-                    'author': 'martin',
-                    'message': 'New rule',
-                },
-                'blob': newRule,
-                'active': true
-            };
+            const ruleObjs = jsonRules.map(jsonRule => {
+                return {
+                    'lastCommit': {
+                        'author': 'martin',
+                        'message': 'New rule',
+                    },
+                    'blob': jsonRule,
+                    'active': true
+                };
+            });
 
-            Rule.insert(ruleObj, (err, dbRule) => {
-                if (err) console.error(err);
-                else console.log('Regla ' + dbRule.id + ' insertada!');
+            const promises = ruleObjs.map(ruleObj => new Promise(resolve => {
+                Rule.insert(ruleObj, (err, dbRule) => {
+                    if (err) console.error(err);
+                    else console.log('Regla ' + dbRule.id + ' insertada!');
+                    resolve();
+                });
+            }));
+
+            Promise.all(promises).then(() => {
+                console.log('Reglas insertadas');
                 callback();
             });
         },

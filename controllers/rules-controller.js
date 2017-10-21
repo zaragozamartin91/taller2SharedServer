@@ -6,6 +6,7 @@ const mainConf = require('../config/main-config');
 const sendMsgCodeResponse = responseUtils.sendMsgCodeResponse;
 const apiVersion = mainConf.apiVersion;
 
+/* TODO : AGREGAR VALIDACIONES DE REGLA A POSTEAR */
 exports.postRule = function (req, res) {
     const userId = req.userId;
     const ruleObj = req.body;
@@ -25,4 +26,8 @@ exports.postRule = function (req, res) {
             res.send({ metadata, rule: dbRule });
         });
     });
+};
+
+exports.estimate = function(req, res) {
+    
 };
