@@ -6,6 +6,8 @@ const TokenModel = require('../model/Token');
 const ApplicationUser = require('../model/ApplicationUser');
 const Car = require('../model/Car');
 const Trip = require('../model/Trip');
+const Rule = require('../model/Rule');
+const ruleHandler = require('../utils/rule-handler');
 
 const tableManager = require('../model/table-manager');
 const tokenManager = require('../utils/token-manager');
@@ -18,27 +20,31 @@ exports.createTestData = function (req, res) {
     flow.series([
         callback => {
             logger.debug('Creando tabla de tokens');
-            tableManager.createTokenTable(() => callback());
+            tableManager.createTokensTable(() => callback());
         },
         callback => {
             logger.debug('Creando tabla de usuarios de negocio');
-            tableManager.createBusinessUserTable(() => callback());
+            tableManager.createBusinessUsersTable(() => callback());
         },
         callback => {
             logger.debug('Creando tabla de servers');
-            tableManager.createApplicationServerTable(() => callback());
+            tableManager.createApplicationServersTable(() => callback());
         },
         callback => {
             logger.debug('Creando tabla de usuarios de aplicacion');
-            tableManager.createApplicationUserTable(() => callback());
+            tableManager.createApplicationUsersTable(() => callback());
         },
         callback => {
             logger.debug('Creando tabla de autos');
-            tableManager.createCarTable(() => callback());
+            tableManager.createCarsTable(() => callback());
         },
         callback => {
             logger.debug('Creando tabla de viajes');
-            tableManager.createTripTable(() => callback());
+            tableManager.createTripsTable(() => callback());
+        },
+        callback => {
+            logger.debug('Creando tabla de reglas');
+            tableManager.createRulesTable(() => callback());
         },
         callback => {
             logger.debug('Insertando usuario');
@@ -218,6 +224,35 @@ exports.createTestData = function (req, res) {
         },
 
         callback => {
+            console.log('Insertando reglas');
+            const jsonRules = ruleHandler.toJson(ruleHandler.BASE_RULES);
+
+            const ruleObjs = jsonRules.map(jsonRule => {
+                return {
+                    'lastCommit': {
+                        'author': 'martin',
+                        'message': 'New rule',
+                    },
+                    'blob': jsonRule,
+                    'active': true
+                };
+            });
+
+            const promises = ruleObjs.map(ruleObj => new Promise(resolve => {
+                Rule.insert(ruleObj, (err, dbRule) => {
+                    if (err) console.error(err);
+                    else console.log('Regla ' + dbRule.id + ' insertada!');
+                    resolve();
+                });
+            }));
+
+            Promise.all(promises).then(() => {
+                console.log('Reglas insertadas');
+                callback();
+            });
+        },
+
+        callback => {
             logger.debug('Fin');
             res.send({ code: 200, message: 'Todos los datos creados!' });
         }
@@ -228,27 +263,31 @@ exports.deleteTestData = function (req, res) {
     flow.series([
         callback => {
             logger.debug('Eliminando tabla de viajes');
-            tableManager.dropTripTable(() => callback());
+            tableManager.dropTripsTable(() => callback());
         },
         callback => {
             logger.debug('Eliminando tabla de autos');
-            tableManager.dropCarTable(() => callback());
+            tableManager.dropCarsTable(() => callback());
         },
         callback => {
             logger.debug('Eliminando tabla de usuarios de aplicacion');
-            tableManager.dropApplicationUserTable(() => callback());
+            tableManager.dropApplicationUsersTable(() => callback());
         },
         callback => {
             logger.debug('Eliminando tabla de tokens');
-            tableManager.dropTokenTable(() => callback());
+            tableManager.dropTokensTable(() => callback());
         },
         callback => {
             logger.debug('Eliminando tabla de servers');
-            tableManager.dropApplicationServerTable(() => callback());
+            tableManager.dropApplicationServersTable(() => callback());
+        },
+        callback => {
+            logger.debug('Eliminando tabla de reglas');
+            tableManager.dropRulesTable(() => callback());
         },
         callback => {
             logger.debug('Eliminando tabla de usuarios de negocio');
-            tableManager.dropBusinessUserTable(() => callback());
+            tableManager.dropBusinessUsersTable(() => callback());
         },
         callback => {
             logger.debug('Fin');

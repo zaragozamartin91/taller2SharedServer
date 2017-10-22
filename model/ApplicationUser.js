@@ -9,7 +9,7 @@ const flow = require('nimble');
 const table = 'app_users';
 const DEFAULT_NAME = 'UNKNOWN';
 const DEFAULT_SURNAME = 'UNKNOWN';
-const DEFAULT_BALANCE_CURR = 'PESOS';
+const DEFAULT_BALANCE_CURR = 'PESO';
 const idType = 'VARCHAR(64)';
 const DEFAULT_BALANCE = [{ currency: DEFAULT_BALANCE_CURR, value: 0.0 }];
 const carTable = Car.table;
@@ -186,7 +186,7 @@ ApplicationUser.prototype.update = function (callback) {
     const sql = `UPDATE ${table} SET type=$1, username=$2, password=$3, fb=$4, name=$5, 
         surname=$6, country=$7, email=$8, birthdate=$9, images=$10, _ref=$11, balance=$12 WHERE id=$13 RETURNING *`;
     const { type, username, password, fb, name, surname, country, email, birthdate, images, id, balance } = user;
-    const values = [type, username, password, JSON.stringify(fb), name, surname, country, email, birthdate, JSON.stringify(images), newRef, JSON.stringify(balance) ,id];
+    const values = [type, username, password, JSON.stringify(fb), name, surname, country, email, birthdate, JSON.stringify(images), newRef, JSON.stringify(balance), id];
 
     dbManager.query(sql, values, err => {
         /* Si no hay error, actualizo el valor de _ref */
@@ -207,6 +207,10 @@ ApplicationUser.prototype.isDriver = function () {
 
 ApplicationUser.prototype.delete = function (callback) {
     ApplicationUser.delete(this.id, callback);
+};
+
+ApplicationUser.prototype.getBalance = function (currency = '') {
+    return this.balance.find(bal => bal.currency.toLowerCase() == currency.toLowerCase());
 };
 
 module.exports = ApplicationUser;

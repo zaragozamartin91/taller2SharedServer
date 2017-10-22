@@ -18,7 +18,7 @@ const DEFAULT_ROUTE = [{
 
 /* FIN DE CONSTANTES ----------------------------------------------------------------------------------------------------------------------------- */
 
-function Trip(id, applicationOwner, driver, passenger, start, end, totalTime, waitTime, travelTime, distance, route, cost) {
+function Trip(id, applicationOwner, driver, passenger, start, end, totalTime, waitTime, travelTime, distance, route, cost, date) {
     this.id = id;
     this.applicationOwner = applicationOwner;
     this.driver = driver;
@@ -31,6 +31,7 @@ function Trip(id, applicationOwner, driver, passenger, start, end, totalTime, wa
     this.distance = distance;
     this.route = route || DEFAULT_ROUTE;
     this.cost = cost || DEFAULT_COST;
+    this.date = date || new Date();
 }
 
 Trip.TABLE = TABLE;
@@ -40,11 +41,11 @@ function fromObj(tripObj) {
 
     /* EN LA TABLA DE VIAJES, LOS NOMBRES DE CAMPOS start Y end SON INVALIDOS POR LO CUAL SE REEMPLAZAN POR _start Y _end */
     /* EN LA TABLA LOS NOMBRES DE COLUMNAS NO SON camelCase POR LO CUAL SE INTENTAN CAPTURAR LOS NOMRBES REGULARES */
-    const { id, applicationOwner, driver, passenger, start, end, totalTime, waitTime, travelTime, distance, route, cost,
+    const { id, applicationOwner, driver, passenger, start, end, totalTime, waitTime, travelTime, distance, route, cost, date,
         _start, _end, applicationowner, totaltime, waittime, traveltime } = tripObj;
 
     return new Trip(id, applicationOwner || applicationowner, driver, passenger, start || _start, end || _end, totalTime || totaltime,
-        waitTime || waittime, travelTime || traveltime, distance, route, cost);
+        waitTime || waittime, travelTime || traveltime, distance, route, cost, date);
 }
 
 Trip.fromObj = fromObj;
