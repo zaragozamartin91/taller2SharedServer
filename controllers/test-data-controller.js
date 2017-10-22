@@ -88,7 +88,7 @@ exports.createTestData = function (req, res) {
                             moment('1991-03-21').toDate(),
                             'driver',
                             ['https://www.postgresql.org/docs/9.6/static/datatype-json.html'],
-                            [{ currency: 'peso', value: 123.45 }, { currency: 'dolar', value: 6789.10 }]
+                            [{ currency: 'ARS', value: 123.45 }, { currency: 'USD', value: 6789.10 }]
                         ];
                         let userObj = { applicationOwner, username, password, name, surname, country, email, birthdate, type, images, balance };
                         ApplicationUser.insert(userObj, (err, user) => {
@@ -115,7 +115,7 @@ exports.createTestData = function (req, res) {
                             moment('1960-09-18').toDate(),
                             'passenger',
                             ['https://www.postgresql.org/docs/9.6/static/datatype-json.html', 'https://docs.google.com/document/d/1Ekd8ohj2WdSd5gg4_s4SGvP3P65CLb69U4-5fMBab4o/'],
-                            [{ currency: 'peso', value: 5000 }, { currency: 'euro', value: 45678.98 }]
+                            [{ currency: 'ARS', value: 5000 }, { currency: 'EUR', value: 45678.98 }]
                         ];
                         let userObj = { applicationOwner, username, password, name, surname, country, email, birthdate, type, images, balance };
                         ApplicationUser.insert(userObj, (err, user) => {
@@ -152,7 +152,7 @@ exports.createTestData = function (req, res) {
                             moment('1991-06-17').toDate(),
                             'driver',
                             [],
-                            [{ currency: 'peso', value: 6789 }, { currency: 'dolar', value: 123321 }]
+                            [{ currency: 'ARS', value: 6789 }, { currency: 'USD', value: 123321 }]
                         ];
                         let userObj = { applicationOwner, username, password, name, surname, country, email, birthdate, type, images, balance };
                         ApplicationUser.insert(userObj, (err, user) => {
@@ -179,7 +179,7 @@ exports.createTestData = function (req, res) {
                             moment('1993-10-01').toDate(),
                             'passenger',
                             ['https://www.postgresql.org/docs/9.6/static/datatype-json.html', 'https://docs.google.com/document/d/1Ekd8ohj2WdSd5gg4_s4SGvP3P65CLb69U4-5fMBab4o/'],
-                            [{ currency: 'peso', value: 1111 }]
+                            [{ currency: 'ARS', value: 1111 }]
                         ];
                         let userObj = { applicationOwner, username, password, name, surname, country, email, birthdate, type, images, balance };
                         ApplicationUser.insert(userObj, (err, user) => {
@@ -209,7 +209,7 @@ exports.createTestData = function (req, res) {
                 };
                 const route = [];
                 const cost = {
-                    'currency': 'PESO',
+                    'currency': 'ARS',
                     'value': 123.25
                 };
                 const tripObj = new Trip(null, 'llevame', driver.id, passenger.id, start, end, 60 * 35, 60 * 5, 60 * 30, 2500, route, cost);

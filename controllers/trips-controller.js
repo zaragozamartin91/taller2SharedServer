@@ -95,7 +95,7 @@ function getTodayTrips(trips) {
 }
 
 exports.estimate = function (req, res) {
-    const { start, end, passenger, distance } = req.body;
+    const { start, end, passenger, distance, cost } = req.body;
     if (!passenger) return sendMsgCodeResponse(res, 'Falta parametro de pasajero', 400);
     if (!distance && (!start || !end)) return sendMsgCodeResponse(res, 'Faltan parametros para calcular distancia', 400);
 
@@ -107,7 +107,7 @@ exports.estimate = function (req, res) {
         return sendMsgCodeResponse(res, 'Error al obtener distancia de viaje', 400);
     }
 
-    const currency = 'PESO';
+    const currency = 'ARS';
 
     const fact = { type: 'passenger', mts, operations: [], dayOfWeek: moment().day(), hour: moment().hour() };
     new Promise((resolve, reject) => Trip.findByUser(passenger, (err, trips) => err ? reject(err) : resolve(trips)))
@@ -121,10 +121,11 @@ exports.estimate = function (req, res) {
         }).then(user => {
             if (!user) return sendMsgCodeResponse(res, 'El usuario no existe', 400);
 
-            fact.pocketBalance = user.getBalance(currency);
+            /* Si en el body del request se indica el cost entonces se toma el currency aqui para obtener el balance del usuario */
+            fact.pocketBalance = cost ? user.getBalance(cost.currency) : user.getBalance(currency);
             fact.email = user.email;
 
-            return new Promise((resolve, reject) => 
+            return new Promise((resolve, reject) =>
                 Rule.findActive((err, rules) => err ? reject(err) : resolve(rules)));
         }).then(rules => {
             const jsonRules = rules.map(rule => rule.blob);

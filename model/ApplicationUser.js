@@ -9,7 +9,7 @@ const flow = require('nimble');
 const table = 'app_users';
 const DEFAULT_NAME = 'UNKNOWN';
 const DEFAULT_SURNAME = 'UNKNOWN';
-const DEFAULT_BALANCE_CURR = 'PESO';
+const DEFAULT_BALANCE_CURR = 'ARS';
 const idType = 'VARCHAR(64)';
 const DEFAULT_BALANCE = [{ currency: DEFAULT_BALANCE_CURR, value: 0.0 }];
 const carTable = Car.table;
@@ -210,7 +210,10 @@ ApplicationUser.prototype.delete = function (callback) {
 };
 
 ApplicationUser.prototype.getBalance = function (currency = '') {
-    return this.balance.find(bal => bal.currency.toLowerCase() == currency.toLowerCase());
+    const balance = this.balance.find(bal => bal.currency.toLowerCase() == currency.toLowerCase());
+    if (balance) return balance;
+    console.log(`El usuario ${this.id} no tiene balance ${currency}`);
+    return DEFAULT_BALANCE;
 };
 
 module.exports = ApplicationUser;

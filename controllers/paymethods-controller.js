@@ -18,6 +18,8 @@ const PAYMENTS_API_URL = process.env.PAYMENTS_API_URL || 'https://shielded-escar
 const AUTHORIZE_URL = PAYMENTS_API_URL + '/user/oauth/authorize';
 const GET_PAYMENTS_URL = PAYMENTS_API_URL + '/paymethods';
 
+/* GET PAYMETHODS ------------------------------------------------------------------------------------------------------------- */
+
 /**
  * Construye una promesa para obtener los metodos de pago.
  * @param {string} token Token de autenticacion con el api de pagos.
@@ -77,7 +79,7 @@ function getStatusCode({ request: { res: { statusCode = 500 } = {} } = {} } = {}
 function __getPaymethods(req, res, renewToken = false) {
     getTokenPromise(renewToken).then(contents => {
         const token = contents.data.access_token;
-        TOKEN_HOLDER.token = token;
+        if (TOKEN_HOLDER.token != token) TOKEN_HOLDER.token = token;
         return paymethodsPromise(token);
     }).then(contents => {
         const items = contents.data.items || [];
@@ -99,3 +101,6 @@ function __getPaymethods(req, res, renewToken = false) {
 exports.getPaymethods = function (req, res) {
     return __getPaymethods(req, res);
 };
+
+/* POST PAYMENT ------------------------------------------------------------------------------------------------------------- */
+

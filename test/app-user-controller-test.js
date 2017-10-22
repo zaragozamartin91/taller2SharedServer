@@ -46,11 +46,11 @@ const userMock1 = {
     ],
     'balance': [
         {
-            'currency': 'peso',
+            'currency': 'ARS',
             'value': 123.45
         },
         {
-            'currency': 'dolar',
+            'currency': 'USD',
             'value': 6789.1
         }
     ]
@@ -90,11 +90,11 @@ const userMock2 = {
     ],
     'balance': [
         {
-            'currency': 'peso',
+            'currency': 'ARS',
             'value': 5000
         },
         {
-            'currency': 'euro',
+            'currency': 'EUR',
             'value': 45678.98
         }
     ]
@@ -131,11 +131,11 @@ const userMock3 = {
     'images': [],
     'balance': [
         {
-            'currency': 'peso',
+            'currency': 'ARS',
             'value': 6789
         },
         {
-            'currency': 'dolar',
+            'currency': 'USD',
             'value': 123321
         }
     ]
@@ -159,7 +159,7 @@ const userMock4 = {
     ],
     'balance': [
         {
-            'currency': 'peso',
+            'currency': 'ARS',
             'value': 1111
         }
     ]

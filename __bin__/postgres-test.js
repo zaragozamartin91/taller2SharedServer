@@ -75,7 +75,7 @@ function addRole() {
 }
 
 let value = [{
-    currency: 'pesos',
+    currency: 'ARS',
     value: 12.50
 }, {
     currency: 'dolares',
@@ -100,7 +100,7 @@ let [applicationOwner, username, name, surname, country, email, birthdate, type,
     moment('1995-12-25').toDate(),
     'driver',
     ['https://www.postgresql.org/docs/9.6/static/datatype-json.html'],
-    [{ currency: 'peso', value: 123.45 }, { currency: 'dolar', value: 6789.10 }]
+    [{ currency: 'ARS', value: 123.45 }, { currency: 'USD', value: 6789.10 }]
 ];
 let userObj = { applicationOwner, username, name, surname, country, email, birthdate, type, images, balance };
 

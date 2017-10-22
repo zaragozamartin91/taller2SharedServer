@@ -11,7 +11,7 @@ const fact = {
     tripCount: 1,
     last30minsTripCount: 11,
     email: 'mzaragoza@gmail.com',
-    pocketBalance: { currency: 'peso', value: 100 },
+    pocketBalance: { currency: 'ARS', value: 100 },
     todayTripCount: 11
 };
 
