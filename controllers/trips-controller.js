@@ -7,6 +7,7 @@ const ApplicationUser = require('../model/ApplicationUser');
 const responseUtils = require('../utils/response-utils');
 const mainConf = require('../config/main-config');
 const dataValidator = require('../utils/data-validator');
+const paymentUtils = require('../utils/payment-utils');
 
 const sendMsgCodeResponse = responseUtils.sendMsgCodeResponse;
 const apiVersion = mainConf.apiVersion;

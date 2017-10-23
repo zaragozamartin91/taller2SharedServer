@@ -83,6 +83,7 @@ router.put('/users/:userId/cars/:carId', tokenValidator.verifyServerToken, appUs
 /* paymethods ROUTES ------------------------------------------------------------------------------------------------------- */
 router.use('/paymethods', tokenValidator.verifyToken);
 router.get('/paymethods', tokenValidator.verifyServerOrRoleToken('user'), paymethodsController.getPaymethods);
+router.post('/payment', paymethodsController.testPayment);
 /* FIN paymethods ROUTES ------------------------------------------------------------------------------------------------------- */
 
 
