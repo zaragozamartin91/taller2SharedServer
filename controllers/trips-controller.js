@@ -11,6 +11,8 @@ const dataValidator = require('../utils/data-validator');
 const sendMsgCodeResponse = responseUtils.sendMsgCodeResponse;
 const apiVersion = mainConf.apiVersion;
 
+const DEF_CURRENCY = 'ARS';
+
 /* FIN DE IMPORTS ----------------------------------------------------------------------------------------------------- */
 
 function buildMetadata(count, total = count) {
@@ -65,11 +67,17 @@ function postTrip(req, res) {
     const serverId = req.serverId;
     trip.applicationOwner = serverId;
 
-    Trip.insert(trip, (err, dbTrip) => {
-        if (err) return sendMsgCodeResponse(res, 'Error en la BBDD al insertar el viaje', 500);
-        const metadata = { version: apiVersion };
-        res.send({ metadata, trip: dbTrip });
-    });
+    /* TODO : USAR EL API DE PAGOS PARA PAGAR EL VIAJE QUE SE ESTA DANDO DE ALTA */
+    new Promise((resolve, reject) => Trip.insert(trip, (err, dbTrip) => err ? reject(err) : resolve(dbTrip)))
+        .then(dbTrip => {
+            const { distance, passenger } = trip;
+            /* Si el campo cost no esta en el body del request, se asume que la transaccion es en DEF_CURRENCY */
+            const { cost: { currency = DEF_CURRENCY } = { currency: DEF_CURRENCY } } = trip;
+
+            res.send({ metadata: { version: apiVersion }, trip: dbTrip });
+        })
+        .catch(err => sendMsgCodeResponse(res, 'Error en la BBDD al insertar el viaje', 500));
+
 }
 
 exports.postTrip = postTrip;
@@ -94,8 +102,35 @@ function getTodayTrips(trips) {
     return trips.filter(trip => moment(trip.date).date() == moment().date());
 }
 
+function estimatePromise(distance, passenger, currency) {
+    const fact = { type: 'passenger', mts: distance, operations: [], dayOfWeek: moment().day(), hour: moment().hour() };
+
+    return new Promise((resolve, reject) => Trip.findByUser(passenger, (err, trips) => err ? reject(err) : resolve(trips)))
+        .then(trips => {
+            fact.tripCount = trips.length;
+            fact.last30minsTripCount = getLast30MinsTrips(trips).length;
+            fact.todayTripCount = getTodayTrips(trips).length;
+
+            return new Promise((resolve, reject) =>
+                ApplicationUser.findById(passenger, (err, user) => err ? reject(err) : resolve(user)));
+        }).then(user => {
+            if (!user) return Promise.reject({ code: 400, message: `El usuario ${passenger} no existe` });
+
+            /* Si en el body del request se indica el cost entonces se toma el currency aqui para obtener el balance del usuario */
+            fact.pocketBalance = user.getBalance(currency);
+            fact.email = user.email;
+
+            return new Promise((resolve, reject) =>
+                Rule.findActive((err, rules) => err ? reject(err) : resolve(rules)));
+        }).then(rules => {
+            const jsonRules = rules.map(rule => rule.blob);
+            return ruleHandler.checkFromJson(fact, jsonRules);
+        });
+}
+
+
 exports.estimate = function (req, res) {
-    const { start, end, passenger, distance, cost } = req.body;
+    const { start, end, passenger, distance, cost = { currency: DEF_CURRENCY, value: 0 } } = req.body;
     if (!passenger) return sendMsgCodeResponse(res, 'Falta parametro de pasajero', 400);
     if (!distance && (!start || !end)) return sendMsgCodeResponse(res, 'Faltan parametros para calcular distancia', 400);
 
@@ -107,31 +142,11 @@ exports.estimate = function (req, res) {
         return sendMsgCodeResponse(res, 'Error al obtener distancia de viaje', 400);
     }
 
-    const currency = 'ARS';
+    const currency = cost.currency;
 
-    const fact = { type: 'passenger', mts, operations: [], dayOfWeek: moment().day(), hour: moment().hour() };
-    new Promise((resolve, reject) => Trip.findByUser(passenger, (err, trips) => err ? reject(err) : resolve(trips)))
-        .then(trips => {
-            fact.tripCount = trips.length;
-            fact.last30minsTripCount = getLast30MinsTrips(trips).length;
-            fact.todayTripCount = getTodayTrips(trips).length;
-
-            return new Promise((resolve, reject) =>
-                ApplicationUser.findById(passenger, (err, user) => err ? reject(err) : resolve(user)));
-        }).then(user => {
-            if (!user) return sendMsgCodeResponse(res, 'El usuario no existe', 400);
-
-            /* Si en el body del request se indica el cost entonces se toma el currency aqui para obtener el balance del usuario */
-            fact.pocketBalance = cost ? user.getBalance(cost.currency) : user.getBalance(currency);
-            fact.email = user.email;
-
-            return new Promise((resolve, reject) =>
-                Rule.findActive((err, rules) => err ? reject(err) : resolve(rules)));
-        }).then(rules => {
-            const jsonRules = rules.map(rule => rule.blob);
-            return ruleHandler.checkFromJson(fact, jsonRules);
-        }).then(result => {
-            if (result.cannotTravel) return sendMsgCodeResponse(res, 'El pasajero debe normalizar su situación de pago', 402);
+    estimatePromise(mts, passenger, currency)
+        .then(result => {
+            if (result.cannotTravel) return Promise.reject({ code: 402, message: 'El pasajero debe normalizar su situación de pago' });
 
             const metadata = { version: apiVersion };
             if (result.free) return res.send({ metadata, cost: { currency, value: 0 } });
@@ -143,5 +158,10 @@ exports.estimate = function (req, res) {
             });
             console.log('Total: ' + amount);
             return res.send({ metadata, cost: { currency, value: amount } });
-        }).catch(err => sendMsgCodeResponse(res, 'Error en la BBDD al calcular el viaje', 500));
+        }).catch(err => {
+            const { code, message } = err;
+            if (code && message) return sendMsgCodeResponse(res, message, code);
+            console.error(err);
+            return sendMsgCodeResponse(res, 'Error en la BBDD al calcular el viaje', 500);
+        });
 };
