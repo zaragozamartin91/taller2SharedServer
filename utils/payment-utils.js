@@ -11,7 +11,7 @@ const API_VERSION = mainConf.apiVersion;
 const DEF_CLIENT_ID = 'ee04c1bd-bd98-4ac9-861e-cff1834e0386';
 const DEF_CLIENT_SECRET = '1e238cae-26ae-412d-a7e6-959e89980a13';
 const TOKEN_HOLDER = {
-    token: '56a4sdas65d4ad654asd4a65sd4a6sd4asd'
+    token: ''
 };
 
 exports.TOKEN_HOLDER = TOKEN_HOLDER;
@@ -129,6 +129,10 @@ exports.getPaymethods = function (req, res) {
 
 
 /* PERFORM PAYMENT ------------------------------------------------------------------------------------------------------------- */
+
+function buildPayment(obj) {
+    
+}
 
 function paymentPromise(token = TOKEN_HOLDER.token, paymentData) {
     try {
