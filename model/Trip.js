@@ -92,4 +92,12 @@ Trip.findById = function (trip, callback) {
         .catch(cause => callback(cause));
 };
 
+Trip.delete = function (trip, callback) {
+    const tripId = trip.id || trip;
+    const sql = `DELETE FROM ${TABLE} WHERE id=$1 RETURNING *`;
+    dbManager.queryPromise(sql, [tripId])
+        .then(([tripRow]) => callback(null, fromObj(tripRow)))
+        .catch(cause => callback(cause));
+};
+
 module.exports = Trip;

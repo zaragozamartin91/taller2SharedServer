@@ -14,6 +14,8 @@ const apiVersion = mainConf.apiVersion;
 
 const DEF_CURRENCY = 'ARS';
 
+const EMPTY_CALLBACK = function () { };
+
 /* FIN DE IMPORTS ----------------------------------------------------------------------------------------------------- */
 
 function buildMetadata(count, total = count) {
@@ -61,27 +63,76 @@ function postTrip(req, res) {
     const tripValidation = dataValidator.validateTrip(trip);
 
     if (!tripValidation.valid) return sendMsgCodeResponse(res, tripValidation.msg, 400);
+    if (!paymethod) return sendMsgCodeResponse(res, 'No se indico un metodo de pago', 400);
 
-    const { totalTime, waitTime, travelTime } = trip;
-    trip.totalTime = totalTime || waitTime + travelTime;
+    const { waitTime, travelTime, totalTime = (waitTime + travelTime) } = trip;
+    trip.totalTime = totalTime;
 
     const serverId = req.serverId;
     trip.applicationOwner = serverId;
 
+    /* Intento obtener el currency del paymethod. Si no esta ahi, lo intento obtener del cost */
+    const cost = trip.cost || { currency: DEF_CURRENCY };
+    const currency = paymethod.currency || cost.currency;
+
     /* TODO : USAR EL API DE PAGOS PARA PAGAR EL VIAJE QUE SE ESTA DANDO DE ALTA */
-    new Promise((resolve, reject) => Trip.insert(trip, (err, dbTrip) => err ? reject(err) : resolve(dbTrip)))
-        .then(dbTrip => {
-            const { distance, passenger } = trip;
-            /* Si el campo cost no esta en el body del request, se asume que la transaccion es en DEF_CURRENCY */
-            const { cost: { currency = DEF_CURRENCY } = { currency: DEF_CURRENCY } } = trip;
+    Trip.insert(trip, (err, dbTrip) => {
+        if (err) return sendMsgCodeResponse(res, 'Error en la BBDD al insertar el viaje', 500);
+        const { distance, passenger } = trip;
 
-            res.send({ metadata: { version: apiVersion }, trip: dbTrip });
-        })
-        .catch(err => sendMsgCodeResponse(res, 'Error en la BBDD al insertar el viaje', 500));
+        estimatePromise(distance, passenger, currency)
+            .then(result => {
+                if (result.cannotTravel) return Promise.reject({ code: 400, message: 'El pasajero debe normalizar su situación de pago' });
 
+                const metadata = { version: apiVersion };
+                // si el viaje resulta gratis, no se efectua ningun pago y se responde al cliente   
+                if (result.free) {
+                    dbTrip.cost = { currency, value: 0 };
+                    res.status(201);
+                    return res.send({ metadata, trip: dbTrip });
+                }
+
+                /* Si el viaje no es gratis, calculo su costo */
+                let amount = 0;
+                result.operations.forEach(op => {
+                    amount = op(amount);
+                    console.log('amount: ' + amount);
+                });
+                console.log('Total: ' + amount);
+
+                // transactionId, currency, value, { parameters, paymethod }
+                const transactionId = generateTransaction(trip);
+                const paymentData = { transactionId, currency, amount, paymethod };
+
+                return new Promise((resolve, reject) =>
+                    paymentUtils.postPayment(paymentData, (err, payment) => {
+                        if (err) reject(err);
+                        else resolve(payment);
+                    }));
+
+            }).then(payment => {
+                const metadata = { version: apiVersion };
+                const { currency, value } = payment;
+                const cost = { currency, value };
+                dbTrip.cost = cost;
+                res.status(201);
+                return res.send({ metadata, trip: dbTrip });
+            })
+            .catch(err => {
+                console.error(err);
+                Trip.delete(dbTrip, EMPTY_CALLBACK);
+                const { code, message } = err;
+                if (code && message) return sendMsgCodeResponse(res, message, code);
+                sendMsgCodeResponse(res, 'Error en la BBDD al insertar el viaje', 500);
+            });
+    });
 }
 
 exports.postTrip = postTrip;
+
+function generateTransaction({ distance, passenger }) {
+    return `${passenger}-${distance}-${Date.now()}`;
+}
 
 function measureDistance(start, end) {
     const lat1 = start.address.location.lat;

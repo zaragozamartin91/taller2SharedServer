@@ -130,9 +130,23 @@ exports.getPaymethods = function (req, res) {
 
 /* PERFORM PAYMENT ------------------------------------------------------------------------------------------------------------- */
 
-function buildPayment(obj) {
-    
+function buildPaymentData(transactionId, currency, value, { parameters, paymethod }) {
+    const { expiration_month, expiration_year, number, type } = parameters;
+    return {
+        'transaction_id': transactionId,
+        currency,
+        value,
+        paymentMethod: {
+            expiration_month,
+            expiration_year,
+            'method': paymethod || 'card',
+            type,
+            number
+        }
+    };
 }
+
+exports.buildPaymentData = buildPaymentData;
 
 function paymentPromise(token = TOKEN_HOLDER.token, paymentData) {
     try {
@@ -146,30 +160,30 @@ function paymentPromise(token = TOKEN_HOLDER.token, paymentData) {
     }
 }
 
-function __postPayment(req, res, paymentData, renewToken = false) {
+function __postPayment(paymentData, callback, renewToken = false) {
     getTokenPromise(renewToken).then(contents => {
         const token = contents.data.access_token;
         updateToken(token);
         return paymentPromise(token, paymentData);
     }).then(contents => {
-        res.send(contents.data);
+        callback(null, contents.data);
     }).catch(cause => {
         const { code, message } = cause;
-        if (code && message) return sendMsgCodeResponse(res, message, code);
+        if (code && message) return callback({ code, message });
 
         console.error(cause);
 
         const statusCode = getStatusCode(cause);
         const unauthorized = statusCode == 403 || statusCode == 401;
         if (unauthorized) {
-            logger.debug('Token invalido o expirado...');
-            __postPayment(req, res, paymentData, true);
+            logger.debug('Token ' + TOKEN_HOLDER.token + ' invalido o expirado...');
+            __postPayment(paymentData, callback, true);
         } else {
-            sendMsgCodeResponse(res, 'Error al realizar el pago', statusCode);
+            callback(cause);
         }
     });
 }
 
-exports.postPayment = function (req, res, paymentData) {
-    return __postPayment(req, res, paymentData);
+exports.postPayment = function (paymentData, callback) {
+    return __postPayment(paymentData, callback);
 };
