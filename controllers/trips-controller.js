@@ -3,6 +3,7 @@ const distanceMeasurer = require('../utils/distance-measurer');
 const ruleHandler = require('../utils/rule-handler');
 const Trip = require('../model/Trip');
 const Rule = require('../model/Rule');
+const Transaction = require('../model/Transaction');
 const ApplicationUser = require('../model/ApplicationUser');
 const responseUtils = require('../utils/response-utils');
 const mainConf = require('../config/main-config');
@@ -94,10 +95,7 @@ function postTrip(req, res) {
 
                 /* Si el viaje no es gratis, calculo su costo */
                 let amount = 0;
-                result.operations.forEach(op => {
-                    amount = op(amount);
-                    console.log('amount: ' + amount);
-                });
+                result.operations.forEach(op => amount = op(amount));
                 console.log('Total: ' + amount);
 
                 // transactionId, currency, value, { parameters, paymethod }
@@ -106,8 +104,13 @@ function postTrip(req, res) {
 
                 return new Promise((resolve, reject) =>
                     paymentUtils.postPayment(paymentData, (err, payment) => {
-                        if (err) reject(err);
-                        else resolve(payment);
+                        payment.success = true;
+                        if (err) {
+                            console.error('Error en el pago');
+                            console.error(err);
+                            payment.success = false;
+                        }
+                        resolve(payment);
                     }));
 
             }).then(payment => {
@@ -115,8 +118,20 @@ function postTrip(req, res) {
                 const { currency, value } = payment;
                 const cost = { currency, value };
                 dbTrip.cost = cost;
-                res.status(201);
-                return res.send({ metadata, trip: dbTrip });
+
+                //Se inserta una transaccion para el pasajero
+                const transObj = {
+                    id: payment.transaction_id, currency, value,
+                    appusr: passenger, trip: dbTrip.id, done: payment.success
+                };
+                Transaction.insert(transObj, (err, dbTransaction) => {
+                    if (err) {
+                        console.error('Error al insertar transaccion');
+                        console.error(err);
+                    }
+                    res.status(201);
+                    return res.send({ metadata, trip: dbTrip });
+                });
             })
             .catch(err => {
                 console.error(err);

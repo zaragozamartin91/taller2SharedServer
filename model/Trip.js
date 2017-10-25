@@ -36,6 +36,9 @@ function Trip(id, applicationOwner, driver, passenger, start, end, totalTime, wa
 
 Trip.TABLE = TABLE;
 
+const idType = 'INTEGER';
+Trip.idType = idType;
+
 function fromObj(tripObj) {
     if (!tripObj) return null;
 
