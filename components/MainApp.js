@@ -12,6 +12,7 @@ import Index from './Index';
 import FormExample from './FormExample';
 import Login from './Login';
 import Users from './Users';
+import Servers from './Servers';
 import CreateUserForm from './CreateUserForm';
 
 /* ESTE FRAGMENTO DE CODIGO ES REQUERIDO PARA LOS EVENTOS DE TIPO TOUCH O CLICK EN COMPONENTES MATERIAL-UI */
@@ -73,6 +74,7 @@ const MainApp = React.createClass({
                     <Route path="/form-example" component={FormExample} />
                     <Route path="/users/list" component={() => <Users token={token} />} />
                     <Route path="/users/create" component={() => <CreateUserForm token={token} />} />
+                    <Route path="/servers/list" component={() => <Servers token={token} />} />
 
                     <form
                         action='/logout'
