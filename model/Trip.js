@@ -36,6 +36,9 @@ function Trip(id, applicationOwner, driver, passenger, start, end, totalTime, wa
 
 Trip.TABLE = TABLE;
 
+const idType = 'INTEGER';
+Trip.idType = idType;
+
 function fromObj(tripObj) {
     if (!tripObj) return null;
 
@@ -87,6 +90,14 @@ Trip.findByUser = function (user, callback) {
 Trip.findById = function (trip, callback) {
     const tripId = trip.id || trip;
     const sql = `SELECT * FROM ${TABLE} WHERE id=$1`;
+    dbManager.queryPromise(sql, [tripId])
+        .then(([tripRow]) => callback(null, fromObj(tripRow)))
+        .catch(cause => callback(cause));
+};
+
+Trip.delete = function (trip, callback) {
+    const tripId = trip.id || trip;
+    const sql = `DELETE FROM ${TABLE} WHERE id=$1 RETURNING *`;
     dbManager.queryPromise(sql, [tripId])
         .then(([tripRow]) => callback(null, fromObj(tripRow)))
         .catch(cause => callback(cause));

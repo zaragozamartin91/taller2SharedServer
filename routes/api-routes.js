@@ -83,6 +83,7 @@ router.put('/users/:userId/cars/:carId', tokenValidator.verifyServerToken, appUs
 /* paymethods ROUTES ------------------------------------------------------------------------------------------------------- */
 router.use('/paymethods', tokenValidator.verifyToken);
 router.get('/paymethods', tokenValidator.verifyServerOrRoleToken('user'), paymethodsController.getPaymethods);
+router.post('/payment', paymethodsController.testPayment);
 /* FIN paymethods ROUTES ------------------------------------------------------------------------------------------------------- */
 
 
@@ -92,6 +93,7 @@ router.get('/trips/:tripId', tokenValidator.verifyServerOrRoleToken('user'), tri
 router.get('/trips', tokenValidator.verifyServerOrRoleToken('user'), tripsController.getTrips);
 router.post('/trips', tokenValidator.verifyServerToken, tripsController.postTrip);
 router.post('/trips/estimate', tokenValidator.verifyServerToken, tripsController.estimate);
+router.post('/trips', tokenValidator.verifyServerToken, tripsController.postTrip);
 /* FIN trips ROUTES ------------------------------------------------------------------------------------------------------- */
 
 

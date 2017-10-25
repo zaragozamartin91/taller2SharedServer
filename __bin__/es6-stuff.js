@@ -1,95 +1,31 @@
-const p1 = Promise.resolve('pepe');
-const p2 = Promise.resolve('posting');
-
-
-
-// cause.request.res.statusCode
-Promise.all([p1, p2]).then(([s1, s2]) => console.log(s1, s2));
-
-
-const moment = require('moment');
-const m = moment('2017-01-01').add(1, 'hour').toDate().getTime();
-
-console.log(m);
-
-function validatePoint({
-    address: { street, location: { lat, lon }
-    }, timestamp }) {
-
-}
-
-function validateRouteItem({ location: { lat, lon }, timestamp }) {
-    
-}
-
-function validateTrip({
-    id,
-    applicationOwner,
-    driver,
-    passenger,
-    start,
-    end,
-    totalTime,
-    waitTime,
-    travelTime,
-    distance,
-    route,
-    cost: { currency, value } }) {
-
-    validatePoint(start);
-    validatePoint(end);
-    route.forEach(validateRouteItem);
-
-    console.log('OK');
-}
-
-const TRIP = {
-    'id': 'string',
-    'applicationOwner': 'string',
-    'driver': 'string',
-    'passenger': 'string',
-    'start': {
-        'address': {
-            'street': 'string',
-            'location': {
-                'lat': 0,
-                'lon': 0
-            }
-        },
-        'timestamp': 0
-    },
-    'end': {
-        'address': {
-            'street': 'string',
-            'location': {
-                'lat': 0,
-                'lon': 0
-            }
-        },
-        'timestamp': 0
-    },
-    'totalTime': 0,
-    'waitTime': 0,
-    'travelTime': 0,
-    'distance': 0,
-    'route': [
+function buildPaymentData(transactionId, currency, value, { parameters, paymethod }) {
+    const { expiration_month, expiration_year, number, type } = parameters;
+    return {
+        'transaction_id': transactionId,
+        currency,
+        value,
+        'paymentMethod':
         {
-            'location': {
-                'lat': 0,
-                'lon': 0
-            },
-            'timestamp': 0
+            expiration_month,
+            expiration_year,
+            'method': paymethod,
+            type,
+            number
         }
-    ],
-    'cost': {
-        'currency': 'string',
-        'value': 0
-    }
+    };
+}
+
+const obj = {
+    'parameters': {
+        'ccvv': 'number',
+        'expiration_month': 'number',
+        'expiration_year': 'number',
+        'number': 'string',
+        'type': 'string'
+    },
+    'paymethod': 'card'
 };
 
-try {
+const payment = buildPayment('abc-def', 'ARS', 250.26, obj);
 
-    validateTrip(TRIP);
-} catch (error) {
-    console.log('ERROR');
-}
+console.log(payment);

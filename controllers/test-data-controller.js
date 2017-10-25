@@ -47,6 +47,10 @@ exports.createTestData = function (req, res) {
             tableManager.createRulesTable(() => callback());
         },
         callback => {
+            logger.debug('Creando tabla de transacciones');
+            tableManager.createTransactionsTable(() => callback());
+        },
+        callback => {
             logger.debug('Insertando usuario');
             BusinessUser.insert({
                 username: 'martin', password: 'pepe', name: 'Martin',
@@ -261,6 +265,10 @@ exports.createTestData = function (req, res) {
 
 exports.deleteTestData = function (req, res) {
     flow.series([
+        callback => {
+            logger.debug('Eliminando tabla de transacciones');
+            tableManager.dropTransactionsTable(() => callback());
+        },
         callback => {
             logger.debug('Eliminando tabla de viajes');
             tableManager.dropTripsTable(() => callback());

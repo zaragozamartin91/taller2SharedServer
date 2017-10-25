@@ -6,6 +6,7 @@ const Car = require('./Car');
 const TokenModel = require('./Token');
 const Trip = require('./Trip');
 const Rule = require('./Rule');
+const Transaction = require('./Transaction');
 
 const dbManager = require('./db-manager');
 const logger = require('log4js').getLogger('table-manager');
@@ -199,6 +200,37 @@ exports.createRulesTable = function (callback) {
 
 exports.dropRulesTable = function (callback) {
     const sql = `DROP TABLE ${Rule.TABLE}`;
+    dbManager.queryPromise(sql, [])
+        .then(() => callback())
+        .catch(cause => {
+            console.error(cause);
+            callback();
+        });
+};
+
+// Transaction -------------------------------------------------------------------------------------------------------
+
+//id, currency, value, date, user, trip, done
+exports.createTransactionsTable = function (callback) {
+    const sql = `CREATE TABLE ${Transaction.table} (
+        id VARCHAR(128) PRIMARY KEY, 
+        currency VARCHAR(3) NOT NULL,
+        value DECIMAL(9,2),
+        date TIMESTAMP DEFAULT now(),
+        appusr ${ApplicationUser.idType} REFERENCES ${ApplicationUser.table}(id) ON DELETE CASCADE,
+        trip ${Trip.idType} REFERENCES ${Trip.TABLE}(id) ON DELETE CASCADE,
+        done BOOLEAN
+    )`;
+    dbManager.queryPromise(sql, [])
+        .then(() => callback())
+        .catch(cause => {
+            console.error(cause);
+            callback();
+        });
+};
+
+exports.dropTransactionsTable = function (callback) {
+    const sql = `DROP TABLE ${Transaction.table}`;
     dbManager.queryPromise(sql, [])
         .then(() => callback())
         .catch(cause => {

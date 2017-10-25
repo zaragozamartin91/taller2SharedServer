@@ -3,13 +3,19 @@ const distanceMeasurer = require('../utils/distance-measurer');
 const ruleHandler = require('../utils/rule-handler');
 const Trip = require('../model/Trip');
 const Rule = require('../model/Rule');
+const Transaction = require('../model/Transaction');
 const ApplicationUser = require('../model/ApplicationUser');
 const responseUtils = require('../utils/response-utils');
 const mainConf = require('../config/main-config');
 const dataValidator = require('../utils/data-validator');
+const paymentUtils = require('../utils/payment-utils');
 
 const sendMsgCodeResponse = responseUtils.sendMsgCodeResponse;
 const apiVersion = mainConf.apiVersion;
+
+const DEF_CURRENCY = 'ARS';
+
+const EMPTY_CALLBACK = function () { };
 
 /* FIN DE IMPORTS ----------------------------------------------------------------------------------------------------- */
 
@@ -58,21 +64,102 @@ function postTrip(req, res) {
     const tripValidation = dataValidator.validateTrip(trip);
 
     if (!tripValidation.valid) return sendMsgCodeResponse(res, tripValidation.msg, 400);
+    if (!paymethod) return sendMsgCodeResponse(res, 'No se indico un metodo de pago', 400);
 
-    const { totalTime, waitTime, travelTime } = trip;
-    trip.totalTime = totalTime || waitTime + travelTime;
+    const { waitTime, travelTime, totalTime = (waitTime + travelTime) } = trip;
+    trip.totalTime = totalTime;
 
     const serverId = req.serverId;
     trip.applicationOwner = serverId;
 
+    /* IMPORTANTE: SE DEBE PASAR LA MONEDA EN EL paymethod AUNQUE NO LO INDIQUE */
+    const currency = paymethod.currency || DEF_CURRENCY;
+    const metadata = { version: apiVersion };
+    const cost = { currency, value: 0 };
+    const { distance, passenger, driver } = trip;
+    let responseSent = false;
+
+    /* TODO : USAR EL API DE PAGOS PARA PAGAR EL VIAJE QUE SE ESTA DANDO DE ALTA */
     Trip.insert(trip, (err, dbTrip) => {
         if (err) return sendMsgCodeResponse(res, 'Error en la BBDD al insertar el viaje', 500);
-        const metadata = { version: apiVersion };
-        res.send({ metadata, trip: dbTrip });
+
+        estimatePromise(distance, passenger, currency)
+            .then(result => {
+                if (result.cannotTravel) return Promise.reject({ code: 400, message: 'El pasajero debe normalizar su situación de pago' });
+
+                // si el viaje resulta gratis, no se efectua ningun pago y se responde al cliente   
+                if (result.free) {
+                    dbTrip.cost = { currency, value: 0 };
+                    res.status(201);
+                    return res.send({ metadata, trip: dbTrip });
+                }
+
+                /* Si el viaje no es gratis, calculo su costo */
+                result.operations.forEach(operation => cost.value = operation(cost.value));
+                console.log('Total: ' + cost.value);
+                dbTrip.cost = cost;
+
+                // transactionId, currency, value, { parameters, paymethod }
+                const transactionId = generateTransaction(trip);
+                const paymentData = paymentUtils.buildPaymentData(transactionId, currency, cost.value, paymethod);
+
+                return new Promise((resolve, reject) => paymentUtils.postPayment(paymentData, (err, payment) => {
+                    // si hay un error en el pago, lo indico con un flag y continuamos con la operacion
+                    payment.success = err ? false : true;
+                    if (err) {
+                        console.error('Error en el pago');
+                        console.error(err);
+                    }
+                    resolve(payment);
+                }));
+
+            }).then(payment => {
+                //Se inserta una transaccion para el pasajero
+                const transObj = {
+                    id: payment.transaction_id, currency, value: cost.value,
+                    appusr: passenger, trip: dbTrip.id, done: payment.success
+                };
+
+                return new Promise((resolve, reject) => Transaction.insert(transObj,
+                    (err, dbTransaction) => err ? reject(err) : resolve(dbTransaction)));
+            })
+            .then(dbTransaction => {
+                // Descuento el saldo del pasajero
+                return new Promise((resolve, reject) => ApplicationUser.pay(passenger, cost, err => {
+                    if (err) return reject(err);
+                    responseSent = true; // indico que se enviara una respuesta al usuario
+                    res.status(201);
+                    res.send({ metadata, trip: dbTrip, success: dbTransaction.done });
+                    resolve(driver);
+                }));
+            })
+            .then(driver => estimatePromise(distance, driver, currency, 'driver'))
+            .then(result => {
+                let amount = 0;
+                result.operations.forEach(operation => amount = operation(amount));
+                console.log('Ganancia del conductor: ' + amount);
+                ApplicationUser.earn(driver, { currency, value: amount }, EMPTY_CALLBACK);
+            })
+            .catch(err => {
+                console.error(err);
+                // Si ocurrio un error, se elimina el viaje cargado
+                Trip.delete(dbTrip, EMPTY_CALLBACK);
+                // evitar enviar la respuesta dos veces
+                if (!responseSent) {
+                    const { code, message } = err;
+                    if (err instanceof Error) return sendMsgCodeResponse(res, message, 500);
+                    else return sendMsgCodeResponse(res, message, code);
+                }
+            });
+
     });
 }
 
 exports.postTrip = postTrip;
+
+function generateTransaction({ distance, passenger }) {
+    return `${passenger}-${distance}-${Date.now()}`;
+}
 
 function measureDistance(start, end) {
     const lat1 = start.address.location.lat;
@@ -94,8 +181,35 @@ function getTodayTrips(trips) {
     return trips.filter(trip => moment(trip.date).date() == moment().date());
 }
 
+function estimatePromise(distance, user, currency, type = 'passenger') {
+    const fact = { type, mts: distance, operations: [], dayOfWeek: moment().day(), hour: moment().hour() };
+
+    return new Promise((resolve, reject) => Trip.findByUser(user, (err, trips) => err ? reject(err) : resolve(trips)))
+        .then(trips => {
+            fact.tripCount = trips.length;
+            fact.last30minsTripCount = getLast30MinsTrips(trips).length;
+            fact.todayTripCount = getTodayTrips(trips).length;
+
+            return new Promise((resolve, reject) =>
+                ApplicationUser.findById(user, (err, user) => err ? reject(err) : resolve(user)));
+        }).then(user => {
+            if (!user) return Promise.reject({ code: 400, message: `El usuario ${user} no existe` });
+
+            /* Si en el body del request se indica el cost entonces se toma el currency aqui para obtener el balance del usuario */
+            fact.pocketBalance = user.getBalance(currency);
+            fact.email = user.email;
+
+            return new Promise((resolve, reject) =>
+                Rule.findActive((err, rules) => err ? reject(err) : resolve(rules)));
+        }).then(rules => {
+            const jsonRules = rules.map(rule => rule.blob);
+            return ruleHandler.checkFromJson(fact, jsonRules);
+        });
+}
+
+
 exports.estimate = function (req, res) {
-    const { start, end, passenger, distance, cost } = req.body;
+    const { start, end, passenger, distance, cost = { currency: DEF_CURRENCY, value: 0 } } = req.body;
     if (!passenger) return sendMsgCodeResponse(res, 'Falta parametro de pasajero', 400);
     if (!distance && (!start || !end)) return sendMsgCodeResponse(res, 'Faltan parametros para calcular distancia', 400);
 
@@ -107,31 +221,11 @@ exports.estimate = function (req, res) {
         return sendMsgCodeResponse(res, 'Error al obtener distancia de viaje', 400);
     }
 
-    const currency = 'ARS';
+    const currency = cost.currency;
 
-    const fact = { type: 'passenger', mts, operations: [], dayOfWeek: moment().day(), hour: moment().hour() };
-    new Promise((resolve, reject) => Trip.findByUser(passenger, (err, trips) => err ? reject(err) : resolve(trips)))
-        .then(trips => {
-            fact.tripCount = trips.length;
-            fact.last30minsTripCount = getLast30MinsTrips(trips).length;
-            fact.todayTripCount = getTodayTrips(trips).length;
-
-            return new Promise((resolve, reject) =>
-                ApplicationUser.findById(passenger, (err, user) => err ? reject(err) : resolve(user)));
-        }).then(user => {
-            if (!user) return sendMsgCodeResponse(res, 'El usuario no existe', 400);
-
-            /* Si en el body del request se indica el cost entonces se toma el currency aqui para obtener el balance del usuario */
-            fact.pocketBalance = cost ? user.getBalance(cost.currency) : user.getBalance(currency);
-            fact.email = user.email;
-
-            return new Promise((resolve, reject) =>
-                Rule.findActive((err, rules) => err ? reject(err) : resolve(rules)));
-        }).then(rules => {
-            const jsonRules = rules.map(rule => rule.blob);
-            return ruleHandler.checkFromJson(fact, jsonRules);
-        }).then(result => {
-            if (result.cannotTravel) return sendMsgCodeResponse(res, 'El pasajero debe normalizar su situación de pago', 402);
+    estimatePromise(mts, passenger, currency)
+        .then(result => {
+            if (result.cannotTravel) return Promise.reject({ code: 402, message: 'El pasajero debe normalizar su situación de pago' });
 
             const metadata = { version: apiVersion };
             if (result.free) return res.send({ metadata, cost: { currency, value: 0 } });
@@ -143,5 +237,10 @@ exports.estimate = function (req, res) {
             });
             console.log('Total: ' + amount);
             return res.send({ metadata, cost: { currency, value: amount } });
-        }).catch(err => sendMsgCodeResponse(res, 'Error en la BBDD al calcular el viaje', 500));
+        }).catch(err => {
+            console.error(err);
+            const { code, message } = err;
+            if (err instanceof Error) return sendMsgCodeResponse(res, message, 500);
+            else return sendMsgCodeResponse(res, message, code);
+        });
 };
