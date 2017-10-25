@@ -77,6 +77,7 @@ function postTrip(req, res) {
     const metadata = { version: apiVersion };
     const cost = { currency, value: 0 };
     const { distance, passenger, driver } = trip;
+    let responseSent = false;
 
     /* TODO : USAR EL API DE PAGOS PARA PAGAR EL VIAJE QUE SE ESTA DANDO DE ALTA */
     Trip.insert(trip, (err, dbTrip) => {
@@ -126,17 +127,31 @@ function postTrip(req, res) {
                 // Descuento el saldo del pasajero
                 return new Promise((resolve, reject) => ApplicationUser.pay(passenger, cost, err => {
                     if (err) return reject(err);
+                    responseSent = true; // indico que se enviara una respuesta al usuario
                     res.status(201);
-                    return res.send({ metadata, trip, success: dbTransaction.done });
+                    res.send({ metadata, trip: dbTrip, success: dbTransaction.done });
+                    resolve(driver);
                 }));
+            })
+            .then(driver => estimatePromise(distance, driver, currency, 'driver'))
+            .then(result => {
+                let amount = 0;
+                result.operations.forEach(operation => amount = operation(amount));
+                console.log('Ganancia del conductor: ' + amount);
+                ApplicationUser.earn(driver, { currency, value: amount }, EMPTY_CALLBACK);
             })
             .catch(err => {
                 console.error(err);
+                // Si ocurrio un error, se elimina el viaje cargado
                 Trip.delete(dbTrip, EMPTY_CALLBACK);
-                const { code, message } = err;
-                if (err instanceof Error) return sendMsgCodeResponse(res, message, 500);
-                else return sendMsgCodeResponse(res, message, code);
+                // evitar enviar la respuesta dos veces
+                if (!responseSent) {
+                    const { code, message } = err;
+                    if (err instanceof Error) return sendMsgCodeResponse(res, message, 500);
+                    else return sendMsgCodeResponse(res, message, code);
+                }
             });
+
     });
 }
 
@@ -166,19 +181,19 @@ function getTodayTrips(trips) {
     return trips.filter(trip => moment(trip.date).date() == moment().date());
 }
 
-function estimatePromise(distance, passenger, currency) {
-    const fact = { type: 'passenger', mts: distance, operations: [], dayOfWeek: moment().day(), hour: moment().hour() };
+function estimatePromise(distance, user, currency, type = 'passenger') {
+    const fact = { type, mts: distance, operations: [], dayOfWeek: moment().day(), hour: moment().hour() };
 
-    return new Promise((resolve, reject) => Trip.findByUser(passenger, (err, trips) => err ? reject(err) : resolve(trips)))
+    return new Promise((resolve, reject) => Trip.findByUser(user, (err, trips) => err ? reject(err) : resolve(trips)))
         .then(trips => {
             fact.tripCount = trips.length;
             fact.last30minsTripCount = getLast30MinsTrips(trips).length;
             fact.todayTripCount = getTodayTrips(trips).length;
 
             return new Promise((resolve, reject) =>
-                ApplicationUser.findById(passenger, (err, user) => err ? reject(err) : resolve(user)));
+                ApplicationUser.findById(user, (err, user) => err ? reject(err) : resolve(user)));
         }).then(user => {
-            if (!user) return Promise.reject({ code: 400, message: `El usuario ${passenger} no existe` });
+            if (!user) return Promise.reject({ code: 400, message: `El usuario ${user} no existe` });
 
             /* Si en el body del request se indica el cost entonces se toma el currency aqui para obtener el balance del usuario */
             fact.pocketBalance = user.getBalance(currency);

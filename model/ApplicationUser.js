@@ -173,7 +173,7 @@ ApplicationUser.findByFbToken = function (fbtoken, app, callback) {
         }).catch(callback);
 };
 
-
+/* Disminuye el saldo del usuario */
 ApplicationUser.pay = function (user, cost, callback) {
     const userId = user.id || user;
     ApplicationUser.findById(userId, (err, dbUser) => {
@@ -188,6 +188,11 @@ ApplicationUser.pay = function (user, cost, callback) {
             .then(([upUsr]) => callback(null, fromObj(upUsr)))
             .catch(cause => callback(cause));
     });
+};
+
+/* Incrementa el saldo del usuario */
+ApplicationUser.earn = function (user, { currency, value }, callback) {
+    ApplicationUser.pay(user, { currency, value: -value }, callback);
 };
 
 ApplicationUser.prototype.validate = function (password, fbToken) {
