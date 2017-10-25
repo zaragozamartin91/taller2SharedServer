@@ -72,20 +72,20 @@ function postTrip(req, res) {
     const serverId = req.serverId;
     trip.applicationOwner = serverId;
 
-    /* Intento obtener el currency del paymethod. Si no esta ahi, lo intento obtener del cost */
-    const cost = trip.cost || { currency: DEF_CURRENCY };
-    const currency = paymethod.currency || cost.currency;
+    /* IMPORTANTE: SE DEBE PASAR LA MONEDA EN EL paymethod AUNQUE NO LO INDIQUE */
+    const currency = paymethod.currency || DEF_CURRENCY;
+    const metadata = { version: apiVersion };
+    const cost = { currency, value: 0 };
+    const { distance, passenger, driver } = trip;
 
     /* TODO : USAR EL API DE PAGOS PARA PAGAR EL VIAJE QUE SE ESTA DANDO DE ALTA */
     Trip.insert(trip, (err, dbTrip) => {
         if (err) return sendMsgCodeResponse(res, 'Error en la BBDD al insertar el viaje', 500);
-        const { distance, passenger } = trip;
 
         estimatePromise(distance, passenger, currency)
             .then(result => {
                 if (result.cannotTravel) return Promise.reject({ code: 400, message: 'El pasajero debe normalizar su situación de pago' });
 
-                const metadata = { version: apiVersion };
                 // si el viaje resulta gratis, no se efectua ningun pago y se responde al cliente   
                 if (result.free) {
                     dbTrip.cost = { currency, value: 0 };
@@ -94,51 +94,48 @@ function postTrip(req, res) {
                 }
 
                 /* Si el viaje no es gratis, calculo su costo */
-                let amount = 0;
-                result.operations.forEach(op => amount = op(amount));
-                console.log('Total: ' + amount);
+                result.operations.forEach(operation => cost.value = operation(cost.value));
+                console.log('Total: ' + cost.value);
+                dbTrip.cost = cost;
 
                 // transactionId, currency, value, { parameters, paymethod }
                 const transactionId = generateTransaction(trip);
-                const paymentData = paymentUtils.buildPaymentData(transactionId, currency, amount, paymethod);
+                const paymentData = paymentUtils.buildPaymentData(transactionId, currency, cost.value, paymethod);
 
-                return new Promise((resolve, reject) =>
-                    paymentUtils.postPayment(paymentData, (err, payment) => {
-                        payment.success = true;
-                        if (err) {
-                            console.error('Error en el pago');
-                            console.error(err);
-                            payment.success = false;
-                        }
-                        resolve(payment);
-                    }));
-
-            }).then(payment => {
-                const metadata = { version: apiVersion };
-                const { currency, value } = payment;
-                const cost = { currency, value };
-                dbTrip.cost = cost;
-
-                //Se inserta una transaccion para el pasajero
-                const transObj = {
-                    id: payment.transaction_id, currency, value,
-                    appusr: passenger, trip: dbTrip.id, done: payment.success
-                };
-                Transaction.insert(transObj, (err, dbTransaction) => {
+                return new Promise((resolve, reject) => paymentUtils.postPayment(paymentData, (err, payment) => {
+                    // si hay un error en el pago, lo indico con un flag y continuamos con la operacion
+                    payment.success = err ? false : true;
                     if (err) {
-                        console.error('Error al insertar transaccion');
+                        console.error('Error en el pago');
                         console.error(err);
                     }
+                    resolve(payment);
+                }));
+
+            }).then(payment => {
+                //Se inserta una transaccion para el pasajero
+                const transObj = {
+                    id: payment.transaction_id, currency, value: cost.value,
+                    appusr: passenger, trip: dbTrip.id, done: payment.success
+                };
+
+                return new Promise((resolve, reject) => Transaction.insert(transObj,
+                    (err, dbTransaction) => err ? reject(err) : resolve(dbTransaction)));
+            })
+            .then(dbTransaction => {
+                // Descuento el saldo del pasajero
+                return new Promise((resolve, reject) => ApplicationUser.pay(passenger, cost, err => {
+                    if (err) return reject(err);
                     res.status(201);
-                    return res.send({ metadata, trip: dbTrip });
-                });
+                    return res.send({ metadata, trip, success: dbTransaction.done });
+                }));
             })
             .catch(err => {
                 console.error(err);
                 Trip.delete(dbTrip, EMPTY_CALLBACK);
                 const { code, message } = err;
-                if (code && message) return sendMsgCodeResponse(res, message, code);
-                sendMsgCodeResponse(res, 'Error en la BBDD al insertar el viaje', 500);
+                if (err instanceof Error) return sendMsgCodeResponse(res, message, 500);
+                else return sendMsgCodeResponse(res, message, code);
             });
     });
 }
@@ -226,9 +223,9 @@ exports.estimate = function (req, res) {
             console.log('Total: ' + amount);
             return res.send({ metadata, cost: { currency, value: amount } });
         }).catch(err => {
-            const { code, message } = err;
-            if (code && message) return sendMsgCodeResponse(res, message, code);
             console.error(err);
-            return sendMsgCodeResponse(res, 'Error en la BBDD al calcular el viaje', 500);
+            const { code, message } = err;
+            if (err instanceof Error) return sendMsgCodeResponse(res, message, 500);
+            else return sendMsgCodeResponse(res, message, code);
         });
 };
