@@ -93,6 +93,7 @@ router.get('/trips/:tripId', tokenValidator.verifyServerOrRoleToken('user'), tri
 router.get('/trips', tokenValidator.verifyServerOrRoleToken('user'), tripsController.getTrips);
 router.post('/trips', tokenValidator.verifyServerToken, tripsController.postTrip);
 router.post('/trips/estimate', tokenValidator.verifyServerToken, tripsController.estimate);
+router.post('/trips', tokenValidator.verifyServerToken, tripsController.postTrip);
 /* FIN trips ROUTES ------------------------------------------------------------------------------------------------------- */
 
 

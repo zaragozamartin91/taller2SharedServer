@@ -131,17 +131,17 @@ exports.getPaymethods = function (req, res) {
 /* PERFORM PAYMENT ------------------------------------------------------------------------------------------------------------- */
 
 function buildPaymentData(transactionId, currency, value, { parameters, paymethod }) {
-    const { expiration_month, expiration_year, number, type } = parameters;
+    console.log('buildPaymentData');
     return {
         'transaction_id': transactionId,
-        currency,
-        value,
+        currency: currency,
+        value: value,
         paymentMethod: {
-            expiration_month,
-            expiration_year,
+            expiration_month: parameters.expiration_month,
+            expiration_year: parameters.expiration_year,
             'method': paymethod || 'card',
-            type,
-            number
+            type: parameters.type,
+            number: parameters.number
         }
     };
 }

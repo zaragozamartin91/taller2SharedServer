@@ -102,7 +102,7 @@ function postTrip(req, res) {
 
                 // transactionId, currency, value, { parameters, paymethod }
                 const transactionId = generateTransaction(trip);
-                const paymentData = { transactionId, currency, amount, paymethod };
+                const paymentData = paymentUtils.buildPaymentData(transactionId, currency, amount, paymethod);
 
                 return new Promise((resolve, reject) =>
                     paymentUtils.postPayment(paymentData, (err, payment) => {
