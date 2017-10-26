@@ -278,7 +278,7 @@ const Users = React.createClass({
         }
 
         const userCards = this.state.users.map(user => (
-            <Card style={{ marginTop: '15px' }}>
+            <Card >
                 <CardHeader
                     title={user.id}
                     subtitle={user.username}

@@ -89,6 +89,7 @@ router.post('/payment', paymethodsController.testPayment);
 
 /* trips ROUTES ------------------------------------------------------------------------------------------------------- */
 router.use('/trips', tokenValidator.verifyToken);
+router.get('/trips/server/:serverId', tokenValidator.verifyManagerToken, tripsController.getServerTrips);
 router.get('/trips/:tripId', tokenValidator.verifyServerOrRoleToken('user'), tripsController.getTrip);
 router.get('/trips', tokenValidator.verifyServerOrRoleToken('user'), tripsController.getTrips);
 router.post('/trips', tokenValidator.verifyServerToken, tripsController.postTrip);

@@ -12,6 +12,7 @@ import Snackbar from 'material-ui/Snackbar';
 import axios from 'axios';
 
 import Header from './Header';
+import Trips from './Trips';
 
 /* FIN DE IMPORTS -------------------------------------------------------------------------------------- */
 
@@ -32,7 +33,8 @@ const Servers = React.createClass({
         return {
             servers: [],
             snackbarOpen: false,
-            snackbarMessage: ''
+            snackbarMessage: '',
+            tripsServer: null
         };
     },
 
@@ -65,6 +67,7 @@ const Servers = React.createClass({
         this.setState({ snackbarOpen: false });
     },
 
+    /* TODO: HACER LLAMADA A APP SERVER */
     checkServer(server) {
         const self = this;
         return function () {
@@ -73,36 +76,52 @@ const Servers = React.createClass({
         };
     },
 
+    viewTrips(server) {
+        const self = this;
+        return function () {
+            self.setState({ tripsServer: server });
+        };
+    },
+
     render() {
-        const serverCards = this.state.servers.map(server => {
-            const style = JSON.parse(JSON.stringify(CARD_STYLES[server.status]));
-            style.marginTop = '15px';
-            return (
-                <Card style={style}>
-                    <CardHeader
-                        title={server.id}
-                        subtitle={server.name} />
-                    <CardText expandable={false}>
-                        Creado por: {server.createdBy} <br />
-                        Creado en: {server.createdTime} <br />
-                        Ultima conexion: {server.lastConnection} <br />
-                    </CardText>
-                    <CardActions>
-                        <FlatButton label="Verificar" onClick={this.checkServer(server)} />
-                    </CardActions>
-                </Card>
-            );
-        });
+        let mainView;
+        if (this.state.tripsServer) {
+            console.log('Renderizando vista de viajes');
+            mainView = <Trips
+                server={this.state.tripsServer}
+                token={this.props.token}
+                goBack={() => this.setState({ tripsServer: null })} />;
+        } else {
+            console.log('Renderizando vista de servidores');
+            mainView = this.state.servers.map(server => {
+                const style = JSON.parse(JSON.stringify(CARD_STYLES[server.status]));
+                return (
+                    <Card style={style}>
+                        <CardHeader
+                            title={server.id}
+                            subtitle={server.name} />
+                        <CardText expandable={false}>
+                            Creado por: {server.createdBy} <br />
+                            Creado en: {server.createdTime} <br />
+                            Ultima conexion: {server.lastConnection} <br />
+                        </CardText>
+                        <CardActions>
+                            <FlatButton label="Verificar" onClick={this.checkServer(server)} />
+                            <FlatButton label="Viajes" onClick={this.viewTrips(server)} />
+                        </CardActions>
+                    </Card>
+                );
+            });
+        }
 
         return (
             <div>
-                {serverCards}
+                {mainView}
                 <Snackbar
                     open={this.state.snackbarOpen}
                     message={this.state.snackbarMessage}
                     autoHideDuration={3000}
-                    onRequestClose={this.handleSnackbarRequestClose}
-                />
+                    onRequestClose={this.handleSnackbarRequestClose} />
             </div >
         );
     }
