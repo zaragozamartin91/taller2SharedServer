@@ -103,4 +103,12 @@ Trip.delete = function (trip, callback) {
         .catch(cause => callback(cause));
 };
 
+Trip.findByServer = function (trip, callback) {
+    const tripId = trip.id || trip;
+    const sql = `SELECT * FROM ${TABLE} WHERE applicationowner=$1`;
+    dbManager.queryPromise(sql, [tripId])
+        .then(rows => callback(null, fromRows(rows)))
+        .catch(cause => callback(cause));
+};
+
 module.exports = Trip;

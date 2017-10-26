@@ -244,3 +244,12 @@ exports.estimate = function (req, res) {
             else return sendMsgCodeResponse(res, message, code);
         });
 };
+
+exports.getServerTrips = function (req, res) {
+    const serverId = req.params.serverId;
+    Trip.findByServer(serverId, (err, trips) => {
+        if (err) return sendMsgCodeResponse(res, err.message, 500);
+        const metadata = buildMetadata(trips.length);
+        res.send({ metadata, trips });
+    });
+};
