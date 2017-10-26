@@ -4,14 +4,12 @@ import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 import RaisedButton from 'material-ui/RaisedButton';
 import TextField from 'material-ui/TextField';
 import { Card, CardActions, CardHeader, CardText } from 'material-ui/Card';
-import Checkbox from 'material-ui/Checkbox';
 import FlatButton from 'material-ui/FlatButton';
 import Dialog from 'material-ui/Dialog';
 import Snackbar from 'material-ui/Snackbar';
 
 import Paper from 'material-ui/Paper';
 import { BottomNavigation, BottomNavigationItem } from 'material-ui/BottomNavigation';
-import FontIcon from 'material-ui/FontIcon';
 
 import axios from 'axios';
 
@@ -19,7 +17,11 @@ import Header from './Header';
 
 /* FIN DE IMPORTS -------------------------------------------------------------------------------------- */
 
-const recentsIcon = <FontIcon className="material-icons">restore</FontIcon>;
+//const goBackIcon = <FontIcon className="material-icons">restore</FontIcon>;
+const goBackIcon = <img
+    src="/images/ic_restore_white_24px.svg"
+    alt="Volver"
+    style={{ width: 25, height: 25, display: 'inline' }} />;
 
 const EMPTY_CALLBACK = () => { };
 
@@ -104,14 +106,14 @@ const Trips = React.createClass({
                     autoHideDuration={3000}
                     onRequestClose={this.handleSnackbarRequestClose} />
 
-                <Paper zDepth={1}>
-                    <BottomNavigation selectedIndex={this.state.selectedIndex}>
-                        <BottomNavigationItem
-                            label="Volver"
-                            icon={recentsIcon}
-                            onClick={this.props.goBack} />
-                    </BottomNavigation>
-                </Paper>
+
+                <BottomNavigation style={{ backgroundColor: '#00BCD4', width: '100%', color: 'white' }}>
+                    <BottomNavigationItem style={{ color: 'white' }}
+                        label="Volver"
+                        icon={goBackIcon}
+                        onClick={this.props.goBack} />
+                </BottomNavigation>
+
             </div >
         );
     }
