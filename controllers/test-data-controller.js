@@ -7,6 +7,7 @@ const ApplicationUser = require('../model/ApplicationUser');
 const Car = require('../model/Car');
 const Trip = require('../model/Trip');
 const Rule = require('../model/Rule');
+const Hit = require('../model/Hit');
 const ruleHandler = require('../utils/rule-handler');
 
 const tableManager = require('../model/table-manager');
@@ -49,6 +50,10 @@ exports.createTestData = function (req, res) {
         callback => {
             logger.debug('Creando tabla de transacciones');
             tableManager.createTransactionsTable(() => callback());
+        },
+        callback => {
+            logger.debug('Creando tabla de hits');
+            tableManager.createHitTable(() => callback());
         },
         callback => {
             logger.debug('Insertando usuario');
@@ -265,6 +270,10 @@ exports.createTestData = function (req, res) {
 
 exports.deleteTestData = function (req, res) {
     flow.series([
+        callback => {
+            logger.debug('Eliminando tabla de hits');
+            tableManager.dropHitTable(() => callback());
+        },
         callback => {
             logger.debug('Eliminando tabla de transacciones');
             tableManager.dropTransactionsTable(() => callback());

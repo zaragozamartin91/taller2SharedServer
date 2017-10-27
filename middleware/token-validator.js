@@ -3,6 +3,7 @@ const responseUtils = require('../utils/response-utils');
 const BusinessUser = require('../model/BusinessUser');
 const Role = require('../model/Role');
 const TokenModel = require('../model/Token');
+const Hit = require('../model/Hit');
 const requestTokenGetter = require('../utils/request-token-getter');
 const logger = require('log4js').getLogger('token-validator');
 
@@ -58,10 +59,21 @@ function verifyServerToken(req, res, next) {
     const serverId = decodedToken.id;
     if (!serverId) return sendMsgCodeResponse(res, 'No autorizado', 401);
 
+    console.log(req.url);
+    console.log(req.baseUrl);
+    console.log(req.originalUrl);
+
     TokenModel.findByOwner(serverId, (err, token) => {
         if (err) return sendMsgCodeResponse(res, `Ocurrio un error al verificar el token de ${serverId}`, 500);
         if (token) {
             req.serverId = serverId;
+
+            // agrego un hit a la url por parte del server
+            Hit.insert({ server: serverId, url: req.url }, (err, dbHit) => {
+                if (err) return logger.error(err);
+                else logger.info(`Hit de ${dbHit.server} a ${dbHit.url} insertado!`);
+            });
+
             logger.debug(`Token de server ${serverId} identificado`);
             return next();
         }

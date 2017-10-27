@@ -7,6 +7,7 @@ const TokenModel = require('./Token');
 const Trip = require('./Trip');
 const Rule = require('./Rule');
 const Transaction = require('./Transaction');
+const Hit = require('./Hit');
 
 const dbManager = require('./db-manager');
 const logger = require('log4js').getLogger('table-manager');
@@ -231,6 +232,35 @@ exports.createTransactionsTable = function (callback) {
 
 exports.dropTransactionsTable = function (callback) {
     const sql = `DROP TABLE ${Transaction.table}`;
+    dbManager.queryPromise(sql, [])
+        .then(() => callback())
+        .catch(cause => {
+            console.error(cause);
+            callback();
+        });
+};
+
+
+// Hit -------------------------------------------------------------------------------------------------------
+
+//id, server, url, date
+exports.createHitTable = function (callback) {
+    const sql = `CREATE TABLE ${Hit.table} (
+        id SERIAL PRIMARY KEY, 
+        server ${ApplicationServer.idType} REFERENCES ${ApplicationServer.table}(id) ON DELETE CASCADE ,
+        url VARCHAR(32),
+        date TIMESTAMP DEFAULT now(),
+    )`;
+    dbManager.queryPromise(sql, [])
+        .then(() => callback())
+        .catch(cause => {
+            console.error(cause);
+            callback();
+        });
+};
+
+exports.dropHitTable = function (callback) {
+    const sql = `DROP TABLE ${Hit.table}`;
     dbManager.queryPromise(sql, [])
         .then(() => callback())
         .catch(cause => {
