@@ -13,6 +13,7 @@ import axios from 'axios';
 
 import Header from './Header';
 import Trips from './Trips';
+import HitStats from './HitStats';
 
 /* FIN DE IMPORTS -------------------------------------------------------------------------------------- */
 
@@ -34,7 +35,8 @@ const Servers = React.createClass({
             servers: [],
             snackbarOpen: false,
             snackbarMessage: '',
-            tripsServer: null
+            tripsServer: null,
+            hitsServer: null,
         };
     },
 
@@ -83,6 +85,14 @@ const Servers = React.createClass({
         };
     },
 
+    viewHits(server) {
+        const self = this;
+        return function () {
+            self.setState({ hitsServer: server });
+        };
+    },
+
+
     render() {
         let mainView;
         if (this.state.tripsServer) {
@@ -91,6 +101,12 @@ const Servers = React.createClass({
                 server={this.state.tripsServer}
                 token={this.props.token}
                 goBack={() => this.setState({ tripsServer: null })} />;
+        } else if (this.state.hitsServer) {
+            console.log('Renderizando vista de estadisticas de endpoints');
+            mainView = <HitStats
+                server={this.state.hitsServer}
+                token={this.props.token}
+                goBack={() => this.setState({ hitsServer: null })} />;
         } else {
             console.log('Renderizando vista de servidores');
             mainView = this.state.servers.map(server => {
@@ -108,6 +124,7 @@ const Servers = React.createClass({
                         <CardActions>
                             <FlatButton label="Verificar" onClick={this.checkServer(server)} />
                             <FlatButton label="Viajes" onClick={this.viewTrips(server)} />
+                            <FlatButton label="Hits" onClick={this.viewHits(server)} />
                         </CardActions>
                     </Card>
                 );
