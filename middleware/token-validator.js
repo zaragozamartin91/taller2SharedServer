@@ -69,7 +69,7 @@ function verifyServerToken(req, res, next) {
             req.serverId = serverId;
 
             // agrego un hit a la url por parte del server
-            Hit.insert({ server: serverId, url: req.url }, (err, dbHit) => {
+            Hit.insert({ server: serverId, method: req.method, url: req.url }, (err, dbHit) => {
                 if (err) return logger.error(err);
                 else logger.info(`Hit de ${dbHit.server} a ${dbHit.url} insertado!`);
             });
