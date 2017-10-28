@@ -27,4 +27,11 @@ Hit.insert = function (hitObj, callback) {
         .catch(callback);
 };
 
+Hit.countByDay = function (callback) {
+    const sql = `select count(id) as count, extract(day from h.date) as day from ${table} as h group by day`;
+    dbManager.queryPromise(sql, [])
+        .then(rows => callback(null, rows))
+        .catch(callback);
+};
+
 module.exports = Hit;
