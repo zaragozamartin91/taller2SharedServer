@@ -141,7 +141,8 @@ function buildPaymentData(transactionId, currency, value, { parameters, paymetho
             expiration_year: parameters.expiration_year,
             'method': paymethod || 'card',
             type: parameters.type,
-            number: parameters.number
+            number: parameters.number,
+            ccvv: parameters.ccvv
         }
     };
 }

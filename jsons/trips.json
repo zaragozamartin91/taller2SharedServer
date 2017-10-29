@@ -1,45 +1,45 @@
 [
-    {
-        "trip": {
-          "driver": "llevame-mzaragoza",
-          "passenger": "llevame-quelopario",
-          "start": {
-            "address": { "street": "Sto domingo 1180", "location": { "lat": -34.497956, "lon": -58.534823 } },
-            "timestamp": 1234
-          },
-          "end": {
-            "address": {
-              "street": "Maipu 1234",
-              "location": {
-                "lat": -34.497800, 
-                "lon": -58.497652
-              }
-            },
-            "timestamp": 5678
-          },
-          "totalTime": 600,
-          "waitTime": 60,
-          "travelTime": 540,
-          "distance": 4300,
-          "route": [
-            {
-              "location": {
-                "lat": 0,
-                "lon": 0
-              },
-              "timestamp": 456
-            }
-          ],
-          "cost": {
-            "currency": "ARS",
-            "value": 350.25
+  {
+    "trip": {
+      "driver": "llevame-mzaragoza",
+      "passenger": "llevame-quelopario",
+      "start": {
+        "address": { "street": "Sto domingo 1180", "location": { "lat": -34.497956, "lon": -58.534823 } },
+        "timestamp": 1509237426992
+      },
+      "end": {
+        "address": {
+          "street": "Maipu 1234",
+          "location": {
+            "lat": -34.497800, 
+            "lon": -58.497652
           }
         },
-        "paymethod": {
-          "paymethod": "card",
-          "parameters": {
-              "expiration_month":"12", "expiration_year":"19", "number":"1111222233334444", "type":"visa"
-          }
+        "timestamp": 1509238026992
+      },
+      "totalTime": 600,
+      "waitTime": 60,
+      "travelTime": 540,
+      "distance": 4300,
+      "route": [
+        {
+          "location": {
+            "lat": 0,
+            "lon": 0
+          },
+          "timestamp": 1509238026692
         }
+      ],
+      "cost": {
+        "currency": "ARS",
+        "value": 350.25
       }
+    },
+    "paymethod": {
+      "paymethod": "card",
+      "parameters": {
+          "expiration_month":"12", "expiration_year":"19", "number":"1111222233334444", "type":"visa", "ccvv":123
+      }
+    }
+  }
 ]

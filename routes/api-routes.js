@@ -78,6 +78,8 @@ router.post('/users/:userId/cars', tokenValidator.verifyServerToken, appUserCont
 router.delete('/users/:userId/cars/:carId', tokenValidator.verifyServerOrRoleToken('manager'), appUserController.deleteUserCar);
 router.get('/users/:userId/cars/:carId', tokenValidator.verifyServerOrRoleToken('user'), appUserController.getUserCar);
 router.put('/users/:userId/cars/:carId', tokenValidator.verifyServerToken, appUserController.updateUserCar);
+
+router.get('/users/:userId/transactions', tokenValidator.verifyServerOrRoleToken('user'), appUserController.getUserTransactions);
 /* FIN users ROUTES ----------------------------------------------------------------------------------------------------------------- */
 
 /* paymethods ROUTES ------------------------------------------------------------------------------------------------------- */

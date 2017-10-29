@@ -1,6 +1,7 @@
 const ApplicationUser = require('../model/ApplicationUser');
 const Car = require('../model/Car');
 const Trip = require('../model/Trip');
+const Transaction = require('../model/Transaction');
 
 const mainConf = require('../config/main-config');
 const logger = require('log4js').getLogger('app-user-controller');
@@ -39,6 +40,11 @@ function findUserAndDo({ serverId, params: { userId } }, callback) {
     Caso contrario, se invoco usando un BusinessToken */
     if (serverId) return ApplicationUser.findByIdAndApp(userId, serverId, callback);
     else return ApplicationUser.findById(userId, callback);
+}
+
+function findUserPromise(req) {
+    return new Promise((resolve, reject) =>
+        findUserAndDo(req, (err, usr) => err ? reject(err) : resolve(usr)));
 }
 
 /**
@@ -272,4 +278,20 @@ exports.getUserTrips = function (req, res) {
             res.send({ metadata, trips });
         });
     });
+};
+
+exports.getUserTransactions = function (req, res) {
+    findUserPromise(req)
+        .then(usr => {
+            if (!usr) return Promise.reject({ code: 404, message: 'El usuario no existe' });
+            return new Promise((resolve, reject) =>
+                Transaction.getByUser(usr, (err, txs) => err ? reject(err) : resolve(txs)));
+        }).then(transactions => {
+            const metadata = buildMetadata(transactions.length);
+            res.send({ metadata, transactions });
+        })
+        .catch(err => {
+            if (err instanceof Error) return sendMsgCodeResponse(res, err.message, 500);
+            return sendMsgCodeResponse(res, err.message, err.code);
+        });
 };

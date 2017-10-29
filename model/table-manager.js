@@ -214,13 +214,14 @@ exports.dropRulesTable = function (callback) {
 //id, currency, value, date, user, trip, done
 exports.createTransactionsTable = function (callback) {
     const sql = `CREATE TABLE ${Transaction.table} (
-        id VARCHAR(128) PRIMARY KEY, 
+        id VARCHAR(128), 
         currency VARCHAR(3) NOT NULL,
         value DECIMAL(9,2),
         date TIMESTAMP DEFAULT now(),
         appusr ${ApplicationUser.idType} REFERENCES ${ApplicationUser.table}(id) ON DELETE CASCADE,
         trip ${Trip.idType} REFERENCES ${Trip.TABLE}(id) ON DELETE CASCADE,
-        done BOOLEAN
+        done BOOLEAN,
+        UNIQUE (id,appusr)
     )`;
     dbManager.queryPromise(sql, [])
         .then(() => callback())

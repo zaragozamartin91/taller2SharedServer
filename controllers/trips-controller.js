@@ -15,7 +15,9 @@ const apiVersion = mainConf.apiVersion;
 
 const DEF_CURRENCY = 'ARS';
 
-const EMPTY_CALLBACK = function () { };
+const EMPTY_CALLBACK = function (err) {
+    if (err) console.error(err);
+};
 
 /* FIN DE IMPORTS ----------------------------------------------------------------------------------------------------- */
 
@@ -78,6 +80,7 @@ function postTrip(req, res) {
     const cost = { currency, value: 0 };
     const { distance, passenger, driver } = trip;
     let responseSent = false;
+    let passengerTransaction;
 
     /* TODO : USAR EL API DE PAGOS PARA PAGAR EL VIAJE QUE SE ESTA DANDO DE ALTA */
     Trip.insert(trip, (err, dbTrip) => {
@@ -115,8 +118,9 @@ function postTrip(req, res) {
 
             }).then(payment => {
                 //Se inserta una transaccion para el pasajero
+                // Un pasajero al hacer un viaje debe crearse la transacción con signo negativo
                 const transObj = {
-                    id: payment.transaction_id, currency, value: cost.value,
+                    id: payment.transaction_id, currency, value: -cost.value,
                     appusr: passenger, trip: dbTrip.id, done: payment.success
                 };
 
@@ -124,6 +128,8 @@ function postTrip(req, res) {
                     (err, dbTransaction) => err ? reject(err) : resolve(dbTransaction)));
             })
             .then(dbTransaction => {
+                passengerTransaction = dbTransaction;
+
                 // Descuento el saldo del pasajero
                 return new Promise((resolve, reject) => ApplicationUser.pay(passenger, cost, err => {
                     if (err) return reject(err);
@@ -138,7 +144,16 @@ function postTrip(req, res) {
                 let amount = 0;
                 result.operations.forEach(operation => amount = operation(amount));
                 console.log('Ganancia del conductor: ' + amount);
+
+                // incremento las ganancias del chofer
                 ApplicationUser.earn(driver, { currency, value: amount }, EMPTY_CALLBACK);
+                /* inserto una transaccion de ganancia del chofer.
+                Estas transacciones siempre seran exitosas */
+                const transObj = {
+                    id: passengerTransaction.id, currency, value: amount,
+                    appusr: driver, trip: dbTrip.id, done: true
+                };
+                Transaction.insert(transObj, EMPTY_CALLBACK);
             })
             .catch(err => {
                 console.error(err);
