@@ -10,6 +10,8 @@ const paymethodsController = require('../controllers/paymethods-controller');
 const tripsController = require('../controllers/trips-controller');
 const rulesController = require('../controllers/rules-controller');
 
+const hitsController = require('../controllers/hits-controller');
+
 const router = express.Router();
 
 /** Api para obtener y reproducir el audio de una cancion */
@@ -104,6 +106,11 @@ router.post('/trips', tokenValidator.verifyServerToken, tripsController.postTrip
 router.use('/rules', tokenValidator.verifyToken);
 router.post('/rules', tokenValidator.verifyManagerToken, rulesController.postRule);
 /* FIN rules ROUTES ------------------------------------------------------------------------------------------------------- */
+
+/* hits ROUTES ------------------------------------------------------------------------------------------------------- */
+router.use('/hits', tokenValidator.verifyToken);
+router.get('/hits/:serverId', hitsController.countLastDayByHour);
+/* FIN hits ROUTES ------------------------------------------------------------------------------------------------------- */
 
 module.exports = router;
 

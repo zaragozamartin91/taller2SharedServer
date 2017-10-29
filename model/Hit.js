@@ -27,9 +27,15 @@ Hit.insert = function (hitObj, callback) {
         .catch(callback);
 };
 
-Hit.countByDay = function (callback) {
-    const sql = `select count(id) as count, extract(day from h.date) as day from ${table} as h group by day`;
-    dbManager.queryPromise(sql, [])
+
+Hit.countLastDayByHour = function (server, callback) {
+    const serverId = server.id || server;
+    const sql = `SELECT COUNT(id) AS count, EXTRACT(hour FROM h.date) AS hour 
+        FROM ${table} AS h 
+        WHERE h.date > NOW() + INTERVAL '-1 day' AND server=$1 
+        GROUP BY hour`;
+    const values = [serverId];
+    dbManager.queryPromise(sql, values)
         .then(rows => callback(null, rows))
         .catch(callback);
 };
