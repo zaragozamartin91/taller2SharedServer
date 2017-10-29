@@ -719,6 +719,61 @@ describe('app-user-controller', function () {
             appUserController.deleteUserCar(req, res);
         });
     });
+
+
+    describe('#getUserCar', function () {
+        it('Obtiene el auto de un usuario', function () {
+            const dbCar = Car.fromObj(carMock1);
+            const dbUser = ApplicationUser.fromObj(userMock1);
+            dbUser.cars[0] = dbCar;
+            sandbox.stub(ApplicationUser, 'findByIdAndApp')
+                .callsFake((userId, serverId, callback) => callback(null, dbUser));
+
+            const req = { serverId: dbUser.applicationOwner, params: { userId: dbUser.id, carId: dbCar.id }, body: {} };
+            const res = {
+                send({ metadata, car }) {
+                    assert.ok(metadata.version);
+                    assert.equal(dbCar, car);
+                }
+            };
+            appUserController.getUserCar(req, res);
+        });
+
+        it('Falla porque el auto no existe', function () {
+            const dbCar = Car.fromObj(carMock1);
+            const dbUser = ApplicationUser.fromObj(userMock1);
+            dbUser.cars[0] = dbCar;
+            sandbox.stub(ApplicationUser, 'findByIdAndApp')
+                .callsFake((userId, serverId, callback) => callback(null, dbUser));
+
+            const req = { serverId: dbUser.applicationOwner, params: { userId: dbUser.id, carId: 999999 }, body: {} };
+            const res = mockErrRes(404);
+            appUserController.getUserCar(req, res);
+        });
+
+
+        it('Falla porque ocurre un error en la bbdd', function () {
+            const dbUser = ApplicationUser.fromObj(userMock1);
+            sandbox.stub(ApplicationUser, 'findByIdAndApp')
+                .callsFake((userId, serverId, callback) => callback(new Error()));
+
+            const req = { serverId: dbUser.applicationOwner, params: { userId: dbUser.id }, body: {} };
+            const res = mockErrRes(500);
+            appUserController.getUserCar(req, res);
+        });
+
+        it('Falla porque el usuario no existe', function () {
+            const dbUser = ApplicationUser.fromObj(userMock1);
+            sandbox.stub(ApplicationUser, 'findByIdAndApp')
+                .callsFake((userId, serverId, callback) => callback());
+
+            const req = { serverId: dbUser.applicationOwner, params: { userId: dbUser.id }, body: {} };
+            const res = mockErrRes(404);
+            appUserController.getUserCar(req, res);
+        });
+    });
+
+
 });
 
 

@@ -7,6 +7,7 @@ const TokenModel = require('./Token');
 const Trip = require('./Trip');
 const Rule = require('./Rule');
 const Transaction = require('./Transaction');
+const Hit = require('./Hit');
 
 const dbManager = require('./db-manager');
 const logger = require('log4js').getLogger('table-manager');
@@ -213,13 +214,14 @@ exports.dropRulesTable = function (callback) {
 //id, currency, value, date, user, trip, done
 exports.createTransactionsTable = function (callback) {
     const sql = `CREATE TABLE ${Transaction.table} (
-        id VARCHAR(128) PRIMARY KEY, 
+        id VARCHAR(128), 
         currency VARCHAR(3) NOT NULL,
         value DECIMAL(9,2),
         date TIMESTAMP DEFAULT now(),
         appusr ${ApplicationUser.idType} REFERENCES ${ApplicationUser.table}(id) ON DELETE CASCADE,
         trip ${Trip.idType} REFERENCES ${Trip.TABLE}(id) ON DELETE CASCADE,
-        done BOOLEAN
+        done BOOLEAN,
+        UNIQUE (id,appusr)
     )`;
     dbManager.queryPromise(sql, [])
         .then(() => callback())
@@ -231,6 +233,36 @@ exports.createTransactionsTable = function (callback) {
 
 exports.dropTransactionsTable = function (callback) {
     const sql = `DROP TABLE ${Transaction.table}`;
+    dbManager.queryPromise(sql, [])
+        .then(() => callback())
+        .catch(cause => {
+            console.error(cause);
+            callback();
+        });
+};
+
+
+// Hit -------------------------------------------------------------------------------------------------------
+
+//id, server, url, date
+exports.createHitTable = function (callback) {
+    const sql = `CREATE TABLE ${Hit.table} (
+        id SERIAL PRIMARY KEY, 
+        server ${ApplicationServer.idType} REFERENCES ${ApplicationServer.table}(id) ON DELETE CASCADE ,
+        method VARCHAR(8),
+        url VARCHAR(32),
+        date TIMESTAMP DEFAULT now()
+    )`;
+    dbManager.queryPromise(sql, [])
+        .then(() => callback())
+        .catch(cause => {
+            console.error(cause);
+            callback();
+        });
+};
+
+exports.dropHitTable = function (callback) {
+    const sql = `DROP TABLE ${Hit.table}`;
     dbManager.queryPromise(sql, [])
         .then(() => callback())
         .catch(cause => {
