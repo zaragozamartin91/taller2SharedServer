@@ -110,6 +110,8 @@ function __getPaymethods(req, res, renewToken = false) {
         const items = contents.data.items || [];
         const metadata = buildMetadata(items.length);
         const paymethods = buildPaymethodsArray(items);
+        // agrego el campo currency para informar que lo necesito al dar de alta un viaje
+        paymethods.forEach(p => p.currency = 'string'); 
         res.send({ metadata, paymethods });
     }).catch(cause => {
         const statusCode = getStatusCode(cause);
@@ -130,7 +132,15 @@ exports.getPaymethods = function (req, res) {
 
 /* PERFORM PAYMENT ------------------------------------------------------------------------------------------------------------- */
 
-function buildPaymentData(transactionId, currency, value, { parameters, paymethod }) {
+/**
+ * Construye el objeto de pago para invocar al PUBLIC PAYMENTS API
+ * @param {string} transactionId Id de la transaccion local
+ * @param {string} currency Moneda (ej:'ARS')
+ * @param {number} value Cantidad a pagar
+ * @param {string} method Metodo de pago (ej:'card')
+ * @param {any} parameters Parametros de pago
+ */
+function buildPaymentData(transactionId, currency, value, method, parameters) {
     console.log('buildPaymentData');
     return {
         'transaction_id': transactionId,
@@ -139,7 +149,7 @@ function buildPaymentData(transactionId, currency, value, { parameters, paymetho
         paymentMethod: {
             expiration_month: parameters.expiration_month,
             expiration_year: parameters.expiration_year,
-            'method': paymethod || 'card',
+            method: method || 'card',
             type: parameters.type,
             number: parameters.number,
             ccvv: parameters.ccvv
