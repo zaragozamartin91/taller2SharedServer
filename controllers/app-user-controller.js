@@ -7,6 +7,7 @@ const mainConf = require('../config/main-config');
 const logger = require('log4js').getLogger('app-user-controller');
 const responseUtils = require('../utils/response-utils');
 const dataValidator = require('../utils/data-validator');
+const paymentUtils = require('../utils/payment-utils');
 const moment = require('moment');
 
 const apiVersion = mainConf.apiVersion;
@@ -280,18 +281,63 @@ exports.getUserTrips = function (req, res) {
     });
 };
 
+function handleError(res) {
+    return function (err) {
+        if (err instanceof Error) return sendMsgCodeResponse(res, err.message || 'Error inesperado', 500);
+        return sendMsgCodeResponse(res, err.message, err.code);
+    };
+}
+
 exports.getUserTransactions = function (req, res) {
     findUserPromise(req)
         .then(usr => {
             if (!usr) return Promise.reject({ code: 404, message: 'El usuario no existe' });
             return new Promise((resolve, reject) =>
-                Transaction.getByUser(usr, (err, txs) => err ? reject(err) : resolve(txs)));
+                Transaction.findByUser(usr, (err, txs) => err ? reject(err) : resolve(txs)));
         }).then(transactions => {
             const metadata = buildMetadata(transactions.length);
             res.send({ metadata, transactions });
         })
-        .catch(err => {
-            if (err instanceof Error) return sendMsgCodeResponse(res, err.message, 500);
-            return sendMsgCodeResponse(res, err.message, err.code);
-        });
+        .catch(handleError(res));
+};
+
+exports.postUserTransaction = function (req, res) {
+    let localTransactionId;
+    const body = req.body;
+
+    findUserPromise(req)
+        .then(usr => {
+            if (!usr) return Promise.reject({ code: 404, message: 'El usuario no existe' });
+            const txValidation = dataValidator.validateTransaction(body);
+            if (!txValidation.valid) return Promise.reject({ code: 400, message: txValidation.message });
+
+            // TODO: TERMINAR ALTA DE TRANSACCIONES MANUALES
+            localTransactionId = body.transaction.id;
+
+            return new Promise((resolve, reject) =>
+                Transaction.findByIdAndUser(localTransactionId, usr, (err, tx) =>
+                    err ? reject(err) : resolve(tx)));
+        })
+        .then(transaction => {
+            if (!transaction) return Promise.reject({ code: 404, message: 'La transaccion no existe' });
+
+            const paymethod = body.paymethod || body.paymentMethod;
+            const { currency, value } = transaction;
+
+            const method = paymethod.paymethod || paymethod.name; // metodo de pago, ej: 'card'
+            const parameters = paymethod.parameters || paymethod;
+            const paymentData = paymentUtils.buildPaymentData(localTransactionId, currency, value, method, parameters);
+
+            return new Promise((resolve, reject) =>
+                paymentUtils.postPayment(paymentData, (err, payment) =>
+                    err ? reject(err) : resolve(payment)));
+        })
+        .then(payment => {
+            Transaction.solve(localTransactionId, payment.transaction_id, (err, txs) => {
+                logger.debug('Transacciones actualizadas:');
+                logger.debug(txs);
+                res.send({ message: 'Pago exitoso!' });
+            });
+        })
+        .catch(handleError(res));
 };

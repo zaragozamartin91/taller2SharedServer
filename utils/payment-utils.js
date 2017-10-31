@@ -1,5 +1,5 @@
 const axios = require('axios');
-const logger = require('log4js').getLogger('paymethods-controller');
+const logger = require('log4js').getLogger('payment-utils');
 const mainConf = require('../config/main-config');
 const responseUtils = require('./response-utils');
 
@@ -10,9 +10,8 @@ const sendMsgCodeResponse = responseUtils.sendMsgCodeResponse;
 const API_VERSION = mainConf.apiVersion;
 const DEF_CLIENT_ID = 'ee04c1bd-bd98-4ac9-861e-cff1834e0386';
 const DEF_CLIENT_SECRET = '1e238cae-26ae-412d-a7e6-959e89980a13';
-const TOKEN_HOLDER = {
-    token: ''
-};
+
+const TOKEN_HOLDER = { token: '' };
 
 exports.TOKEN_HOLDER = TOKEN_HOLDER;
 
@@ -22,7 +21,7 @@ exports.TOKEN_HOLDER = TOKEN_HOLDER;
  * @return {string} Token de pago.
  */
 function updateToken(token) {
-    if (TOKEN_HOLDER.token != token) TOKEN_HOLDER.token = token;
+    if (TOKEN_HOLDER.token != token) { TOKEN_HOLDER.token = token; }
     return TOKEN_HOLDER.token;
 }
 
@@ -83,11 +82,14 @@ exports.buildPaymethodsArray = buildPaymethodsArray;
  * @param {any} cause Causa de un error.
  * @return {number} Codigo de error. 500 como valor por defecto. 
  */
-function getStatusCode({ request: { res: { statusCode = 500 } = {} } = {} } = {}) {
-    return statusCode;
+function getStatusCode(cause = { request: { res: { statusCode: 500 } } }) {
+    cause.request = cause.request || { res: { statusCode: 500 } };
+    cause.request.res = cause.request.res || { statusCode: 500 };
+    return cause.request.res.statusCode;
 }
 
 exports.getStatusCode = getStatusCode;
+
 
 
 function buildMetadata(count, total = count) {
@@ -110,6 +112,8 @@ function __getPaymethods(req, res, renewToken = false) {
         const items = contents.data.items || [];
         const metadata = buildMetadata(items.length);
         const paymethods = buildPaymethodsArray(items);
+        // agrego el campo currency para informar que lo necesito al dar de alta un viaje
+        paymethods.forEach(p => p.currency = 'string');
         res.send({ metadata, paymethods });
     }).catch(cause => {
         const statusCode = getStatusCode(cause);
@@ -130,7 +134,15 @@ exports.getPaymethods = function (req, res) {
 
 /* PERFORM PAYMENT ------------------------------------------------------------------------------------------------------------- */
 
-function buildPaymentData(transactionId, currency, value, { parameters, paymethod }) {
+/**
+ * Construye el objeto de pago para invocar al PUBLIC PAYMENTS API
+ * @param {string} transactionId Id de la transaccion local
+ * @param {string} currency Moneda (ej:'ARS')
+ * @param {number} value Cantidad a pagar
+ * @param {string} method Metodo de pago (ej:'card')
+ * @param {any} parameters Parametros de pago
+ */
+function buildPaymentData(transactionId, currency, value, method, parameters) {
     console.log('buildPaymentData');
     return {
         'transaction_id': transactionId,
@@ -139,7 +151,7 @@ function buildPaymentData(transactionId, currency, value, { parameters, paymetho
         paymentMethod: {
             expiration_month: parameters.expiration_month,
             expiration_year: parameters.expiration_year,
-            'method': paymethod || 'card',
+            method: method || 'card',
             type: parameters.type,
             number: parameters.number,
             ccvv: parameters.ccvv

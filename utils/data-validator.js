@@ -58,8 +58,6 @@ function validateRouteItem({ location: { lat, lon }, timestamp }) {
 }
 
 function __validateTrip({
-    id,
-    applicationOwner,
     driver,
     passenger,
     start,
@@ -68,8 +66,7 @@ function __validateTrip({
     waitTime,
     travelTime,
     distance,
-    route,
-    cost: { currency, value } }) {
+    route }) {
 
     if (typeof driver != 'string') return { valid: false, msg: 'Conductor invalido' };
     if (typeof passenger != 'string') return { valid: false, msg: 'No se indico un pasajero' };
@@ -79,8 +76,6 @@ function __validateTrip({
     if (typeof travelTime != 'number') return { valid: false, msg: 'Tiempo de viaje invalido' };
     if (typeof distance != 'number') return { valid: false, msg: 'Distancia de viaje invalida' };
     if (!route) return { valid: false, msg: 'No se indico una ruta de viaje' };
-    if (typeof currency != 'string') return { valid: false, msg: 'Tipo de moneda invalido' };
-    if (typeof value != 'number') return { valid: false, msg: 'Costo de viaje invalido' };
 
     try {
         const startValidation = validatePoint(start);
@@ -119,3 +114,15 @@ function validateTrip(tripObj) {
 }
 
 exports.validateTrip = validateTrip;
+
+/* VALIDACION DE OBJETOS DE TIPO TRANSACCION ------------------------------------------------------------------------------------------------------------------- */
+
+function validateTransaction(transReq) {
+    const { transaction = {}, paymethod, paymentMethod } = transReq;
+    if (!transaction.id) return { valid: false, message: 'No se indico la transaccion pendiente' };
+    if (!paymethod && !paymentMethod) return { valid: false, message: 'No se indico el metodo de pago' };
+
+    return { valid: true };
+}
+
+exports.validateTransaction = validateTransaction;

@@ -62,7 +62,8 @@ function getTrips(req, res) {
 exports.getTrips = getTrips;
 
 function postTrip(req, res) {
-    const { trip, paymethod } = req.body;
+    const { trip } = req.body;
+    const paymethod = req.body.paymethod || req.body.paymentMethod;
     const tripValidation = dataValidator.validateTrip(trip);
 
     if (!tripValidation.valid) return sendMsgCodeResponse(res, tripValidation.msg, 400);
@@ -81,6 +82,7 @@ function postTrip(req, res) {
     const { distance, passenger, driver } = trip;
     let responseSent = false;
     let passengerTransaction;
+
 
     /* TODO : USAR EL API DE PAGOS PARA PAGAR EL VIAJE QUE SE ESTA DANDO DE ALTA */
     Trip.insert(trip, (err, dbTrip) => {
@@ -102,12 +104,15 @@ function postTrip(req, res) {
                 console.log('Total: ' + cost.value);
                 dbTrip.cost = cost;
 
-                // transactionId, currency, value, { parameters, paymethod }
-                const transactionId = generateTransaction(trip);
-                const paymentData = paymentUtils.buildPaymentData(transactionId, currency, cost.value, paymethod);
+                const localTransactionId = generateTransaction(trip); // transaccion local generada para invocar al payment api
+                const method = paymethod.paymethod || paymethod.name; // metodo de pago, ej: 'card'
+                const parameters = paymethod.parameters || paymethod;
+                const paymentData = paymentUtils.buildPaymentData(localTransactionId, currency, cost.value, method, parameters);
+
 
                 return new Promise((resolve, reject) => paymentUtils.postPayment(paymentData, (err, payment) => {
                     // si hay un error en el pago, lo indico con un flag y continuamos con la operacion
+                    payment = payment || { transaction_id: localTransactionId };
                     payment.success = err ? false : true;
                     if (err) {
                         console.error('Error en el pago');
@@ -135,7 +140,12 @@ function postTrip(req, res) {
                     if (err) return reject(err);
                     responseSent = true; // indico que se enviara una respuesta al usuario
                     res.status(201);
-                    res.send({ metadata, trip: dbTrip, success: dbTransaction.done });
+                    res.send({
+                        metadata, trip: dbTrip, transaction: {
+                            id: dbTransaction.id,
+                            success: dbTransaction.done,
+                        }
+                    });
                     resolve(driver);
                 }));
             })

@@ -34,10 +34,35 @@ Transaction.insert = function (transObj, callback) {
         .catch(err => callback(err));
 };
 
-Transaction.getByUser = function (user, callback) {
+Transaction.findByUser = function (user, callback) {
     const userId = user.id || user;
     const sql = `SELECT * FROM ${table} WHERE appusr=$1`;
     const values = [userId];
+    dbManager.queryPromise(sql, values)
+        .then(rows => callback(null, fromRows(rows)))
+        .catch(callback);
+};
+
+Transaction.findByIdAndUser = function (id, user, callback) {
+    const userId = user.id || user;
+    const sql = `SELECT * FROM ${table} WHERE id=$1 AND appusr=$2`;
+    const values = [id, userId];
+    dbManager.queryPromise(sql, values)
+        .then(([tx]) => callback(null, fromObj(tx)))
+        .catch(callback);
+};
+
+/**
+ * Resuelve un pago pendiente.
+ * @param {string} localTx Id de transaccion local.
+ * @param {string} newTx Id de transaccion nueva (proveniente del PAYMENT API).
+ * @param {function} callback Funcion a invocar cuando se resuelve la transaccion
+ */
+Transaction.solve = function (localTx, newTx, callback) {
+    const localTxId = localTx.id || localTx;
+    const newTxId = newTx.id || newTx;
+    const sql = `UPDATE ${table} SET id=$1, done=$2 WHERE id=$3 RETURNING *`;
+    const values = [newTxId, true, localTxId];
     dbManager.queryPromise(sql, values)
         .then(rows => callback(null, fromRows(rows)))
         .catch(callback);
