@@ -29,6 +29,11 @@ exports.postRule = function (req, res) {
     });
 };
 
+/**
+ * Construye un fact a partir de un arreglo descriptivo del fact
+ * @param {Array<string>} facts Descripcion de los hechos, ej: ['nombre:martin','edad:26']
+ * @returns {any} Hecho.
+ */
 function buildFact(facts) {
     let superFact = '{';
 
@@ -54,30 +59,35 @@ function buildFact(facts) {
         if (curr == (facts.length - 1)) superFact += `${key}:${value}`;
         else superFact += `${key}:${value},`;
     }
-    return superFact + '}';
+    superFact += '}';
+    return JSON.parse(superFact);
 }
 exports.buildFact = buildFact;
 
-exports.runRules = function (req, res) {
-    const { rules, facts } = req.body;
-    if (!rules || rules.length == 0) return sendMsgCodeResponse(res, 'No se indicaron reglas', 400);
-    if (!facts || facts.length == 0) return sendMsgCodeResponse(res, 'No se indicaron hechos', 400);
-
+function parseFact(facts) {
     let fact = null;
     /* Si el primer fact es objeto se le trata como el fact principal */
     if (typeof facts[0].blob == 'object') fact = facts[0].blob;
     /* si el primer fact es string parseable como json, entonces se lo toma como el fact principal */
-    if (!fact) try { fact = JSON.parse(facts[0].blob); } catch (error) { console.error(error); }
+    if (!fact) try { fact = JSON.parse(facts[0].blob); } catch (error) { console.error('fact no es parseable'); }
     /* caso contrario, se construye el fact principal a partir del arreglo */
-    if (!fact) try { fact = JSON.parse(buildFact(facts)); } catch (error) { console.error(error); }
+    if (!fact) try { fact = buildFact(facts); } catch (error) { console.error(error); }
 
-    let checkPromise;
-    checkPromise = ruleHandler.checkFromJson(fact, rules);
+    return fact;
+}
 
-    checkPromise.then(result => {
-        if (result.cannotTravel) return Promise.reject({ code: 402, message: 'El pasajero debe normalizar su situación de pago' });
-
+/**
+ * Crea una funcion para procesar el resultado del motor de reglas.
+ * @param {Response} res HTTP response.
+ * @returns {function} Funcion que procesa el resultado del motor de reglas y responde al cliente.
+ */
+function processResult(res) {
+    return function (result) {
         const metadata = { version: apiVersion };
+        if (result.cannotTravel) return res.send({
+            metadata, facts: [{ language: Rule.DEFAULT_LANGUAGE, blob: 'El pasajero debe normalizar su situación de pago' }]
+        });
+
         if (result.free) return res.send({
             metadata, facts: [{ language: Rule.DEFAULT_LANGUAGE, blob: 'Viaje gratis' }]
         });
@@ -89,5 +99,45 @@ exports.runRules = function (req, res) {
         });
         console.log('Total: ' + amount);
         return res.send({ metadata, facts: [{ language: Rule.DEFAULT_LANGUAGE, blob: `Costo: ${amount}` }] });
-    });
+    };
+}
+
+function processError(res) {
+    return function (err) {
+        if (err instanceof Error) sendMsgCodeResponse(res, err.message, 500);
+        else sendMsgCodeResponse(res, err.message, err.code);
+    };
+}
+
+exports.runRules = function (req, res) {
+    const { rules, facts } = req.body;
+    if (!rules || rules.length == 0) return sendMsgCodeResponse(res, 'No se indicaron reglas', 400);
+    if (!facts || facts.length == 0) return sendMsgCodeResponse(res, 'No se indicaron hechos', 400);
+
+    let fact = parseFact(facts);
+
+    ruleHandler.checkFromJson(fact, rules)
+        .then(processResult(res))
+        .catch(processError(res));
+};
+
+exports.runRule = function (req, res) {
+    const ruleId = req.params.ruleId;
+
+    new Promise((resolve, reject) =>
+        Rule.findById(ruleId, (err, rule) => err ? reject(err) : resolve(rule)))
+        .then(rule => {
+            if (!rule) return Promise.reject({ message: 'La regla no existe', code: 404 });
+            if (!rule.active) return Promise.reject({ message: 'La regla no esta activa', code: 400 });
+
+            const facts = req.body;
+            const fact = parseFact(facts);
+            return ruleHandler.checkFromJson(fact, [rule.blob]);
+        })
+        .then(processResult(res))
+        .catch(processError(res));
+};
+
+exports.deleteRule = function (req, res) {
+
 };

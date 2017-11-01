@@ -107,6 +107,8 @@ router.post('/trips', tokenValidator.verifyServerToken, tripsController.postTrip
 router.use('/rules', tokenValidator.verifyToken);
 router.post('/rules', tokenValidator.verifyManagerToken, rulesController.postRule);
 router.post('/rules/run',tokenValidator.verifyAdminToken,rulesController.runRules);
+router.post('/rules/:ruleId/run',tokenValidator.verifyAdminToken,rulesController.runRule);
+router.delete('/rules/:ruleId',tokenValidator.verifyManagerToken, rulesController.deleteRule);
 /* FIN rules ROUTES ------------------------------------------------------------------------------------------------------- */
 
 /* hits ROUTES ------------------------------------------------------------------------------------------------------- */

@@ -80,3 +80,23 @@ function findActive(callback) {
 }
 
 exports.findActive = findActive;
+
+function findById(rule, callback) {
+    const ruleId = rule.id || rule;
+    const sql = `SELECT * FROM ${TABLE} WHERE id=$1`;
+    const values = [ruleId];
+    dbManager.queryPromise(sql, values)
+        .then(([dbRule]) => callback(null, fromObj(dbRule)))
+        .catch(err => callback(err));
+}
+
+exports.findById = findById;
+
+function find(callback) {
+    const sql = `SELECT * FROM ${TABLE}`;
+    dbManager.queryPromise(sql, [])
+        .then(rules => callback(null, fromRows(rules)))
+        .catch(callback);
+}
+
+exports.find = find;
