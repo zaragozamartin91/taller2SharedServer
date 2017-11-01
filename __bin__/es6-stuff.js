@@ -1,5 +1,11 @@
-function getStatusCode({ request: { res: { statusCode = 500 } = {} } ={} }) {
-    return statusCode;
-}
+const rulesController = require('../controllers/rules-controller');
 
-console.log(getStatusCode({}));
+const facts = [
+    {blob: 'nombre: martin'},
+    {blob: 'trabajo  : "programador"'},
+    {blob: ' edad  : 12345'},
+];
+
+const fact = rulesController.buildFact(facts);
+
+console.log(JSON.parse(fact));

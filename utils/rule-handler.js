@@ -8,8 +8,15 @@ function cloneFact(fact) {
     return JSON.parse(JSON.stringify(fact));
 }
 
+function buildFact(baseFact = {}) {
+    const fact = cloneFact(baseFact);
+    const { operations = [] } = fact;
+    fact.operations = operations;
+    return fact;
+}
+
 exports.check = function (fact, rules) {
-    fact = cloneFact(fact);
+    fact = buildFact(fact);
     const ruleEngine = new RuleEngine(rules);
     return new Promise((resolve, reject) => {
         try {
@@ -21,7 +28,7 @@ exports.check = function (fact, rules) {
 };
 
 exports.checkFromJson = function (fact, jsonRules) {
-    fact = cloneFact(fact);
+    fact = buildFact(fact);
     const ruleEngine = new RuleEngine();
     ruleEngine.fromJSON(jsonRules);
     return new Promise((resolve, reject) => {

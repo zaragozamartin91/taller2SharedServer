@@ -106,6 +106,7 @@ router.post('/trips', tokenValidator.verifyServerToken, tripsController.postTrip
 /* rules ROUTES ------------------------------------------------------------------------------------------------------- */
 router.use('/rules', tokenValidator.verifyToken);
 router.post('/rules', tokenValidator.verifyManagerToken, rulesController.postRule);
+router.post('/rules/run',tokenValidator.verifyAdminToken,rulesController.runRules);
 /* FIN rules ROUTES ------------------------------------------------------------------------------------------------------- */
 
 /* hits ROUTES ------------------------------------------------------------------------------------------------------- */
