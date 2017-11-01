@@ -118,8 +118,8 @@ exports.validateTrip = validateTrip;
 /* VALIDACION DE OBJETOS DE TIPO TRANSACCION ------------------------------------------------------------------------------------------------------------------- */
 
 function validateTransaction(transReq) {
-    const { transaction = {}, paymethod, paymentMethod } = transReq;
-    if (!transaction.id) return { valid: false, message: 'No se indico la transaccion pendiente' };
+    const { transaction, paymethod, paymentMethod } = transReq;
+    if (!transaction && !transaction.id) return { valid: false, message: 'No se indico la transaccion pendiente' };
     if (!paymethod && !paymentMethod) return { valid: false, message: 'No se indico el metodo de pago' };
 
     return { valid: true };

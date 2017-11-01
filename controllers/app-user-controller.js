@@ -312,7 +312,7 @@ exports.postUserTransaction = function (req, res) {
             if (!txValidation.valid) return Promise.reject({ code: 400, message: txValidation.message });
 
             // TODO: TERMINAR ALTA DE TRANSACCIONES MANUALES
-            localTransactionId = body.transaction.id;
+            localTransactionId = body.transaction.id || body.transaction;
 
             return new Promise((resolve, reject) =>
                 Transaction.findByIdAndUser(localTransactionId, usr, (err, tx) =>

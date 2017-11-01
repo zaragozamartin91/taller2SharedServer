@@ -1,0 +1,15 @@
+[
+    {
+        "paymethod": {
+            "paymethod": "card",
+            "parameters": {
+                "expiration_month": "12",
+                "expiration_year": "19",
+                "number": "1111222233334444",
+                "type": "visa",
+                "ccvv": 123
+            }
+        },
+        "transaction": "llevame-quelopario-1234"
+    }
+]
