@@ -139,5 +139,11 @@ exports.runRule = function (req, res) {
 };
 
 exports.deleteRule = function (req, res) {
+    const ruleId = req.params.ruleId;
 
+    Rule.delete(ruleId, (err, rule) => {
+        if (err) return sendMsgCodeResponse(res, err.message, 500);
+        if (!rule) return sendMsgCodeResponse(res, 'La regla no existe', 404);
+        sendMsgCodeResponse(res, 'Baja correcta', 204);
+    });
 };

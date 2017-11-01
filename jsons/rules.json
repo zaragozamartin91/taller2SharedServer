@@ -1,18 +1,69 @@
-{
-    "rules": [
-      {"condition":"function (R) { R.when(this.type == 'passenger'); }","consequence":"function (R) {console.log('Costo minimo de viaje 50 pesos');this.operations.push(v => 50);R.next();}","on":true},
-      {"condition":"function (R) {R.when(this.type == 'passenger');}","consequence":"function (R) { console.log('precio por km 15 pesos'); this.operations.push(v => v + this.mts * 0.015); R.next();}","on":true},
-      {"condition":"function (R) {R.when(this.type == 'passenger' && this.dayOfWeek == 3 && this.hour == 15);}","consequence":"function (R) {console.log('Descuento del 5% los miercoles de 15hs a 16hs');this.operations.push(v => v * 0.95);R.next();}","on":true}
-    ],
-    "facts": [
-      {
-        "language": "string",
-        "blob": {
-            "type":"passenger",
-            "dayOfWeek":3,
-            "hour":15,
-            "mts":1500
-        }
-      }
-    ]
-  }
+[
+    {
+        "rules": [
+            {
+                "condition": "function (R) { R.when(this.type == 'passenger'); }",
+                "consequence": "function (R) {console.log('Costo minimo de viaje 50 pesos');this.operations.push(v => 50);R.next();}",
+                "on": true
+            },
+            {
+                "condition": "function (R) {R.when(this.type == 'passenger');}",
+                "consequence": "function (R) { console.log('precio por km 15 pesos'); this.operations.push(v => v + this.mts * 0.015); R.next();}",
+                "on": true
+            },
+            {
+                "condition": "function (R) {R.when(this.type == 'passenger' && this.dayOfWeek == 3 && this.hour == 15);}",
+                "consequence": "function (R) {console.log('Descuento del 5% los miercoles de 15hs a 16hs');this.operations.push(v => v * 0.95);R.next();}",
+                "on": true
+            }
+        ],
+        "facts": [
+            {
+                "language": "node-rules/javascript",
+                "blob": {
+                    "type": "passenger",
+                    "dayOfWeek": 3,
+                    "hour": 15,
+                    "mts": 1500
+                }
+            }
+        ]
+    },
+    {
+        "rules": [
+            {
+                "condition": "function (R) { R.when(this.type == 'passenger'); }",
+                "consequence": "function (R) {console.log('Costo minimo de viaje 50 pesos');this.operations.push(v => 50);R.next();}",
+                "on": true
+            },
+            {
+                "condition": "function (R) {R.when(this.type == 'passenger');}",
+                "consequence": "function (R) { console.log('precio por km 15 pesos'); this.operations.push(v => v + this.mts * 0.015); R.next();}",
+                "on": true
+            },
+            {
+                "condition": "function (R) {R.when(this.type == 'passenger' && this.dayOfWeek == 3 && this.hour == 15);}",
+                "consequence": "function (R) {console.log('Descuento del 5% los miercoles de 15hs a 16hs');this.operations.push(v => v * 0.95);R.next();}",
+                "on": true
+            }
+        ],
+        "facts": [
+            {
+                "language": "node-rules/javascript",
+                "blob": "type:passenger"
+            },
+            {
+                "language": "node-rules/javascript",
+                "blob": "mts:1500"
+            },
+            {
+                "language": "node-rules/javascript",
+                "blob": "dayOfWeek:3"
+            },
+            {
+                "language": "node-rules/javascript",
+                "blob": "hour:15"
+            }
+        ]
+    }
+]
