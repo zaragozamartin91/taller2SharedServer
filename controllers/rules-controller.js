@@ -16,7 +16,7 @@ exports.postRule = function (req, res) {
         if (err) return sendMsgCodeResponse(res, 'Error al obtener el usuario de la BBDD', 500);
         if (!dbUser) return sendMsgCodeResponse(res, 'El usuario no existe', 404);
 
-        ruleObj.lastCommit = { author: userId, message: '' };
+        ruleObj.author = userId;
         Rule.insert(ruleObj, (err, dbRule) => {
             if (err) return sendMsgCodeResponse(res, 'Error al insertar la regla en la BBDD', 500);
 

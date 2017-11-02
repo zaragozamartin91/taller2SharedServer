@@ -48,6 +48,10 @@ exports.createTestData = function (req, res) {
             tableManager.createRulesTable(() => callback());
         },
         callback => {
+            logger.debug('Creando tabla de commits de reglas');
+            tableManager.createRuleCommitsTable(() => callback());
+        },
+        callback => {
             logger.debug('Creando tabla de transacciones');
             tableManager.createTransactionsTable(() => callback());
         },
@@ -238,10 +242,8 @@ exports.createTestData = function (req, res) {
 
             const ruleObjs = jsonRules.map(jsonRule => {
                 return {
-                    'lastCommit': {
-                        'author': 'martin',
-                        'message': 'New rule',
-                    },
+                    'author': 'martin',
+                    'message': 'New rule',
                     'blob': jsonRule,
                     'active': true
                 };
@@ -297,6 +299,10 @@ exports.deleteTestData = function (req, res) {
         callback => {
             logger.debug('Eliminando tabla de servers');
             tableManager.dropApplicationServersTable(() => callback());
+        },
+        callback => {
+            logger.debug('Eliminando tabla de commits de reglas');
+            tableManager.dropRuleCommitsTable(() => callback());
         },
         callback => {
             logger.debug('Eliminando tabla de reglas');
