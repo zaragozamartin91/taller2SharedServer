@@ -54,7 +54,7 @@ function asRow(ruleObj) {
     return { id, _ref, language, blob, active, author, message, timestamp };
 }
 
-function insert(ruleObj, callback) {
+Rule.insert = function (ruleObj, callback) {
     const ruleRow = asRow(ruleObj);
     const { language = DEFAULT_LANGUAGE, blob, active = true, author, message = '' } = ruleRow;
     const _ref = hashRule(ruleRow);
@@ -68,15 +68,38 @@ function insert(ruleObj, callback) {
     dbManager.queryPromise(sql, values)
         .then(([dbRule]) => callback(null, fromObj(dbRule)))
         .catch(err => callback(err));
-}
+};
 
-exports.insert = insert;
-
-function findActive(callback) {
+Rule.findActive = function (callback) {
     const sql = `SELECT * FROM ${TABLE} WHERE active=$1`;
     dbManager.queryPromise(sql, [true])
         .then(rules => callback(null, fromRows(rules)))
         .catch(callback);
-}
+};
 
-exports.findActive = findActive;
+Rule.findById = function (rule, callback) {
+    const ruleId = rule.id || rule;
+    const sql = `SELECT * FROM ${TABLE} WHERE id=$1`;
+    const values = [ruleId];
+    dbManager.queryPromise(sql, values)
+        .then(([dbRule]) => callback(null, fromObj(dbRule)))
+        .catch(err => callback(err));
+};
+
+Rule.find = function (callback) {
+    const sql = `SELECT * FROM ${TABLE}`;
+    dbManager.queryPromise(sql, [])
+        .then(rules => callback(null, fromRows(rules)))
+        .catch(callback);
+};
+
+Rule.delete = function (rule, callback) {
+    const ruleId = rule.id || rule;
+    const sql = `DELETE FROM ${TABLE} WHERE id=$1 RETURNING *`;
+    const values = [ruleId];
+    dbManager.queryPromise(sql, values)
+        .then(([dbRule]) => callback(null, fromObj(dbRule)))
+        .catch(err => callback(err));
+};
+
+module.exports = Rule;
