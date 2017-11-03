@@ -22,7 +22,7 @@ exports.postRule = function (req, res) {
 
             const { id, _ref, username, name, surname, roles } = dbUser;
             dbRule.lastCommit.author = { id, _ref, username, name, surname, roles };
-
+            dbRule.blob = typeof dbRule.blob == 'string' ? dbRule.blob : JSON.stringify(dbRule.blob);
             const metadata = { version: apiVersion };
             res.send({ metadata, rule: dbRule });
         });
@@ -102,7 +102,7 @@ function processResult(res) {
     };
 }
 
-function processError(res) {
+function handleError(res) {
     return function (err) {
         if (err instanceof Error) sendMsgCodeResponse(res, err.message, 500);
         else sendMsgCodeResponse(res, err.message, err.code);
@@ -118,7 +118,7 @@ exports.runRules = function (req, res) {
 
     ruleHandler.checkFromJson(fact, rules)
         .then(processResult(res))
-        .catch(processError(res));
+        .catch(handleError(res));
 };
 
 exports.runRule = function (req, res) {
@@ -135,7 +135,7 @@ exports.runRule = function (req, res) {
             return ruleHandler.checkFromJson(fact, [rule.blob]);
         })
         .then(processResult(res))
-        .catch(processError(res));
+        .catch(handleError(res));
 };
 
 exports.deleteRule = function (req, res) {
@@ -146,4 +146,36 @@ exports.deleteRule = function (req, res) {
         if (!rule) return sendMsgCodeResponse(res, 'La regla no existe', 404);
         sendMsgCodeResponse(res, 'Baja correcta', 204);
     });
+};
+
+exports.updateRule = function (req, res) {
+    const userId = req.userId;
+    const ruleId = req.params.ruleId;
+    const { _ref, blob, active, message = '' } = req.body;
+
+    new Promise((resolve, reject) =>
+        Rule.findById(ruleId, (err, rule) => err ? reject(err) : resolve(rule)))
+        .then(rule => {
+            if (!rule) return Promise.reject({ code: 404, message: 'La regla no existe' });
+            if (!_ref) return Promise.reject({ code: 400, message: 'No se indico _ref' });
+            if (_ref != rule._ref) return Promise.reject({ code: 409, message: 'Ocurrio una colision' });
+
+            rule.message = message || rule.message;
+            rule.active = active || rule.active;
+            rule.blob = blob || rule.blob;
+
+            const p1 = new Promise((resolve, reject) =>
+                Rule.update(rule, (err, upRule) => err ? reject(err) : resolve(upRule)));
+            const p2 = new Promise((resolve, reject) =>
+                BusinessUser.findById(userId, (err, user) => err ? reject(err) : resolve(user)));
+
+            return Promise.all([p1, p2]);
+        })
+        .then(([upRule, { id, _ref, username, name, surname, roles }]) => {
+            upRule.lastCommit.author = { id, _ref, username, name, surname, roles };
+            upRule.blob = typeof upRule.blob == 'string' ? upRule.blob : JSON.stringify(upRule.blob);
+            const metadata = { version: apiVersion };
+            res.send({ metadata, rule: upRule });
+        })
+        .catch(handleError(res));
 };

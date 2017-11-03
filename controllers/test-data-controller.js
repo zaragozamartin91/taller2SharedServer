@@ -239,6 +239,10 @@ exports.createTestData = function (req, res) {
         callback => {
             console.log('Insertando reglas');
             const jsonRules = ruleHandler.toJson(ruleHandler.BASE_RULES);
+            jsonRules.forEach(jsonRule => {
+                jsonRule.condition = jsonRule.condition.replace(/\r/g, '').replace(/\n */g, '');
+                jsonRule.consequence = jsonRule.consequence.replace(/\r/g, '').replace(/\n */g, '');
+            });
 
             const ruleObjs = jsonRules.map(jsonRule => {
                 return {

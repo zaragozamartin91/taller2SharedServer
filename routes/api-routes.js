@@ -109,6 +109,7 @@ router.post('/rules', tokenValidator.verifyManagerToken, rulesController.postRul
 router.post('/rules/run',tokenValidator.verifyAdminToken,rulesController.runRules);
 router.post('/rules/:ruleId/run',tokenValidator.verifyAdminToken,rulesController.runRule);
 router.delete('/rules/:ruleId',tokenValidator.verifyManagerToken, rulesController.deleteRule);
+router.put('/rules/:ruleId',tokenValidator.verifyManagerToken, rulesController.updateRule);
 /* FIN rules ROUTES ------------------------------------------------------------------------------------------------------- */
 
 /* hits ROUTES ------------------------------------------------------------------------------------------------------- */

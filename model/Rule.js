@@ -62,7 +62,7 @@ Rule.insert = function (ruleObj, callback) {
             dbRule = rule;
 
             /* Inserto el commit de la regla */
-            const commitObj = { rule, author, message, blob: blobValue, active };
+            const commitObj = { rule, author, message, blob, active };
             return new Promise((resolve, reject) =>
                 RuleCommit.insert(commitObj, (err, dbCommit) => err ? reject(err) : resolve(dbCommit)));
         })
@@ -74,7 +74,7 @@ Rule.insert = function (ruleObj, callback) {
 };
 
 Rule.findActive = function (callback) {
-    const sql = `SELECT * FROM ${TABLE} WHERE active=$1`;
+    const sql = `SELECT * FROM ${TABLE} WHERE active=$1 ORDER BY id ASC`;
     dbManager.queryPromise(sql, [true])
         .then(rules => callback(null, fromRows(rules)))
         .catch(callback);
@@ -97,6 +97,29 @@ Rule.delete = function (rule, callback) {
     dbManager.queryPromise(sql, values)
         .then(([dbRule]) => callback(null, fromObj(dbRule)))
         .catch(err => callback(err));
+};
+
+Rule.update = function (rule, callback) {
+    const newRef = hashRule(rule);
+    const { id, language, blob, active, author, message } = rule;
+    const sql = `UPDATE ${TABLE} SET _ref=$1, language=$2, blob=$3, active=$4 WHERE id=$5 RETURNING *`;
+    const values = [newRef, language, blob, active, id];
+
+    let dbRule;
+    dbManager.queryPromise(sql, values)
+        .then(([rule]) => {
+            dbRule = rule;
+
+            /* Inserto el commit de la regla */
+            const commitObj = { rule, author, message, blob, active };
+            return new Promise((resolve, reject) =>
+                RuleCommit.insert(commitObj, (err, dbCommit) => err ? reject(err) : resolve(dbCommit)));
+        })
+        .then(commit => {
+            dbRule.lastCommit = { author, message, timestamp: commit.timestamp };
+            callback(null, fromObj(dbRule));
+        })
+        .catch(callback);
 };
 
 module.exports = Rule;
