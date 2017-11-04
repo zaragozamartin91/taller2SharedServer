@@ -64,17 +64,24 @@ const MainApp = React.createClass({
         const token = this.state.token;
         if (!token) return <Login onSubmit={this.setToken} />;
 
+        console.log('window.location.hash: ' + window.location.hash);
+        if (window.location.hash == '#/') {
+            console.log('REPLACING LOCATION');
+            window.location.replace('/main#/index');
+            //return <span>Redireccionando...</span>;
+        }
+
         /* Si un usuario inicio sesion, renderizo la app normal */
         return (
             <MuiThemeProvider>
                 <div>
                     <MainAppBar onLogout={() => this.logoutForm.submit()} />
 
-                    <Route path="/index" component={Index} />
                     <Route path="/form-example" component={FormExample} />
                     <Route path="/users/list" component={() => <Users token={token} />} />
                     <Route path="/users/create" component={() => <CreateUserForm token={token} />} />
                     <Route path="/servers/list" component={() => <Servers token={token} />} />
+                    <Route path="/index" component={Index} />
 
                     <form
                         action='/logout'
