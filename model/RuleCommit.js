@@ -23,6 +23,7 @@ function fromRows(rows = []) {
     return rows.map(fromObj);
 }
 
+/* istanbul ignore next */
 RuleCommit.insert = function (commit, callback) {
     const { rule, author, message, blob, active } = commit;
     const ruleId = rule.id || rule;
@@ -33,6 +34,7 @@ RuleCommit.insert = function (commit, callback) {
         .catch(callback);
 };
 
+/* istanbul ignore next */
 RuleCommit.findByRule = function (rule, callback) {
     const ruleId = rule.id || rule;
     const sql = `SELECT * FROM ${table} WHERE rule=$1`;
@@ -42,6 +44,7 @@ RuleCommit.findByRule = function (rule, callback) {
         .catch(callback);
 };
 
+/* istanbul ignore next */
 RuleCommit.findLastByRule = function (rule, callback) {
     const ruleId = rule.id || rule;
     const sql = `SELECT * FROM ${table} WHERE rule=$1 ORDER BY id DESC LIMIT 1`;
@@ -51,6 +54,7 @@ RuleCommit.findLastByRule = function (rule, callback) {
         .catch(callback);
 };
 
+/* istanbul ignore next */
 RuleCommit.findById = function (commit, callback) {
     const commitId = commit.id || commit;
     const sql = `SELECT * FROM ${table} WHERE id=$1`;

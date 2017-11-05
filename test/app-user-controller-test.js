@@ -773,7 +773,92 @@ describe('app-user-controller', function () {
         });
     });
 
+    describe('#updateUserCar', function () {
+        it('falla por un error en la bbdd', function () {
+            const dbUser = ApplicationUser.fromObj(userMock1);
+            sandbox.stub(ApplicationUser, 'findByIdAndApp')
+                .callsFake((userId, serverId, callback) => callback(new Error()));
 
+            const req = { serverId: dbUser.applicationOwner, params: { userId: dbUser.id }, body: {} };
+            const res = mockErrRes(500);
+            appUserController.updateUserCar(req, res);
+        });
+
+        it('falla porque no existe el usuario', function () {
+            const dbUser = ApplicationUser.fromObj(userMock1);
+            sandbox.stub(ApplicationUser, 'findByIdAndApp')
+                .callsFake((userId, serverId, callback) => callback());
+
+            const req = { serverId: dbUser.applicationOwner, params: { userId: dbUser.id }, body: {} };
+            const res = mockErrRes(404);
+            appUserController.updateUserCar(req, res);
+        });
+
+        it('falla porque el auto no existe', function () {
+            const dbCar = Car.fromObj(carMock1);
+            const dbUser = ApplicationUser.fromObj(userMock1);
+            dbUser.cars = null;
+            sandbox.stub(ApplicationUser, 'findByIdAndApp')
+                .callsFake((userId, serverId, callback) => callback(null, dbUser));
+
+            const req = { serverId: dbUser.applicationOwner, params: { userId: dbUser.id, carId: dbCar.id }, body: {} };
+            const res = mockErrRes(404);
+            appUserController.updateUserCar(req, res);
+        });
+
+        it('falla porque ocurre una colision', function () {
+            const dbCar = Car.fromObj(carMock1);
+            const dbUser = ApplicationUser.fromObj(userMock1);
+            dbUser.cars = [dbCar];
+            sandbox.stub(ApplicationUser, 'findByIdAndApp')
+                .callsFake((userId, serverId, callback) => callback(null, dbUser));
+
+            const carData = { _ref: 'Invalid ref' };
+
+            const req = { serverId: dbUser.applicationOwner, params: { userId: dbUser.id, carId: dbCar.id }, body: carData };
+            const res = mockErrRes(409);
+            appUserController.updateUserCar(req, res);
+        });
+
+        it('falla porque ocurre un error en la bbdd al actualizar el auto', function () {
+            const dbCar = Car.fromObj(carMock1);
+            const dbUser = ApplicationUser.fromObj(userMock1);
+            dbUser.cars = [dbCar];
+            sandbox.stub(ApplicationUser, 'findByIdAndApp')
+                .callsFake((userId, serverId, callback) => callback(null, dbUser));
+
+            const carData = { _ref: dbCar._ref };
+            dbCar.update = callback => callback(new Error());
+
+            const req = { serverId: dbUser.applicationOwner, params: { userId: dbUser.id, carId: dbCar.id }, body: carData };
+            const res = mockErrRes(500);
+            appUserController.updateUserCar(req, res);
+        });
+
+        it('Actualiza el auto correctamente', function () {
+            const dbCar = Car.fromObj(carMock1);
+            const dbUser = ApplicationUser.fromObj(userMock1);
+            dbUser.cars = [dbCar];
+            sandbox.stub(ApplicationUser, 'findByIdAndApp')
+                .callsFake((userId, serverId, callback) => callback(null, dbUser));
+
+            const carData = {
+                _ref: dbCar._ref, properties: [
+                    { name: 'brand', value: 'ford' }
+                ]
+            };
+            dbCar.update = callback => callback(null, dbCar);
+
+            const req = { serverId: dbUser.applicationOwner, params: { userId: dbUser.id, carId: dbCar.id }, body: carData };
+            const res = {
+                send({ metadata, car }) {
+                    assert.ok(metadata.version);
+                    assert.equal(dbCar, car);
+                }
+            };
+            appUserController.updateUserCar(req, res);
+        });
+    });
 });
 
 

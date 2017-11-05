@@ -45,7 +45,7 @@ function fromRows(rows = []) {
     return rows.map(fromObj);
 }
 
-
+/* istanbul ignore next */
 Rule.insert = function (ruleObj, callback) {
     const { language = DEFAULT_LANGUAGE, blob, active = true, author, message = '' } = ruleObj;
     const _ref = hashRule(ruleObj);
@@ -73,6 +73,7 @@ Rule.insert = function (ruleObj, callback) {
         .catch(callback);
 };
 
+/* istanbul ignore next */
 Rule.findActive = function (callback) {
     const sql = `SELECT * FROM ${TABLE} WHERE active=$1 ORDER BY id ASC`;
     dbManager.queryPromise(sql, [true])
@@ -80,6 +81,7 @@ Rule.findActive = function (callback) {
         .catch(callback);
 };
 
+/* istanbul ignore next */
 Rule.findById = function (rule, callback) {
     const ruleId = rule.id || rule;
     const sql = `SELECT * FROM ${TABLE} WHERE id=$1`;
@@ -89,7 +91,7 @@ Rule.findById = function (rule, callback) {
         .catch(err => callback(err));
 };
 
-
+/* istanbul ignore next */
 Rule.delete = function (rule, callback) {
     const ruleId = rule.id || rule;
     const sql = `DELETE FROM ${TABLE} WHERE id=$1 RETURNING *`;
@@ -99,6 +101,7 @@ Rule.delete = function (rule, callback) {
         .catch(err => callback(err));
 };
 
+/* istanbul ignore next */
 Rule.update = function (rule, callback) {
     const newRef = hashRule(rule);
     const { id, language, blob, active, author, message } = rule;

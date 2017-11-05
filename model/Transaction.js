@@ -25,6 +25,7 @@ function fromRows(rows = []) {
     return rows.map(fromObj);
 }
 
+/* istanbul ignore next */
 Transaction.insert = function (transObj, callback) {
     const { id, currency, value, appusr, trip, done } = fromObj(transObj);
     const sql = `INSERT INTO ${table}(id, currency, value, appusr, trip, done) VALUES($1,$2,$3,$4,$5,$6) RETURNING *`;
@@ -34,6 +35,7 @@ Transaction.insert = function (transObj, callback) {
         .catch(err => callback(err));
 };
 
+/* istanbul ignore next */
 Transaction.findByUser = function (user, callback) {
     const userId = user.id || user;
     const sql = `SELECT * FROM ${table} WHERE appusr=$1`;
@@ -43,6 +45,7 @@ Transaction.findByUser = function (user, callback) {
         .catch(callback);
 };
 
+/* istanbul ignore next */
 Transaction.findByIdAndUser = function (id, user, callback) {
     const userId = user.id || user;
     const sql = `SELECT * FROM ${table} WHERE id=$1 AND appusr=$2`;
@@ -58,6 +61,7 @@ Transaction.findByIdAndUser = function (id, user, callback) {
  * @param {string} newTx Id de transaccion nueva (proveniente del PAYMENT API).
  * @param {function} callback Funcion a invocar cuando se resuelve la transaccion
  */
+/* istanbul ignore next */
 Transaction.solve = function (localTx, newTx, callback) {
     const localTxId = localTx.id || localTx;
     const newTxId = newTx.id || newTx;
