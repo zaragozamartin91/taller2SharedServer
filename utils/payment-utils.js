@@ -49,7 +49,8 @@ function paymethodsPromise(token = TOKEN_HOLDER.token) {
 exports.paymethodsPromise = paymethodsPromise;
 
 function authTokenPromise(client_id = DEF_CLIENT_ID, client_secret = DEF_CLIENT_SECRET) {
-    return axios.post(AUTHORIZE_URL, { client_id, client_secret });
+    //return axios.post(AUTHORIZE_URL, { client_id, client_secret });
+    return axios.post('https://shielded-escarpment-27661.herokuapp.com/api/v1/user/oauth/authorize', { 'client_id': 'ee04c1bd-bd98-4ac9-861e-cff1834e0386', 'client_secret': '1e238cae-26ae-412d-a7e6-959e89980a13' });
 }
 
 function getTokenPromise(renew = false) {
@@ -104,27 +105,28 @@ function buildMetadata(count, total = count) {
  * @param {Boolean} renewToken [OPCIONAL] indica si se debe renovar el token de autenticacion.
  */
 function __getPaymethods(req, res, renewToken = false) {
-    getTokenPromise(renewToken).then(contents => {
-        const token = contents.data.access_token;
-        updateToken(token);
-        return paymethodsPromise(token);
-    }).then(contents => {
-        const items = contents.data.items || [];
-        const metadata = buildMetadata(items.length);
-        const paymethods = buildPaymethodsArray(items);
-        // agrego el campo currency para informar que lo necesito al dar de alta un viaje
-        paymethods.forEach(p => p.currency = 'string');
-        res.send({ metadata, paymethods });
-    }).catch(cause => {
-        const statusCode = getStatusCode(cause);
-        const unauthorized = statusCode == 403 || statusCode == 401;
-        if (unauthorized) {
-            logger.debug('Token invalido o expirado...');
-            __getPaymethods(req, res, true);
-        } else {
-            sendMsgCodeResponse(res, 'Error al obtener los medios de pago', statusCode);
-        }
-    });
+    getTokenPromise(renewToken)
+        .then(contents => {
+            const token = contents.data.access_token;
+            updateToken(token);
+            return paymethodsPromise(token);
+        }).then(contents => {
+            const items = contents.data.items || [];
+            const metadata = buildMetadata(items.length);
+            const paymethods = buildPaymethodsArray(items);
+            // agrego el campo currency para informar que lo necesito al dar de alta un viaje
+            paymethods.forEach(p => p.currency = 'string');
+            res.send({ metadata, paymethods });
+        }).catch(cause => {
+            const statusCode = getStatusCode(cause);
+            const unauthorized = statusCode == 403 || statusCode == 401;
+            if (unauthorized) {
+                logger.debug('Token invalido o expirado...');
+                __getPaymethods(req, res, true);
+            } else {
+                sendMsgCodeResponse(res, 'Error al obtener los medios de pago', statusCode);
+            }
+        });
 }
 
 exports.getPaymethods = function (req, res) {
@@ -174,27 +176,28 @@ function paymentPromise(token = TOKEN_HOLDER.token, paymentData) {
 }
 
 function __postPayment(paymentData, callback, renewToken = false) {
-    getTokenPromise(renewToken).then(contents => {
-        const token = contents.data.access_token;
-        updateToken(token);
-        return paymentPromise(token, paymentData);
-    }).then(contents => {
-        callback(null, contents.data);
-    }).catch(cause => {
-        const { code, message } = cause;
-        if (code && message) return callback({ code, message });
+    getTokenPromise(renewToken)
+        .then(contents => {
+            const token = contents.data.access_token;
+            updateToken(token);
+            return paymentPromise(token, paymentData);
+        }).then(contents => {
+            callback(null, contents.data);
+        }).catch(cause => {
+            const { code, message } = cause;
+            if (code && message) return callback({ code, message });
 
-        console.error(cause);
+            console.error(cause);
 
-        const statusCode = getStatusCode(cause);
-        const unauthorized = statusCode == 403 || statusCode == 401;
-        if (unauthorized) {
-            logger.debug('Token ' + TOKEN_HOLDER.token + ' invalido o expirado...');
-            __postPayment(paymentData, callback, true);
-        } else {
-            callback(cause);
-        }
-    });
+            const statusCode = getStatusCode(cause);
+            const unauthorized = statusCode == 403 || statusCode == 401;
+            if (unauthorized) {
+                logger.debug('Token ' + TOKEN_HOLDER.token + ' invalido o expirado...');
+                __postPayment(paymentData, callback, true);
+            } else {
+                callback(cause);
+            }
+        });
 }
 
 exports.postPayment = function (paymentData, callback) {

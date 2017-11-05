@@ -8,6 +8,7 @@ const Trip = require('./Trip');
 const Rule = require('./Rule');
 const Transaction = require('./Transaction');
 const Hit = require('./Hit');
+const RuleCommit = require('./RuleCommit');
 
 const dbManager = require('./db-manager');
 const logger = require('log4js').getLogger('table-manager');
@@ -185,9 +186,6 @@ exports.createRulesTable = function (callback) {
         id SERIAL PRIMARY KEY, 
         _ref VARCHAR(128) NOT NULL,
         language VARCHAR(32) DEFAULT '${Rule.DEFAULT_LANGUAGE}',
-        author ${BusinessUser.idType} REFERENCES ${BusinessUser.table}(id) ON DELETE SET NULL,
-        message VARCHAR(128),
-        timestamp TIMESTAMP DEFAULT now(),
         blob JSON NOT NULL,
         active BOOLEAN
     )`;
@@ -201,6 +199,37 @@ exports.createRulesTable = function (callback) {
 
 exports.dropRulesTable = function (callback) {
     const sql = `DROP TABLE ${Rule.TABLE}`;
+    dbManager.queryPromise(sql, [])
+        .then(() => callback())
+        .catch(cause => {
+            console.error(cause);
+            callback();
+        });
+};
+
+// RuleCommit -------------------------------------------------------------------------------------------------------
+
+//author, message, timestamp, blob, active
+exports.createRuleCommitsTable = function (callback) {
+    const sql = `CREATE TABLE ${RuleCommit.table} (
+        id SERIAL PRIMARY KEY, 
+        rule integer REFERENCES ${Rule.TABLE} ON DELETE CASCADE,
+        author ${BusinessUser.idType} REFERENCES ${BusinessUser.table}(id) ON DELETE CASCADE,
+        message VARCHAR(128),
+        timestamp TIMESTAMP DEFAULT now(),
+        blob JSON NOT NULL,
+        active BOOLEAN
+    )`;
+    dbManager.queryPromise(sql, [])
+        .then(() => callback())
+        .catch(cause => {
+            console.error(cause);
+            callback();
+        });
+};
+
+exports.dropRuleCommitsTable = function (callback) {
+    const sql = `DROP TABLE ${RuleCommit.table}`;
     dbManager.queryPromise(sql, [])
         .then(() => callback())
         .catch(cause => {

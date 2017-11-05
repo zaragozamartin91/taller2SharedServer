@@ -41,6 +41,8 @@ router.delete('/servers/:serverId', tokenValidator.verifyManagerToken, serverCon
 router.put('/servers/:serverId', tokenValidator.verifyManagerToken, serverController.updateServer);
 
 router.post('/servers/:serverId', tokenValidator.verifyManagerToken, serverController.resetToken);
+
+router.get('/servers/:serverId/keepalive', tokenValidator.verifyManagerToken, serverController.pingServer);
 /* FIN servers ROUTES ----------------------------------------------------------------------------------------------------------- */
 
 
@@ -106,9 +108,12 @@ router.post('/trips', tokenValidator.verifyServerToken, tripsController.postTrip
 /* rules ROUTES ------------------------------------------------------------------------------------------------------- */
 router.use('/rules', tokenValidator.verifyToken);
 router.post('/rules', tokenValidator.verifyManagerToken, rulesController.postRule);
-router.post('/rules/run',tokenValidator.verifyAdminToken,rulesController.runRules);
-router.post('/rules/:ruleId/run',tokenValidator.verifyAdminToken,rulesController.runRule);
-router.delete('/rules/:ruleId',tokenValidator.verifyManagerToken, rulesController.deleteRule);
+router.post('/rules/run', tokenValidator.verifyAdminToken, rulesController.runRules);
+router.post('/rules/:ruleId/run', tokenValidator.verifyAdminToken, rulesController.runRule);
+router.delete('/rules/:ruleId', tokenValidator.verifyManagerToken, rulesController.deleteRule);
+router.put('/rules/:ruleId', tokenValidator.verifyManagerToken, rulesController.updateRule);
+router.get('/rules/:ruleId/commits', tokenValidator.verifyManagerToken, rulesController.getRuleCommits);
+router.get('/rules/:ruleId/commits/:commitId', tokenValidator.verifyManagerToken, rulesController.getRuleCommit);
 /* FIN rules ROUTES ------------------------------------------------------------------------------------------------------- */
 
 /* hits ROUTES ------------------------------------------------------------------------------------------------------- */
