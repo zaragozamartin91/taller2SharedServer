@@ -112,6 +112,8 @@ router.post('/rules/run', tokenValidator.verifyAdminToken, rulesController.runRu
 router.post('/rules/:ruleId/run', tokenValidator.verifyAdminToken, rulesController.runRule);
 router.delete('/rules/:ruleId', tokenValidator.verifyManagerToken, rulesController.deleteRule);
 router.put('/rules/:ruleId', tokenValidator.verifyManagerToken, rulesController.updateRule);
+router.get('/rules/:ruleId/commits', tokenValidator.verifyManagerToken, rulesController.getRuleCommits);
+router.get('/rules/:ruleId/commits/:commitId', tokenValidator.verifyManagerToken, rulesController.getRuleCommit);
 /* FIN rules ROUTES ------------------------------------------------------------------------------------------------------- */
 
 /* hits ROUTES ------------------------------------------------------------------------------------------------------- */
