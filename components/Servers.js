@@ -25,6 +25,12 @@ const CARD_STYLES = {
     err: { backgroundColor: 'rgba(219, 64, 64, 0.75)', color: 'black' },
 };
 
+const STATUS_SUFFIX = {
+    unknown: '',
+    ok: ' - OK',
+    err: ' - NO RESPONDE',
+};
+
 const Servers = React.createClass({
     getDefaultProps() {
         return { token: '' };
@@ -71,10 +77,19 @@ const Servers = React.createClass({
 
     /* TODO: HACER LLAMADA A APP SERVER */
     checkServer(server) {
+        const serverId = server.id || server;
         const self = this;
+
         return function () {
-            server.status = Math.random() >= 0.5 ? 'ok' : 'err';
-            self.setState({ servers: self.state.servers });
+            axios.get(`/api/v1/servers/${serverId}/keepalive?token=${self.props.token}`)
+                .then(contents => {
+                    server.status = 'ok';
+                    self.setState({ servers: self.state.servers });
+                })
+                .catch(err => {
+                    server.status = 'err';
+                    self.setState({ servers: self.state.servers });
+                });
         };
     },
 
@@ -111,11 +126,12 @@ const Servers = React.createClass({
             console.log('Renderizando vista de servidores');
             mainView = this.state.servers.map(server => {
                 const style = JSON.parse(JSON.stringify(CARD_STYLES[server.status]));
+                const subtitle = `${server.name}${STATUS_SUFFIX[server.status]}`;
                 return (
                     <Card style={style}>
                         <CardHeader
                             title={server.id}
-                            subtitle={server.name} />
+                            subtitle={subtitle} />
                         <CardText expandable={false}>
                             Creado por: {server.createdBy} <br />
                             Creado en: {server.createdTime} <br />
