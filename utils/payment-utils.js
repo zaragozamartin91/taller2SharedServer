@@ -7,6 +7,8 @@ const responseUtils = require('./response-utils');
 
 const sendMsgCodeResponse = responseUtils.sendMsgCodeResponse;
 
+const MAX_RECONN_TRIES = 3;
+
 const API_VERSION = mainConf.apiVersion;
 const DEF_CLIENT_ID = 'ee04c1bd-bd98-4ac9-861e-cff1834e0386';
 const DEF_CLIENT_SECRET = '1e238cae-26ae-412d-a7e6-959e89980a13';
@@ -40,20 +42,20 @@ const POST_PAYMENT_URL = PAYMENTS_API_URL + '/payments';
  * @param {string} token Token de autenticacion con el api de pagos.
  * @return {Promise} Promesa para obtener los metodos de pago
  */
-function paymethodsPromise(token = TOKEN_HOLDER.token) {
+/* istanbul ignore next */
+exports.paymethodsPromise = function (token = TOKEN_HOLDER.token) {
     return axios.get(GET_PAYMENTS_URL, {
         headers: { 'Authorization': `Bearer ${token}` }
     });
-}
-
-exports.paymethodsPromise = paymethodsPromise;
+};
 
 function authTokenPromise(client_id = DEF_CLIENT_ID, client_secret = DEF_CLIENT_SECRET) {
     //return axios.post(AUTHORIZE_URL, { client_id, client_secret });
     return axios.post('https://shielded-escarpment-27661.herokuapp.com/api/v1/user/oauth/authorize', { 'client_id': 'ee04c1bd-bd98-4ac9-861e-cff1834e0386', 'client_secret': '1e238cae-26ae-412d-a7e6-959e89980a13' });
 }
 
-function getTokenPromise(renew = false) {
+/* istanbul ignore next */
+exports.getTokenPromise = function (renew = false) {
     if (renew || !TOKEN_HOLDER.token) {
         logger.debug('Renovando token');
         return authTokenPromise();
@@ -61,9 +63,7 @@ function getTokenPromise(renew = false) {
 
     logger.debug('Reutilizando token ' + TOKEN_HOLDER.token);
     return Promise.resolve({ data: { access_token: TOKEN_HOLDER.token } });
-}
-
-exports.getTokenPromise = getTokenPromise;
+};
 
 /**
  * Crea un arreglo con los metodos de pago.
@@ -104,12 +104,12 @@ function buildMetadata(count, total = count) {
  * @param {Response} res Http response.
  * @param {Boolean} renewToken [OPCIONAL] indica si se debe renovar el token de autenticacion.
  */
-function __getPaymethods(req, res, renewToken = false) {
-    getTokenPromise(renewToken)
+function __getPaymethods(req, res, renewToken = false, tries = 0) {
+    exports.getTokenPromise(renewToken)
         .then(contents => {
             const token = contents.data.access_token;
             updateToken(token);
-            return paymethodsPromise(token);
+            return exports.paymethodsPromise(token);
         }).then(contents => {
             const items = contents.data.items || [];
             const metadata = buildMetadata(items.length);
@@ -120,9 +120,12 @@ function __getPaymethods(req, res, renewToken = false) {
         }).catch(cause => {
             const statusCode = getStatusCode(cause);
             const unauthorized = statusCode == 403 || statusCode == 401;
-            if (unauthorized) {
+            if (unauthorized && tries < MAX_RECONN_TRIES) {
                 logger.debug('Token invalido o expirado...');
-                __getPaymethods(req, res, true);
+                __getPaymethods(req, res, true, tries + 1);
+            } else if (unauthorized && tries >= MAX_RECONN_TRIES) {
+                logger.debug('Intentos maximos de obtener el token alcanzados...');
+                sendMsgCodeResponse(res, 'Intentos maximos de obtener el token alcanzados', 500);
             } else {
                 sendMsgCodeResponse(res, 'Error al obtener los medios de pago', statusCode);
             }
@@ -163,7 +166,8 @@ function buildPaymentData(transactionId, currency, value, method, parameters) {
 
 exports.buildPaymentData = buildPaymentData;
 
-function paymentPromise(token = TOKEN_HOLDER.token, paymentData) {
+/* istanbul ignore next */
+exports.paymentPromise = function (token = TOKEN_HOLDER.token, paymentData) {
     try {
         console.log(paymentData);
         return axios.post(POST_PAYMENT_URL, paymentData, {
@@ -173,14 +177,14 @@ function paymentPromise(token = TOKEN_HOLDER.token, paymentData) {
         console.error(error);
         return Promise.reject({ code: 500, message: 'Estructura de pago incorrecta' });
     }
-}
+};
 
 function __postPayment(paymentData, callback, renewToken = false) {
-    getTokenPromise(renewToken)
+    exports.getTokenPromise(renewToken)
         .then(contents => {
             const token = contents.data.access_token;
             updateToken(token);
-            return paymentPromise(token, paymentData);
+            return exports.paymentPromise(token, paymentData);
         }).then(contents => {
             callback(null, contents.data);
         }).catch(cause => {
