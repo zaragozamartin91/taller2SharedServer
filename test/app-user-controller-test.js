@@ -4,6 +4,7 @@ const appUserController = require('../controllers/app-user-controller');
 const dbManager = require('../model/db-manager');
 const ApplicationServer = require('../model/ApplicationServer');
 const ApplicationUser = require('../model/ApplicationUser');
+const Trip = require('../model/Trip');
 const Car = require('../model/Car');
 const TokenModel = require('../model/Token');
 const tokenManager = require('../utils/token-manager');
@@ -73,29 +74,29 @@ const carMock1 = {
 };
 
 const userMock2 = {
-    'id': 'quelopario',
-    '_ref': '6b868e317825e0ecbac97721009f91907eb7aa65',
-    'applicationOwner': 'llevame',
-    'type': 'passenger',
-    'cars': [],
-    'username': 'quelopario',
-    'name': 'Hector',
-    'surname': 'Zaragoza',
-    'country': 'Argentina',
-    'email': 'quelopario@gmail.com',
-    'birthdate': '1960-09-18T03:00:00.000Z',
-    'images': [
-        'https://www.postgresql.org/docs/9.6/static/datatype-json.html',
-        'https://docs.google.com/document/d/1Ekd8ohj2WdSd5gg4_s4SGvP3P65CLb69U4-5fMBab4o/'
+    "id": "llevame-quelopario",
+    "_ref": "6b868e317825e0ecbac97721009f91907eb7aa65",
+    "applicationOwner": "llevame",
+    "type": "passenger",
+    "cars": [],
+    "username": "quelopario",
+    "name": "Hector",
+    "surname": "Zaragoza",
+    "country": "Argentina",
+    "email": "quelopario@gmail.com",
+    "birthdate": "1960-09-18T03:00:00.000Z",
+    "images": [
+        "https://www.postgresql.org/docs/9.6/static/datatype-json.html",
+        "https://docs.google.com/document/d/1Ekd8ohj2WdSd5gg4_s4SGvP3P65CLb69U4-5fMBab4o/"
     ],
-    'balance': [
+    "balance": [
         {
-            'currency': 'ARS',
-            'value': 5000
+            "currency": "ARS",
+            "value": 4950
         },
         {
-            'currency': 'EUR',
-            'value': 45678.98
+            "currency": "EUR",
+            "value": 45678.98
         }
     ]
 };
@@ -182,6 +183,101 @@ const serverMock2 = {
     'name': 'Super Taxi',
     'lastConnection': 1507163945586
 };
+
+const tripMocks = [
+    {
+        "id": 1,
+        "applicationOwner": "llevame",
+        "driver": "llevame-mzaragoza",
+        "passenger": "llevame-quelopario",
+        "start": {
+            "address": {
+                "street": "Sto domingo 1180",
+                "location": {
+                    "lat": -34.497956,
+                    "lon": -58.534823
+                }
+            },
+            "timestamp": 1510107005246
+        },
+        "end": {
+            "address": {
+                "street": "Av. Cordoba 673",
+                "location": {
+                    "lat": -34.598282,
+                    "lon": -58.376498
+                }
+            },
+            "timestamp": 1510109105246
+        },
+        "totalTime": 2100,
+        "waitTime": 300,
+        "travelTime": 1800,
+        "distance": 2500,
+        "route": [],
+        "cost": {
+            "currency": "ARS",
+            "value": 123.25
+        },
+        "date": "2017-11-08T05:10:02.589Z"
+    },
+    {
+        "id": 2,
+        "applicationOwner": "llevame",
+        "driver": "llevame-mzaragoza",
+        "passenger": "llevame-quelopario",
+        "start": {
+            "address": {
+                "street": "Sto domingo 1180",
+                "location": {
+                    "lat": -34.497956,
+                    "lon": -58.534823
+                }
+            },
+            "timestamp": 1509237426992
+        },
+        "end": {
+            "address": {
+                "street": "Maipu 1234",
+                "location": {
+                    "lat": -34.4978,
+                    "lon": -58.497652
+                }
+            },
+            "timestamp": 1509238026992
+        },
+        "totalTime": 600,
+        "waitTime": 60,
+        "travelTime": 540,
+        "distance": 4300,
+        "route": [
+            {
+                "location": {
+                    "lat": 0,
+                    "lon": 0
+                },
+                "timestamp": 1509238026692
+            }
+        ],
+        "cost": {
+            "currency": "ARS",
+            "value": 350.25
+        },
+        "date": "2017-11-08T05:24:03.387Z"
+    }
+];
+
+const transactionMocks = [
+    {
+        "id": "6863d2b4-014c-4ca6-aeee-66a3e451a4de",
+        "currency": "ARS",
+        "value": "-50.00",
+        "date": "2017-11-08T05:24:08.331Z",
+        "appusr": "llevame-quelopario",
+        "trip": 2,
+        "done": true
+    }
+];
 
 function mockTokens() {
     return [TokenModel.fromObj(tokenMock1)];
@@ -858,6 +954,49 @@ describe('app-user-controller', function () {
             };
             appUserController.updateUserCar(req, res);
         });
+    });
+
+    describe('#getUserTrips', function () {
+        it('Falla por un error en la BBDD', function () {
+            const dbUser = ApplicationUser.fromObj(userMock2);
+            sandbox.stub(ApplicationUser, 'findByIdAndApp')
+                .callsFake((userId, serverId, callback) => callback(new Error()));
+
+            const req = { serverId: dbUser.applicationOwner, params: { userId: dbUser.id } };
+            const res = mockErrRes(500);
+            appUserController.getUserTrips(req, res);
+        });
+
+        it('Falla porque el usuario no existe', function () {
+            const dbUser = ApplicationUser.fromObj(userMock2);
+            sandbox.stub(ApplicationUser, 'findByIdAndApp')
+                .callsFake((userId, serverId, callback) => callback());
+
+            const req = { serverId: dbUser.applicationOwner, params: { userId: dbUser.id } };
+            const res = mockErrRes(404);
+            appUserController.getUserTrips(req, res);
+        });
+
+        it('Encuentra los viajes del usuario', function () {
+            const dbUser = ApplicationUser.fromObj(userMock2);
+            sandbox.stub(ApplicationUser, 'findByIdAndApp')
+                .callsFake((userId, serverId, callback) => callback(null, dbUser));
+
+            const dbTrips = tripMocks;
+            sandbox.stub(Trip, 'findByUser')
+                .callsFake((userId, callback) => callback(null, dbTrips));
+
+            const req = { serverId: dbUser.applicationOwner, params: { userId: dbUser.id } };
+            const res = {
+                send({ metadata, trips }) {
+                    assert.ok(metadata.total == metadata.count == trips.length);
+                    assert.equal(dbTrips, trips);
+                }
+            };
+            appUserController.getUserTrips(req, res);
+        });
+
+
     });
 });
 
