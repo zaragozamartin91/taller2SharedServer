@@ -163,6 +163,7 @@ ApplicationUser.findByUsernameAndApp = function (user, app, callback) {
     });
 };
 
+/* istanbul ignore next */
 ApplicationUser.findByFbToken = function (fbtoken, app, callback) {
     const sql = buildFindQuery('WHERE u.applicationowner=$1');
     dbManager.queryPromise(sql, [app])
@@ -174,6 +175,7 @@ ApplicationUser.findByFbToken = function (fbtoken, app, callback) {
 };
 
 /* Disminuye el saldo del usuario */
+/* istanbul ignore next */
 ApplicationUser.pay = function (user, cost, callback) {
     const userId = user.id || user;
     ApplicationUser.findById(userId, (err, dbUser) => {
@@ -191,16 +193,19 @@ ApplicationUser.pay = function (user, cost, callback) {
 };
 
 /* Incrementa el saldo del usuario */
+/* istanbul ignore next */
 ApplicationUser.earn = function (user, { currency, value }, callback) {
     ApplicationUser.pay(user, { currency, value: -value }, callback);
 };
 
+/* istanbul ignore next */
 ApplicationUser.prototype.validate = function (password, fbToken) {
     if (password) return password == this.password;
     const authToken = this.fb.authToken;
     return authToken && fbToken == authToken;
 };
 
+/* istanbul ignore next */
 ApplicationUser.prototype.update = function (callback) {
     const user = this;
     const newRef = hashUser(user);

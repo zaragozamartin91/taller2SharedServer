@@ -80,6 +80,16 @@ describe('rule-handler', function () {
             ruleHandler.check(fact, ruleHandler.BASE_RULES).then(handleResult);
         });
 
+        it('Descuento del 5% a partir del 5 viaje del dia', function () {
+            const type = 'passenger';
+            const distance = 1500;
+            const fact = {
+                type, mts: distance, operations: [], todayTripCount: 4,
+                dayOfWeek: moment('2017-11-09').day(), hour: moment('2017-11-09 17:30').hour()
+            };
+            ruleHandler.check(fact, ruleHandler.BASE_RULES).then(handleResult);
+        });
+
         it('Chequea reglas de chofer', function () {
             const type = 'driver';
             const distance = 1500;
