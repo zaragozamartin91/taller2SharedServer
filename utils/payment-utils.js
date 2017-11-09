@@ -179,7 +179,7 @@ exports.paymentPromise = function (token = TOKEN_HOLDER.token, paymentData) {
     }
 };
 
-function __postPayment(paymentData, callback, renewToken = false) {
+function __postPayment(paymentData, callback, renewToken = false, tries = 0) {
     exports.getTokenPromise(renewToken)
         .then(contents => {
             const token = contents.data.access_token;
@@ -195,9 +195,12 @@ function __postPayment(paymentData, callback, renewToken = false) {
 
             const statusCode = getStatusCode(cause);
             const unauthorized = statusCode == 403 || statusCode == 401;
-            if (unauthorized) {
+            if (unauthorized && tries < MAX_RECONN_TRIES) {
                 logger.debug('Token ' + TOKEN_HOLDER.token + ' invalido o expirado...');
-                __postPayment(paymentData, callback, true);
+                __postPayment(paymentData, callback, true, tries + 1);
+            } else if (unauthorized && tries >= MAX_RECONN_TRIES) {
+                logger.debug('Intentos maximos de obtener el token alcanzados...');
+                callback(new Error('Intentos maximos de obtener el token alcanzados...'));
             } else {
                 callback(cause);
             }

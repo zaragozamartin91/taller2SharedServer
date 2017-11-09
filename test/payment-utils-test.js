@@ -146,5 +146,15 @@ describe('payment-utils-test', function () {
                 console.log(paymentDataMock);
             });
         });
+
+        it('Falla porque se alcanzo la cantidad maxima de intentos de renovacion de token', function () {
+            //const token = contents.data.access_token;
+            const errObj = { request: { res: { statusCode: 401 } } };
+            sandbox.stub(paymentUtils, 'getTokenPromise').returns(Promise.reject(errObj));
+
+            paymentUtils.postPayment(paymentDataMock, err => {
+                assert.ok(err);
+            });
+        });
     });
 });

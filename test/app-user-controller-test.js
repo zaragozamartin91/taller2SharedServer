@@ -988,8 +988,10 @@ describe('app-user-controller', function () {
 
             const req = { serverId: dbUser.applicationOwner, params: { userId: dbUser.id } };
             const res = {
+                status(code) { this.code = code; },
                 send({ metadata, trips }) {
-                    assert.ok(metadata.total == metadata.count == trips.length);
+                    assert.equal(dbTrips.length, metadata.count);
+                    assert.equal(dbTrips.length, metadata.total);
                     assert.equal(dbTrips, trips);
                 }
             };
