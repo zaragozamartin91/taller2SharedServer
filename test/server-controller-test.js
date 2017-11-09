@@ -6,6 +6,7 @@ const ApplicationServer = require('../model/ApplicationServer');
 const TokenModel = require('../model/Token');
 const tokenManager = require('../utils/token-manager');
 const sinon = require('sinon');
+const axios = require('axios');
 
 let sandbox = null;
 
@@ -339,6 +340,48 @@ describe('server-controller', function () {
             };
 
             serverController.renewToken(req, res);
+        });
+    });
+
+    describe('#pingServer', function () {
+        it('Obtiene el estado de llevame', function () {
+            sandbox.stub(axios, 'get').returns(Promise.resolve({ data: { code: 200 } }));
+
+            const req = { params: { serverId: 'llevame' } };
+            const res = mockErrRes(200);
+            serverController.pingServer(req, res);
+        });
+
+        it('Obtiene el estado de llevame con codigo ausente', function () {
+            sandbox.stub(axios, 'get').returns(Promise.resolve({ data: {} }));
+
+            const req = { params: { serverId: 'llevame' } };
+            const res = mockErrRes(200);
+            serverController.pingServer(req, res);
+        });
+
+        it('Falla al obtener el estado de llevame', function () {
+            sandbox.stub(axios, 'get').returns(Promise.reject({ data: { code: 500 } }));
+
+            const req = { params: { serverId: 'llevame' } };
+            const res = mockErrRes(500);
+            serverController.pingServer(req, res);
+        });
+
+        it('Obtiene el estado de otro server', function () {
+            sandbox.stub(Math, 'random').returns(0.6);
+
+            const req = { params: { serverId: 'another' } };
+            const res = mockErrRes(200);
+            serverController.pingServer(req, res);
+        });
+
+        it('Obtiene el estado de otro server como fallido', function () {
+            sandbox.stub(Math, 'random').returns(0.4);
+
+            const req = { params: { serverId: 'another' } };
+            const res = mockErrRes(500);
+            serverController.pingServer(req, res);
         });
     });
 });

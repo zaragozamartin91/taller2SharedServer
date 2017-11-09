@@ -279,7 +279,7 @@ exports.createHitTable = function (callback) {
         id SERIAL PRIMARY KEY, 
         server ${ApplicationServer.idType} REFERENCES ${ApplicationServer.table}(id) ON DELETE CASCADE ,
         method VARCHAR(8),
-        url VARCHAR(32),
+        url VARCHAR(128),
         date TIMESTAMP DEFAULT now()
     )`;
     dbManager.queryPromise(sql, [])

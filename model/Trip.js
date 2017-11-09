@@ -59,6 +59,7 @@ function fromRows(rows = []) {
 
 Trip.fromRows = fromRows;
 
+/* istanbul ignore next */
 Trip.insert = function (tripObj, callback) {
     const trip = fromObj(tripObj);
     const { applicationOwner, driver, passenger, start, end, totalTime, waitTime, travelTime, distance, route, cost } = trip;
@@ -72,6 +73,7 @@ Trip.insert = function (tripObj, callback) {
         .catch(cause => callback(cause));
 };
 
+/* istanbul ignore next */
 Trip.find = function (callback) {
     const sql = `SELECT * FROM ${TABLE}`;
     dbManager.queryPromise(sql, [])
@@ -79,6 +81,7 @@ Trip.find = function (callback) {
         .catch(cause => callback(cause));
 };
 
+/* istanbul ignore next */
 Trip.findByUser = function (user, callback) {
     const userId = user.id || user;
     const sql = `SELECT * FROM ${TABLE} WHERE driver=$1 OR passenger=$1`;
@@ -87,6 +90,7 @@ Trip.findByUser = function (user, callback) {
         .catch(cause => callback(cause));
 };
 
+/* istanbul ignore next */
 Trip.findById = function (trip, callback) {
     const tripId = trip.id || trip;
     const sql = `SELECT * FROM ${TABLE} WHERE id=$1`;
@@ -95,6 +99,7 @@ Trip.findById = function (trip, callback) {
         .catch(cause => callback(cause));
 };
 
+/* istanbul ignore next */
 Trip.delete = function (trip, callback) {
     const tripId = trip.id || trip;
     const sql = `DELETE FROM ${TABLE} WHERE id=$1 RETURNING *`;
@@ -103,6 +108,7 @@ Trip.delete = function (trip, callback) {
         .catch(cause => callback(cause));
 };
 
+/* istanbul ignore next */
 Trip.findByServer = function (trip, callback) {
     const tripId = trip.id || trip;
     const sql = `SELECT * FROM ${TABLE} WHERE applicationowner=$1`;

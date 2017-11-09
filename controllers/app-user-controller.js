@@ -267,26 +267,25 @@ exports.updateUserCar = function (req, res) {
     });
 };
 
-
-exports.getUserTrips = function (req, res) {
-    findUserAndDo(req, (err, user) => {
-        if (err) return sendMsgCodeResponse(res, 'Error en la BBDD al obtener el usuario', 500);
-        if (!user) return sendMsgCodeResponse(res, 'No existe el usuario', 404);
-
-        Trip.findByUser(user, (err, trips) => {
-            if (err) return sendMsgCodeResponse(res, 'Error en la BBDD al obtener los viajes', 500);
-            const metadata = buildMetadata(trips.length);
-            res.send({ metadata, trips });
-        });
-    });
-};
-
 function handleError(res) {
     return function (err) {
         if (err instanceof Error) return sendMsgCodeResponse(res, err.message || 'Error inesperado', 500);
         return sendMsgCodeResponse(res, err.message, err.code);
     };
 }
+
+exports.getUserTrips = function (req, res) {
+    const userId = req.params.userId;
+    const p1 = findUserPromise(req);
+    const p2 = new Promise((resolve, reject) =>
+        Trip.findByUser(userId, (err, trips) => err ? reject(err) : resolve(trips)));
+
+    Promise.all([p1, p2]).then(([user, trips]) => {
+        if (!user) return Promise.reject({ code: 404, message: 'No existe el usuario' });
+        const metadata = buildMetadata(trips.length);
+        res.send({ metadata, trips });
+    }).catch(handleError(res));
+};
 
 exports.getUserTransactions = function (req, res) {
     findUserPromise(req)

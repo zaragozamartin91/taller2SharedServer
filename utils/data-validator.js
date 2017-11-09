@@ -119,7 +119,7 @@ exports.validateTrip = validateTrip;
 
 function validateTransaction(transReq) {
     const { transaction, paymethod, paymentMethod } = transReq;
-    if (!transaction && !transaction.id) return { valid: false, message: 'No se indico la transaccion pendiente' };
+    if (!transaction) return { valid: false, message: 'No se indico la transaccion pendiente' };
     if (!paymethod && !paymentMethod) return { valid: false, message: 'No se indico el metodo de pago' };
 
     return { valid: true };

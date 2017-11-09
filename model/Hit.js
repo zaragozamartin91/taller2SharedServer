@@ -17,6 +17,7 @@ function fromObj(hitObj) {
     return new Hit(id, server, method, url, date);
 }
 
+/* istanbul ignore next */
 Hit.insert = function (hitObj, callback) {
     const { server, method, url } = hitObj;
     const sql = `INSERT INTO ${table}(server, method, url) VALUES($1,$2,$3) RETURNING *`;
@@ -27,7 +28,7 @@ Hit.insert = function (hitObj, callback) {
         .catch(callback);
 };
 
-
+/* istanbul ignore next */
 Hit.countLastDayByHour = function (server, callback) {
     const serverId = server.id || server;
     const sql = `SELECT COUNT(id) AS count, EXTRACT(hour FROM h.date) AS hour 
