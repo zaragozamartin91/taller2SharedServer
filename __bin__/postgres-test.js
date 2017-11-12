@@ -75,7 +75,7 @@ function addRole() {
 }
 
 let value = [{
-    currency: 'pesos',
+    currency: 'ARS',
     value: 12.50
 }, {
     currency: 'dolares',
@@ -100,7 +100,7 @@ let [applicationOwner, username, name, surname, country, email, birthdate, type,
     moment('1995-12-25').toDate(),
     'driver',
     ['https://www.postgresql.org/docs/9.6/static/datatype-json.html'],
-    [{ currency: 'peso', value: 123.45 }, { currency: 'dolar', value: 6789.10 }]
+    [{ currency: 'ARS', value: 123.45 }, { currency: 'USD', value: 6789.10 }]
 ];
 let userObj = { applicationOwner, username, name, surname, country, email, birthdate, type, images, balance };
 
@@ -125,18 +125,12 @@ let userObj = { applicationOwner, username, name, surname, country, email, birth
 //     dbManager.end();
 // });
 
-const id = Math.floor(Math.random() * 1000);
-const nameId = `NAME-${id}`;
-dbManager.queryPromise('INSERT INTO person VALUES($1,$2) RETURNING *', [nameId, id])
+
+dbManager.queryPromise('SELECT * FROM points', [])
     .then(rows => {
-        console.log(rows);
-        return dbManager.queryPromise('UPDATE asdad SET name=$1 WHERE dni=$2 RETURNING *', ['PEPE', id]);
-    })
-    .then(rows => {
-        console.log(rows);
-        return dbManager.queryPromise('UPDATE person SET name=$1 WHERE dni=$2 RETURNING *', ['PEPE', id]);
-    })
-    .catch(cause => {
+        console.log(rows[0].value.address.location.lat, rows[0].value.address.location.lon);
+        dbManager.end();
+    }).catch(cause => {
         console.error(cause);
         dbManager.end();
     });

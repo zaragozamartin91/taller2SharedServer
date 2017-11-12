@@ -6,10 +6,10 @@ const Car = require('./Car');
 const logger = require('log4js').getLogger('ApplicationUser');
 const flow = require('nimble');
 
-const table = 'app_user';
+const table = 'app_users';
 const DEFAULT_NAME = 'UNKNOWN';
 const DEFAULT_SURNAME = 'UNKNOWN';
-const DEFAULT_BALANCE_CURR = 'PESOS';
+const DEFAULT_BALANCE_CURR = 'ARS';
 const idType = 'VARCHAR(64)';
 const DEFAULT_BALANCE = [{ currency: DEFAULT_BALANCE_CURR, value: 0.0 }];
 const carTable = Car.table;
@@ -163,6 +163,7 @@ ApplicationUser.findByUsernameAndApp = function (user, app, callback) {
     });
 };
 
+/* istanbul ignore next */
 ApplicationUser.findByFbToken = function (fbtoken, app, callback) {
     const sql = buildFindQuery('WHERE u.applicationowner=$1');
     dbManager.queryPromise(sql, [app])
@@ -173,27 +174,46 @@ ApplicationUser.findByFbToken = function (fbtoken, app, callback) {
         }).catch(callback);
 };
 
-function validateType(type = '') {
-    type = type.toLowerCase();
-    return type == 'passenger' || type == 'driver';
-}
+/* Disminuye el saldo del usuario */
+/* istanbul ignore next */
+ApplicationUser.pay = function (user, cost, callback) {
+    const userId = user.id || user;
+    ApplicationUser.findById(userId, (err, dbUser) => {
+        if (err) return callback(err);
+        const specBalance = dbUser.balance.find(bal => bal.currency.toLowerCase() == cost.currency.toLowerCase());
+        if (!specBalance) return callback(new Error(`El usuario ${userId} no tiene balance ${cost.currency}`));
+        specBalance.value = specBalance.value - cost.value;
 
-ApplicationUser.validateType = validateType;
+        const sql = `UPDATE ${table} SET balance=$1 WHERE id=$2 RETURNING *`;
+        const values = [JSON.stringify(dbUser.balance), userId];
+        dbManager.queryPromise(sql, values)
+            .then(([upUsr]) => callback(null, fromObj(upUsr)))
+            .catch(cause => callback(cause));
+    });
+};
 
+/* Incrementa el saldo del usuario */
+/* istanbul ignore next */
+ApplicationUser.earn = function (user, { currency, value }, callback) {
+    ApplicationUser.pay(user, { currency, value: -value }, callback);
+};
+
+/* istanbul ignore next */
 ApplicationUser.prototype.validate = function (password, fbToken) {
     if (password) return password == this.password;
     const authToken = this.fb.authToken;
     return authToken && fbToken == authToken;
 };
 
+/* istanbul ignore next */
 ApplicationUser.prototype.update = function (callback) {
     const user = this;
     const newRef = hashUser(user);
 
     const sql = `UPDATE ${table} SET type=$1, username=$2, password=$3, fb=$4, name=$5, 
-        surname=$6, country=$7, email=$8, birthdate=$9, images=$10, _ref=$11 WHERE id=$12 RETURNING *`;
-    const { type, username, password, fb, name, surname, country, email, birthdate, images, id } = user;
-    const values = [type, username, password, JSON.stringify(fb), name, surname, country, email, birthdate, JSON.stringify(images), newRef, id];
+        surname=$6, country=$7, email=$8, birthdate=$9, images=$10, _ref=$11, balance=$12 WHERE id=$13 RETURNING *`;
+    const { type, username, password, fb, name, surname, country, email, birthdate, images, id, balance } = user;
+    const values = [type, username, password, JSON.stringify(fb), name, surname, country, email, birthdate, JSON.stringify(images), newRef, JSON.stringify(balance), id];
 
     dbManager.query(sql, values, err => {
         /* Si no hay error, actualizo el valor de _ref */
@@ -202,18 +222,25 @@ ApplicationUser.prototype.update = function (callback) {
     });
 };
 
-ApplicationUser.prototype.isPassenger = function(){ 
+ApplicationUser.prototype.isPassenger = function () {
     const usrType = this.type || '';
     return usrType.toLowerCase() == 'passenger';
 };
 
-ApplicationUser.prototype.isDriver = function(){ 
+ApplicationUser.prototype.isDriver = function () {
     const usrType = this.type || '';
     return usrType.toLowerCase() == 'driver';
 };
 
 ApplicationUser.prototype.delete = function (callback) {
     ApplicationUser.delete(this.id, callback);
+};
+
+ApplicationUser.prototype.getBalance = function (currency = '') {
+    const balance = this.balance.find(bal => bal.currency.toLowerCase() == currency.toLowerCase());
+    if (balance) return balance;
+    console.log(`El usuario ${this.id} no tiene balance ${currency}`);
+    return DEFAULT_BALANCE;
 };
 
 module.exports = ApplicationUser;

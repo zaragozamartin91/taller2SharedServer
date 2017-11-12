@@ -1,9 +1,13 @@
 const ApplicationUser = require('../model/ApplicationUser');
 const Car = require('../model/Car');
+const Trip = require('../model/Trip');
+const Transaction = require('../model/Transaction');
+
 const mainConf = require('../config/main-config');
 const logger = require('log4js').getLogger('app-user-controller');
 const responseUtils = require('../utils/response-utils');
 const dataValidator = require('../utils/data-validator');
+const paymentUtils = require('../utils/payment-utils');
 const moment = require('moment');
 
 const apiVersion = mainConf.apiVersion;
@@ -39,6 +43,11 @@ function findUserAndDo({ serverId, params: { userId } }, callback) {
     else return ApplicationUser.findById(userId, callback);
 }
 
+function findUserPromise(req) {
+    return new Promise((resolve, reject) =>
+        findUserAndDo(req, (err, usr) => err ? reject(err) : resolve(usr)));
+}
+
 /**
  * Obtiene una vista simplificada del usuario para enviar como respuesta al cliente.
  * @param {ApplicationUser} user Usuario del cual obtener la vista. 
@@ -59,19 +68,8 @@ exports.getUser = function (req, res) {
     });
 };
 
-/**
- * Valida un formulario de usuario.
- * @param {any} userObj Formulario de usuario. 
- * @return {any} Objeto con formato {valid,msg}
- */
-function validatePostUserForm({ type, username, password, firstName, lastName, country, email, birthdate }) {
-    if (!type || !username || !password || !firstName || !lastName || !country || !email || !birthdate) return { valid: false, msg: 'No fueron ingresados todos los parametros' };
-    if (!dataValidator.validateEmail(email)) return { valid: false, msg: 'Email invalido' };
-    if (!dataValidator.validateDate(birthdate)) return { valid: false, msg: 'Fecha de necimiento invalida' };
-    if (!ApplicationUser.validateType(type)) return { valid: false, msg: 'Tipo de cliente invalido' };
-    return { valid: true };
-}
 
+const validatePostUserForm = dataValidator.validateAppUser;
 exports.validatePostUserForm = validatePostUserForm;
 
 exports.postUser = function (req, res) {
@@ -138,13 +136,13 @@ exports.updateUser = function (req, res) {
     findUserAndDo(req, (err, user) => {
         if (!user) return sendMsgCodeResponse(res, 'El usuario no existe', 404);
 
-        const { _ref, type, username, password, fb, firstName, lastName, country, email, birthdate, images } = req.body;
+        const { _ref, type, username, password, fb, firstName, lastName, country, email, birthdate, images, balance } = req.body;
         const oldRef = _ref;
         if (user._ref != oldRef) return sendMsgCodeResponse(res, 'Ocurrio una colision', 409);
 
         if (type) {
             console.log('VALIDANDO TIPO ' + type);
-            if (!ApplicationUser.validateType(type)) return sendMsgCodeResponse(res, 'El tipo es invalido', 400);
+            if (!dataValidator.validateAppUserType(type)) return sendMsgCodeResponse(res, 'Tipo de usuario invalido', 400);
             user.type = type.toLowerCase();
         }
         user.username = username || user.username;
@@ -161,6 +159,7 @@ exports.updateUser = function (req, res) {
             else user.birthdate = moment(birthdate).toDate();
         }
         user.images = images || user.images;
+        user.balance = balance || user.balance;
 
         user.update(err => {
             if (err) return sendMsgCodeResponse(res, 'Ocurrio un error al actualizar el usuario', 500);
@@ -266,4 +265,78 @@ exports.updateUserCar = function (req, res) {
             res.send({ metadata, car });
         });
     });
+};
+
+function handleError(res) {
+    return function (err) {
+        if (err instanceof Error) return sendMsgCodeResponse(res, err.message || 'Error inesperado', 500);
+        return sendMsgCodeResponse(res, err.message, err.code);
+    };
+}
+
+exports.getUserTrips = function (req, res) {
+    const userId = req.params.userId;
+    const p1 = findUserPromise(req);
+    const p2 = new Promise((resolve, reject) =>
+        Trip.findByUser(userId, (err, trips) => err ? reject(err) : resolve(trips)));
+
+    Promise.all([p1, p2]).then(([user, trips]) => {
+        if (!user) return Promise.reject({ code: 404, message: 'No existe el usuario' });
+        const metadata = buildMetadata(trips.length);
+        res.send({ metadata, trips });
+    }).catch(handleError(res));
+};
+
+exports.getUserTransactions = function (req, res) {
+    findUserPromise(req)
+        .then(usr => {
+            if (!usr) return Promise.reject({ code: 404, message: 'El usuario no existe' });
+            return new Promise((resolve, reject) =>
+                Transaction.findByUser(usr, (err, txs) => err ? reject(err) : resolve(txs)));
+        }).then(transactions => {
+            const metadata = buildMetadata(transactions.length);
+            res.send({ metadata, transactions });
+        })
+        .catch(handleError(res));
+};
+
+exports.postUserTransaction = function (req, res) {
+    let localTransactionId;
+    const body = req.body;
+
+    findUserPromise(req)
+        .then(usr => {
+            if (!usr) return Promise.reject({ code: 404, message: 'El usuario no existe' });
+            const txValidation = dataValidator.validateTransaction(body);
+            if (!txValidation.valid) return Promise.reject({ code: 400, message: txValidation.message });
+
+            // TODO: TERMINAR ALTA DE TRANSACCIONES MANUALES
+            localTransactionId = body.transaction.id || body.transaction;
+
+            return new Promise((resolve, reject) =>
+                Transaction.findByIdAndUser(localTransactionId, usr, (err, tx) =>
+                    err ? reject(err) : resolve(tx)));
+        })
+        .then(transaction => {
+            if (!transaction) return Promise.reject({ code: 404, message: 'La transaccion no existe' });
+
+            const paymethod = body.paymethod || body.paymentMethod;
+            const { currency, value } = transaction;
+
+            const method = paymethod.paymethod || paymethod.name; // metodo de pago, ej: 'card'
+            const parameters = paymethod.parameters || paymethod;
+            const paymentData = paymentUtils.buildPaymentData(localTransactionId, currency, value, method, parameters);
+
+            return new Promise((resolve, reject) =>
+                paymentUtils.postPayment(paymentData, (err, payment) =>
+                    err ? reject(err) : resolve(payment)));
+        })
+        .then(payment => {
+            Transaction.solve(localTransactionId, payment.transaction_id, (err, txs) => {
+                logger.debug('Transacciones actualizadas:');
+                logger.debug(txs);
+                res.send({ message: 'Pago exitoso!' });
+            });
+        })
+        .catch(handleError(res));
 };

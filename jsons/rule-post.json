@@ -1,0 +1,14 @@
+{
+    "language": "node-rules/javascript",
+    "lastCommit": {
+        "author": "martin",
+        "message": "Nueva regla",
+        "timestamp": 1509574130918
+    },
+    "blob": {
+        "condition": "function (R) {R.when(this.type == 'passenger');}",
+        "consequence": "function (R) {console.log('precio por km 15 pesos');this.operations.push(v => v + this.mts *0.015);R.next();}",
+        "on": true
+    },
+    "active": true
+}

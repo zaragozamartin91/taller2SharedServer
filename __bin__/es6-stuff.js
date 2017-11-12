@@ -1,15 +1,3 @@
-const p = Promise.resolve('pepe');
-p.then(contents => {
-    console.log(contents);
-    return Promise.resolve('posting');
-}).then(contents => {
-    console.log(contents);
-});
+const moment = require('moment');
 
-// cause.request.res.statusCode
-function foo({ request: { res: { statusCode = 500 } = {} } = {} } = {}) {
-    console.log(statusCode);
-}
-
-const cause = { request: {} };
-foo(cause);
+console.log(moment('2017-11-08 15:00').day());

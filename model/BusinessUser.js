@@ -9,7 +9,7 @@ const logger = require('log4js').getLogger('BusinessUser');
 
 /* CONSTANTES -------------------------------------------------------------------------------------- */
 
-const table = 'business_user';
+const table = 'business_users';
 const idType = 'VARCHAR(64)';
 const DEFAULT_NAME = 'UNKNOWN';
 const DEFAULT_SURNAME = 'UNKNOWN';

@@ -2,7 +2,7 @@ const dbManager = require('./db-manager');
 const hasher = require('../utils/hasher');
 const logger = require('log4js').getLogger('Car');
 
-const table = 'car';
+const table = 'cars';
 const idType = 'VARCHAR(64)';
 const DEFAULT_PROPERTIES = [];
 

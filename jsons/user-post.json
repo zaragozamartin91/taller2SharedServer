@@ -1,0 +1,13 @@
+{
+    "type": "passenger",
+    "username": "rhuber",
+    "password": "pepe",
+    "firstName": "Rolando",
+    "lastName": "Huber",
+    "country": "ARG",
+    "email": "rhuber@gmail.com",
+    "birthdate": "1991-05-05",
+    "images": [
+      "image"
+    ]
+  }

@@ -7,6 +7,10 @@ const appUserController = require('../controllers/app-user-controller');
 
 const testDataController = require('../controllers/test-data-controller');
 const paymethodsController = require('../controllers/paymethods-controller');
+const tripsController = require('../controllers/trips-controller');
+const rulesController = require('../controllers/rules-controller');
+
+const hitsController = require('../controllers/hits-controller');
 
 const router = express.Router();
 
@@ -21,8 +25,7 @@ router.get('/test', function (req, res) {
 
 router.post('/token', tokenController.generateToken);
 
-/* /servers ROUTES -------------------------------------------------------------------------------------------------------------- */
-
+/* servers ROUTES -------------------------------------------------------------------------------------------------------------- */
 router.post('/servers/ping', serverController.renewToken);
 
 // Agrego el middleware para parsear y deocdificar el token
@@ -39,12 +42,11 @@ router.put('/servers/:serverId', tokenValidator.verifyManagerToken, serverContro
 
 router.post('/servers/:serverId', tokenValidator.verifyManagerToken, serverController.resetToken);
 
-
+router.get('/servers/:serverId/keepalive', tokenValidator.verifyManagerToken, serverController.pingServer);
 /* FIN servers ROUTES ----------------------------------------------------------------------------------------------------------- */
 
 
-/* /business-users ROUTES ------------------------------------------------------------------------------------------------------- */
-
+/* business-users ROUTES ------------------------------------------------------------------------------------------------------- */
 router.use('/business-users', tokenValidator.verifyToken);
 
 // Agrego el middleware para validar que el usuario sea admin
@@ -60,33 +62,64 @@ router.delete('/business-users/:userId', tokenValidator.verifyAdminToken, busine
 // EL ORDEN DE ESTOS ENDPOINTS ES FUNDAMENTAL
 router.get('/business-users/me', tokenValidator.verifyUserToken, businessUsersController.getMyUser);
 router.get('/business-users/:userId', tokenValidator.verifyUserToken, businessUsersController.getUser);
+/* FIN business-users ROUTES ---------------------------------------------------------------------------------------------------- */
 
-/* FIN /business-users ROUTES ---------------------------------------------------------------------------------------------------- */
 
-
-/* /users ROUTES ------------------------------------------------------------------------------------------------------- */
-
+/* users ROUTES -------------------------------------------------------------------------------------------------------------------- */
 router.use('/users', tokenValidator.verifyToken);
 
-router.get('/users', tokenValidator.verifyServerOrUserToken, appUserController.getUsers);
-router.get('/users/:userId', tokenValidator.verifyServerOrUserToken, appUserController.getUser);
+router.get('/users', tokenValidator.verifyServerOrRoleToken('user'), appUserController.getUsers);
+router.get('/users/:userId', tokenValidator.verifyServerOrRoleToken('user'), appUserController.getUser);
 router.post('/users', tokenValidator.verifyServerToken, appUserController.postUser);
-router.delete('/users/:userId', tokenValidator.verifyServerOrUserToken, appUserController.deleteUser);
+router.delete('/users/:userId', tokenValidator.verifyServerOrRoleToken('manager'), appUserController.deleteUser);
 router.post('/users/validate', tokenValidator.verifyServerToken, appUserController.validateUser);
 router.put('/users/:userId', tokenValidator.verifyServerToken, appUserController.updateUser);
 
-router.get('/users/:userId/cars', tokenValidator.verifyServerOrUserToken, appUserController.getUserCars);
-router.post('/users/:userId/cars', tokenValidator.verifyServerOrUserToken, appUserController.postUserCar);
-router.delete('/users/:userId/cars/:carId', tokenValidator.verifyServerOrUserToken, appUserController.deleteUserCar);
-router.get('/users/:userId/cars/:carId', tokenValidator.verifyServerOrUserToken, appUserController.getUserCar);
-router.put('/users/:userId/cars/:carId', tokenValidator.verifyServerOrUserToken, appUserController.updateUserCar);
+router.get('/users/:userId/trips', tokenValidator.verifyServerOrRoleToken('user'), appUserController.getUserTrips);
 
-/* FIN /users ROUTES ---------------------------------------------------------------------------------------------------- */
+router.get('/users/:userId/cars', tokenValidator.verifyServerOrRoleToken('user'), appUserController.getUserCars);
+router.post('/users/:userId/cars', tokenValidator.verifyServerToken, appUserController.postUserCar);
+router.delete('/users/:userId/cars/:carId', tokenValidator.verifyServerOrRoleToken('manager'), appUserController.deleteUserCar);
+router.get('/users/:userId/cars/:carId', tokenValidator.verifyServerOrRoleToken('user'), appUserController.getUserCar);
+router.put('/users/:userId/cars/:carId', tokenValidator.verifyServerToken, appUserController.updateUserCar);
 
-/* /paymethods ROUTES ------------------------------------------------------------------------------------------------------- */
+router.get('/users/:userId/transactions', tokenValidator.verifyServerOrRoleToken('user'), appUserController.getUserTransactions);
+router.post('/users/:userId/transactions', tokenValidator.verifyServerToken, appUserController.postUserTransaction);
+/* FIN users ROUTES ----------------------------------------------------------------------------------------------------------------- */
+
+/* paymethods ROUTES ------------------------------------------------------------------------------------------------------- */
 router.use('/paymethods', tokenValidator.verifyToken);
-router.get('/paymethods', tokenValidator.verifyServerOrUserToken ,paymethodsController.getPaymethods);
-/* FIN /paymethods ROUTES ------------------------------------------------------------------------------------------------------- */
+router.get('/paymethods', tokenValidator.verifyServerOrRoleToken('user'), paymethodsController.getPaymethods);
+router.post('/payment', paymethodsController.testPayment);
+/* FIN paymethods ROUTES ------------------------------------------------------------------------------------------------------- */
+
+
+/* trips ROUTES ------------------------------------------------------------------------------------------------------- */
+router.use('/trips', tokenValidator.verifyToken);
+router.get('/trips/server/:serverId', tokenValidator.verifyManagerToken, tripsController.getServerTrips);
+router.get('/trips/:tripId', tokenValidator.verifyServerOrRoleToken('user'), tripsController.getTrip);
+router.get('/trips', tokenValidator.verifyServerOrRoleToken('user'), tripsController.getTrips);
+router.post('/trips', tokenValidator.verifyServerToken, tripsController.postTrip);
+router.post('/trips/estimate', tokenValidator.verifyServerToken, tripsController.estimate);
+router.post('/trips', tokenValidator.verifyServerToken, tripsController.postTrip);
+/* FIN trips ROUTES ------------------------------------------------------------------------------------------------------- */
+
+
+/* rules ROUTES ------------------------------------------------------------------------------------------------------- */
+router.use('/rules', tokenValidator.verifyToken);
+router.post('/rules', tokenValidator.verifyManagerToken, rulesController.postRule);
+router.post('/rules/run', tokenValidator.verifyAdminToken, rulesController.runRules);
+router.post('/rules/:ruleId/run', tokenValidator.verifyAdminToken, rulesController.runRule);
+router.delete('/rules/:ruleId', tokenValidator.verifyManagerToken, rulesController.deleteRule);
+router.put('/rules/:ruleId', tokenValidator.verifyManagerToken, rulesController.updateRule);
+router.get('/rules/:ruleId/commits', tokenValidator.verifyManagerToken, rulesController.getRuleCommits);
+router.get('/rules/:ruleId/commits/:commitId', tokenValidator.verifyManagerToken, rulesController.getRuleCommit);
+/* FIN rules ROUTES ------------------------------------------------------------------------------------------------------- */
+
+/* hits ROUTES ------------------------------------------------------------------------------------------------------- */
+router.use('/hits', tokenValidator.verifyToken);
+router.get('/hits/:serverId', hitsController.countLastDayByHour);
+/* FIN hits ROUTES ------------------------------------------------------------------------------------------------------- */
 
 module.exports = router;
 

@@ -8,7 +8,7 @@ const logger = require('log4js').getLogger('ApplicationServer');
 
 /* CONSTANTES -------------------------------------------------------------------------------------- */
 
-const table = 'application_server';
+const table = 'app_servers';
 const idType = 'VARCHAR(64)';
 
 /* CODIGO -------------------------------------------------------------------------------------- */

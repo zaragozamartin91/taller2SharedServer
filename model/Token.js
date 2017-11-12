@@ -2,7 +2,7 @@ const dbManager = require('../model/db-manager');
 const tokenManager = require('../utils/token-manager');
 const Token = tokenManager.Token;
 
-const table = 'token';
+const table = 'tokens';
 
 class TokenModel extends Token {
     /**

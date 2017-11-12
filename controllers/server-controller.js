@@ -4,6 +4,7 @@ const ApplicationServer = require('../model/ApplicationServer');
 const tokenManager = require('../utils/token-manager');
 const BusinessUser = require('../model/BusinessUser');
 const TokenModel = require('../model/Token');
+const axios = require('axios');
 
 const logger = require('log4js').getLogger('server-controller');
 
@@ -13,6 +14,7 @@ const buildMetadata = responseUtils.buildMetadata;
 const requestTokenGetter = require('../utils/request-token-getter');
 
 const getToken = requestTokenGetter.getToken;
+
 
 exports.getServer = function (req, res) {
     getServer(req, res, server => {
@@ -162,4 +164,18 @@ exports.renewToken = function (req, res) {
             }
         });
     });
+};
+
+
+exports.pingServer = function (req, res) {
+    const serverId = req.params.serverId;
+    if (serverId == 'llevame') {
+        axios.get('http://taller2-application-server.herokuapp.com/api/v1/keepalive')
+            .then(contents => sendMsgCodeResponse(res, contents.data.code || 'OK', 200))
+            .catch(err => sendMsgCodeResponse(res, err.message || 'Error al verificar el estado de llevame', 500));
+    } else {
+        const serverOk = Math.random() >= 0.5;
+        if (serverOk) sendMsgCodeResponse(res, 'OK', 200);
+        else sendMsgCodeResponse(res, `Servidor ${serverId} inactivo`, 500);
+    }
 };
