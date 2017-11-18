@@ -304,9 +304,14 @@ exports.postUserTransaction = function (req, res) {
     let localTransactionId;
     const body = req.body;
 
+    let passenger;
+    let cost;
+
     findUserPromise(req)
         .then(usr => {
             if (!usr) return Promise.reject({ code: 404, message: 'El usuario no existe' });
+            passenger = usr;
+
             const txValidation = dataValidator.validateTransaction(body);
             if (!txValidation.valid) return Promise.reject({ code: 400, message: txValidation.message });
 
@@ -323,6 +328,8 @@ exports.postUserTransaction = function (req, res) {
             const paymethod = body.paymethod || body.paymentMethod;
             const { currency, value } = transaction;
 
+            cost = { currency, value };
+
             const method = paymethod.paymethod || paymethod.name; // metodo de pago, ej: 'card'
             const parameters = paymethod.parameters || paymethod;
             const paymentData = paymentUtils.buildPaymentData(localTransactionId, currency, value, method, parameters);
@@ -335,7 +342,22 @@ exports.postUserTransaction = function (req, res) {
             Transaction.solve(localTransactionId, payment.transaction_id, (err, txs) => {
                 logger.debug('Transacciones actualizadas:');
                 logger.debug(txs);
-                res.send({ message: 'Pago exitoso!' });
+
+                const tx = txs.find(t => t.appusr == passenger.id);
+
+                const resBody = {
+                    metadata: { version: apiVersion },
+                    transaction: {
+                        id: tx.id,
+                        trip: tx.trip,
+                        timestamp: tx.date.getTime(),
+                        cost,
+                        description: `Pago del viaje ${tx.trip}`,
+                        data: {}
+                    }
+                };
+
+                res.send(resBody);
             });
         })
         .catch(handleError(res));

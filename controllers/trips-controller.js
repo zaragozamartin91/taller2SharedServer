@@ -25,6 +25,8 @@ function buildMetadata(count, total = count) {
     return { count, total, 'next': '', 'prev': '', 'first': '', 'last': '', 'version': apiVersion };
 }
 
+exports.PAYMENT_API_FAIL_CODE = 601;
+
 /**
  * Busca un viaje en la BBDD y realiza una accion con el viaje encontrado.
  * @param {object} req Request del cliente. 
@@ -134,12 +136,13 @@ function postTrip(req, res) {
             })
             .then(dbTransaction => {
                 passengerTransaction = dbTransaction;
+                const statusCode = dbTransaction.done ? 201 : exports.PAYMENT_API_FAIL_CODE;
 
-                // Descuento el saldo del pasajero
+                // Descuento el saldo del pasajero aunque el pago haya fallado
                 return new Promise((resolve, reject) => ApplicationUser.pay(passenger, cost, err => {
                     if (err) return reject(err);
                     responseSent = true; // indico que se enviara una respuesta al usuario
-                    res.status(201);
+                    res.status(statusCode);
                     res.send({
                         metadata, trip: dbTrip, transaction: {
                             id: dbTransaction.id,
