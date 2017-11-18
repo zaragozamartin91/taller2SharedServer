@@ -81,7 +81,7 @@ const EditUserCard = React.createClass({
         ];
 
         return (
-            <Card style={{ marginTop: '15px' }}>
+            <Card >
                 <CardHeader
                     title='Editar usuario'
                     subtitle={this.state.username}
@@ -278,7 +278,7 @@ const Users = React.createClass({
         }
 
         const userCards = this.state.users.map(user => (
-            <Card >
+            <Card style={{ backgroundColor: "rgba(255,255,255,1)" }} >
                 <CardHeader
                     title={user.id}
                     subtitle={user.username}
