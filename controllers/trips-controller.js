@@ -94,11 +94,15 @@ function postTrip(req, res) {
             .then(result => {
                 if (result.cannotTravel) return Promise.reject({ code: 400, message: 'El pasajero debe normalizar su situación de pago' });
 
+                const localTransactionId = generateTransaction(trip); // transaccion local generada para invocar al payment api
+
                 // si el viaje resulta gratis, no se efectua ningun pago y se responde al cliente   
                 if (result.free) {
-                    dbTrip.cost = { currency, value: 0 };
-                    res.status(201);
-                    return res.send({ metadata, trip: dbTrip });
+                    console.log('Viaje gratis!');
+                    cost.value = 0;
+                    dbTrip.cost = cost;
+                    const payment = { transaction_id: localTransactionId, success: true };
+                    return Promise.resolve(payment);
                 }
 
                 /* Si el viaje no es gratis, calculo su costo */
@@ -106,7 +110,6 @@ function postTrip(req, res) {
                 console.log('Total: ' + cost.value);
                 dbTrip.cost = cost;
 
-                const localTransactionId = generateTransaction(trip); // transaccion local generada para invocar al payment api
                 const method = paymethod.paymethod || paymethod.name; // metodo de pago, ej: 'card'
                 const parameters = paymethod.parameters || paymethod;
                 const paymentData = paymentUtils.buildPaymentData(localTransactionId, currency, cost.value, method, parameters);
@@ -212,27 +215,23 @@ function getTodayTrips(trips) {
 function estimatePromise(distance, user, currency, type = 'passenger') {
     const fact = { type, mts: distance, operations: [], dayOfWeek: moment().day(), hour: moment().hour() };
 
-    return new Promise((resolve, reject) => Trip.findByUser(user, (err, trips) => err ? reject(err) : resolve(trips)))
-        .then(trips => {
-            fact.tripCount = trips.length;
-            fact.last30minsTripCount = getLast30MinsTrips(trips).length;
-            fact.todayTripCount = getTodayTrips(trips).length;
+    const p1 = new Promise((resolve, reject) => Trip.findByUser(user, (err, trips) => err ? reject(err) : resolve(trips)));
+    const p2 = new Promise((resolve, reject) => ApplicationUser.findById(user, (err, user) => err ? reject(err) : resolve(user)));
+    const p3 = new Promise((resolve, reject) => Rule.findActive((err, rules) => err ? reject(err) : resolve(rules)));
 
-            return new Promise((resolve, reject) =>
-                ApplicationUser.findById(user, (err, user) => err ? reject(err) : resolve(user)));
-        }).then(user => {
-            if (!user) return Promise.reject({ code: 400, message: `El usuario ${user} no existe` });
+    return Promise.all([p1, p2, p3]).then(([trips, user, rules]) => {
+        if (!user) return Promise.reject({ code: 400, message: `El usuario ${user} no existe` });
 
-            /* Si en el body del request se indica el cost entonces se toma el currency aqui para obtener el balance del usuario */
-            fact.pocketBalance = user.getBalance(currency);
-            fact.email = user.email;
+        fact.tripCount = trips.length;
+        fact.last30minsTripCount = getLast30MinsTrips(trips).length;
+        fact.todayTripCount = getTodayTrips(trips).length;
+        // Si en el body del request se indica el cost entonces se toma el currency aqui para obtener el balance del usuario 
+        fact.pocketBalance = user.getBalance(currency);
+        fact.email = user.email;
 
-            return new Promise((resolve, reject) =>
-                Rule.findActive((err, rules) => err ? reject(err) : resolve(rules)));
-        }).then(rules => {
-            const jsonRules = rules.map(rule => rule.blob);
-            return ruleHandler.checkFromJson(fact, jsonRules);
-        });
+        const jsonRules = rules.map(rule => rule.blob);
+        return ruleHandler.checkFromJson(fact, jsonRules);
+    });
 }
 
 
