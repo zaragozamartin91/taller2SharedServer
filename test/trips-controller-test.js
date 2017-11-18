@@ -240,107 +240,107 @@ function mockPassenger() {
 
 const dbRulesMock = [{
     blob:
-    {
-        condition: 'function (R) {R.when(this.type == \'passenger\' && this.pocketBalance.value < 0);}',
-        consequence: 'function (R) {this.cannotTravel = true;R.stop();}',
-        on: true
-    }
+        {
+            condition: 'function (R) {R.when(this.type == \'passenger\' && this.pocketBalance.value < 0);}',
+            consequence: 'function (R) {this.cannotTravel = true;R.stop();}',
+            on: true
+        }
 },
 {
     blob:
-    {
-        condition: 'function (R) {R.when(this.type == \'passenger\' && this.email.endsWith(\'@llevame.com\'));}',
-        consequence: 'function (R) {this.free = true;R.stop();}',
-        on: true
-    }
+        {
+            condition: 'function (R) {R.when(this.type == \'passenger\' && this.email.endsWith(\'@llevame.com\'));}',
+            consequence: 'function (R) {this.free = true;R.stop();}',
+            on: true
+        }
 },
 {
     blob:
-    {
-        condition: 'function (R) {R.when(this.type == \'passenger\');}',
-        consequence: 'function (R) {console.log(\'Costo minimo de viaje 50 pesos\');this.operations.push(v => 50);R.next();}',
-        on: true
-    }
+        {
+            condition: 'function (R) {R.when(this.type == \'passenger\');}',
+            consequence: 'function (R) {console.log(\'Costo minimo de viaje 50 pesos\');this.operations.push(v => 50);R.next();}',
+            on: true
+        }
 },
 {
     blob:
-    {
-        condition: 'function (R) {R.when(this.type == \'passenger\');}',
-        consequence: 'function (R) {console.log(\'precio por km 15 pesos\');this.operations.push(v => v + this.mts * 0.015);R.next();}',
-        on: true
-    }
+        {
+            condition: 'function (R) {R.when(this.type == \'passenger\');}',
+            consequence: 'function (R) {console.log(\'precio por km 15 pesos\');this.operations.push(v => v + this.mts * 0.015);R.next();}',
+            on: true
+        }
 },
 {
     blob:
-    {
-        condition: 'function (R) {R.when(this.type == \'passenger\' && this.dayOfWeek == 3 && this.hour == 15);}',
-        consequence: 'function (R) {console.log(\'Descuento del 5% los miercoles de 15hs a 16hs\');this.operations.push(v => v * 0.95);R.next();}',
-        on: true
-    }
+        {
+            condition: 'function (R) {R.when(this.type == \'passenger\' && this.dayOfWeek == 3 && this.hour == 15);}',
+            consequence: 'function (R) {console.log(\'Descuento del 5% los miercoles de 15hs a 16hs\');this.operations.push(v => v * 0.95);R.next();}',
+            on: true
+        }
 },
 {
     blob:
-    {
-        condition: 'function (R) {R.when(this.type == \'passenger\' && this.dayOfWeek >= 1 && this.dayOfWeek <= 5 && this.hour >= 17 && this.hour < 19);}',
-        consequence: 'function (R) {console.log(\'Recargo del 10% Lunes a Viernes de 17hs a 19hs\');this.operations.push(v => v * 1.1);R.next();}',
-        on: true
-    }
+        {
+            condition: 'function (R) {R.when(this.type == \'passenger\' && this.dayOfWeek >= 1 && this.dayOfWeek <= 5 && this.hour >= 17 && this.hour < 19);}',
+            consequence: 'function (R) {console.log(\'Recargo del 10% Lunes a Viernes de 17hs a 19hs\');this.operations.push(v => v * 1.1);R.next();}',
+            on: true
+        }
 },
 {
     blob:
-    {
-        condition: 'function (R) {R.when(this.type == \'passenger\' && this.todayTripCount >= 4);}',
-        consequence: 'function (R) {console.log(\'Descuento del 5% a partir del 5 viaje del dia\');this.operations.push(v => v * 0.95);R.next();}',
-        on: true
-    }
+        {
+            condition: 'function (R) {R.when(this.type == \'passenger\' && this.todayTripCount >= 4);}',
+            consequence: 'function (R) {console.log(\'Descuento del 5% a partir del 5 viaje del dia\');this.operations.push(v => v * 0.95);R.next();}',
+            on: true
+        }
 },
 {
     blob:
-    {
-        condition: 'function (R) {R.when(this.type == \'passenger\' && this.last30minsTripCount > 10);}',
-        consequence: 'function (R) {console.log(\'Recargo del 15% si en los últimos 30 mins se realizaron mas de 10 viajes\');this.operations.push(v => v * 1.15);R.next();}',
-        on: true
-    }
+        {
+            condition: 'function (R) {R.when(this.type == \'passenger\' && this.last30minsTripCount > 10);}',
+            consequence: 'function (R) {console.log(\'Recargo del 15% si en los últimos 30 mins se realizaron mas de 10 viajes\');this.operations.push(v => v * 1.15);R.next();}',
+            on: true
+        }
 },
 {
     blob:
-    {
-        condition: 'function (R) {R.when(this.type == \'passenger\' && this.tripCount == 0);}',
-        consequence: 'function (R) {console.log(\'Descuento de 100ARS en primer viaje\');this.operations.push(v => v - 100 > 0 ? v - 100 : 0);R.next();}',
-        on: true
-    }
+        {
+            condition: 'function (R) {R.when(this.type == \'passenger\' && this.tripCount == 0);}',
+            consequence: 'function (R) {console.log(\'Descuento de 100ARS en primer viaje\');this.operations.push(v => v - 100 > 0 ? v - 100 : 0);R.next();}',
+            on: true
+        }
 },
 {
     blob:
-    {
-        condition: 'function (R) {R.when(this.type == \'driver\');}',
-        consequence: 'function (R) {console.log(\'Pago de viaje minimo 30ARS\');this.operations.push(v => 30);R.next();}',
-        on: true
-    }
+        {
+            condition: 'function (R) {R.when(this.type == \'driver\');}',
+            consequence: 'function (R) {console.log(\'Pago de viaje minimo 30ARS\');this.operations.push(v => 30);R.next();}',
+            on: true
+        }
 },
 {
     blob:
-    {
-        condition: 'function (R) {R.when(this.type == \'driver\');}',
-        consequence: 'function (R) {console.log(\'Pago por KM de 5ARS\');this.operations.push(v => v + this.mts * 0.005);R.next();}',
-        on: true
-    }
+        {
+            condition: 'function (R) {R.when(this.type == \'driver\');}',
+            consequence: 'function (R) {console.log(\'Pago por KM de 5ARS\');this.operations.push(v => v + this.mts * 0.005);R.next();}',
+            on: true
+        }
 },
 {
     blob:
-    {
-        condition: 'function (R) {R.when(this.type == \'driver\' && this.dayOfWeek >= 1 && this.dayOfWeek <= 5 && this.hour >= 17 && this.hour < 19);}',
-        consequence: 'function (R) {console.log(\'Aumento del 3% de Lunes a Viernes de 17hs a 19hs\');this.operations.push(v => v * 1.03);R.next();}',
-        on: true
-    }
+        {
+            condition: 'function (R) {R.when(this.type == \'driver\' && this.dayOfWeek >= 1 && this.dayOfWeek <= 5 && this.hour >= 17 && this.hour < 19);}',
+            consequence: 'function (R) {console.log(\'Aumento del 3% de Lunes a Viernes de 17hs a 19hs\');this.operations.push(v => v * 1.03);R.next();}',
+            on: true
+        }
 },
 {
     blob:
-    {
-        condition: 'function (R) {R.when(this.type == \'driver\' && this.todayTripCount > 10);}',
-        consequence: 'function (R) {console.log(\'Aumento del 2% si realizo mas de 10 viajes en el dia\');this.operations.push(v => v * 1.02);R.next();}',
-        on: true
-    }
+        {
+            condition: 'function (R) {R.when(this.type == \'driver\' && this.todayTripCount > 10);}',
+            consequence: 'function (R) {console.log(\'Aumento del 2% si realizo mas de 10 viajes en el dia\');this.operations.push(v => v * 1.02);R.next();}',
+            on: true
+        }
 }];
 
 
@@ -511,7 +511,50 @@ describe('trips-controller', function () {
             const res = {
                 status(code) { this.code = code; },
                 send({ metadata, trip, transaction }) {
-                    
+                    assert.ok(transaction.success);
+                    assert.equal(201, this.code);
+                }
+            };
+            tripsController.postTrip(req, res);
+        });
+
+        it('Da de alta un viaje con pago fallido', function () {
+            const dbTrip = mockInsertedTrip();
+            sandbox.stub(Trip, 'insert')
+                .callsFake((trip, callback) => callback(null, dbTrip));
+
+            sandbox.stub(Trip, 'findByUser')
+                .callsFake((user, callback) => callback(null, mockTrips()));
+
+            const dbPassenger = mockPassenger();
+            dbPassenger.getBalance = currency => dbPassenger.balance[0];
+            sandbox.stub(ApplicationUser, 'findById')
+                .callsFake((user, callback) => callback(null, dbPassenger));
+
+            const dbRules = mockActiveRules();
+
+            //console.log(dbRules);
+            sandbox.stub(Rule, 'findActive')
+                .callsFake(callback => callback(null, dbRules));
+
+            sandbox.stub(paymentUtils, 'postPayment')
+                .callsFake((paymentData, callback) => callback(new Error('Error de prueba')));
+
+            sandbox.stub(Transaction, 'insert')
+                .callsFake((trans, callback) => callback(null, trans));
+
+            sandbox.stub(ApplicationUser, 'pay')
+                .callsFake((passenger, cost, callback) => callback());
+
+            sandbox.stub(ApplicationUser, 'earn')
+                .callsFake((passenger, cost, callback) => callback());
+
+            const req = { body: mockPostTripReqBody(), serverId: dbTrip.applicationOwner };
+            const res = {
+                status(code) { this.code = code; },
+                send({ metadata, trip, transaction }) {
+                    assert.ok(!transaction.success);
+                    assert.equal(tripsController.PAYMENT_API_FAIL_CODE, this.code);
                 }
             };
             tripsController.postTrip(req, res);
