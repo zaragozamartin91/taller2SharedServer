@@ -208,5 +208,7 @@ function __postPayment(paymentData, callback, renewToken = false, tries = 0) {
 }
 
 exports.postPayment = function (paymentData, callback) {
+    /* FIXME : se agrega un fallo en el pago a proposito */
+    //return callback(new Error('Error de pago modo DEBUG'));
     return __postPayment(paymentData, callback);
 };
