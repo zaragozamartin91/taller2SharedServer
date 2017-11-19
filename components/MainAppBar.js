@@ -40,7 +40,6 @@ const MainAppBar = React.createClass({
                     <MenuItem style={{ fontWeight: 'bold' }} onClick={this.props.onLogout}>Cerrar sesion</MenuItem>
 
                     <Link to="/index" onClick={this.closeDrawer}><MenuItem >Principal</MenuItem></Link>
-                    <Link to="/form-example" onClick={this.closeDrawer}><MenuItem >form-example</MenuItem></Link>
                     <MenuItem primaryText='Usuarios'
                         rightIcon={<ArrowDropRight />}
                         menuItems={[

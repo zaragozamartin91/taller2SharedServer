@@ -81,7 +81,7 @@ const EditUserCard = React.createClass({
         ];
 
         return (
-            <Card >
+            <Card style={{ backgroundColor: "rgba(255,255,255,0.8)" }} >
                 <CardHeader
                     title='Editar usuario'
                     subtitle={this.state.username}
@@ -192,6 +192,7 @@ const Users = React.createClass({
     componentDidMount() {
         console.log('token: ' + this.props.token);
         this.loadUsers();
+        console.log('USERS DID MOUNT');
     },
 
     openErrSnackbar(msg) {
@@ -252,6 +253,10 @@ const Users = React.createClass({
     },
 
     render() {
+        if (this.state.users.length == 0) {
+            return <div>No users...</div>;
+        }
+
         let editUserCard = null;
         if (this.state.updatingUser) {
             const user = this.state.users.find(u => u.id == this.state.updatingUser);
@@ -278,7 +283,7 @@ const Users = React.createClass({
         }
 
         const userCards = this.state.users.map(user => (
-            <Card style={{ backgroundColor: "rgba(255,255,255,1)" }} >
+            <Card style={{ backgroundColor: "rgba(255,255,255,0.8)" }} >
                 <CardHeader
                     title={user.id}
                     subtitle={user.username}
@@ -298,7 +303,7 @@ const Users = React.createClass({
         const mainElem = editUserCard || deleteUserDialog || userCards;
 
         return (
-            <div>
+            <div >
                 {mainElem}
                 <Snackbar
                     open={this.state.errSnackbarOpen}
@@ -308,7 +313,8 @@ const Users = React.createClass({
                 />
             </div >
         );
-    }
+    },
+
 });
 
 export default Users;

@@ -77,7 +77,7 @@ const Trips = React.createClass({
             const waitTime = `${trip.waitTime / 60} Minutos`;
             const travelTime = `${trip.travelTime / 60} Minutos`;
             return (
-                <Card >
+                <Card style={{ backgroundColor: "rgba(255,255,255,0.8)" }} >
                     <CardHeader
                         title={title}
                         subtitle={subtitle} />

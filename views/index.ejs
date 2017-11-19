@@ -11,17 +11,71 @@
   <link rel="stylesheet" href="/stylesheets/style.css" />
 
   <style>
-    body { 
+    /*body { 
         background-image: url('images/city_1.jpg');
         background-repeat: no-repeat;
         background-attachment: fixed;
         background-size:cover;
+        
+        min-height: 100%;
+        margin: 0px;
+    }*/
+
+    
+    /* 
+    html { 
+        background: url(images/city_1.jpg) no-repeat center center fixed; 
+        -webkit-background-size: cover;
+        -moz-background-size: cover;
+        -o-background-size: cover;
+        background-size: cover;
+        min-height: 100%;
+    }*/
+
+    /*FUNCIONA MAS O MENOS*/
+    /*#background_wrap {
+        z-index: -1;
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100%;
+        width: 100%;
+        background-size: cover;
+        background-image: url('images/city_1.jpg');
+        background-attachment: fixed;
+    }*/
+
+    #background_wrap {
+        z-index: -1;
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 110%;
+        width: 100%;
+        background-size: cover;
+        background-image: url('images/city_4.png');
+        background-repeat: no-repeat;
+        background-attachment: scroll;
+    }
+
+    body {
+        margin: 0px;
+    }
+
+    .with-margin {
+        margin: 8px;
+    }
+
+    .index {
+        /*mix-blend-mode: difference;*/
     }
   </style>
 </head>
 
 <body >
+    <div id="background_wrap"></div>
     <div class="page-content" id="root"></div>
+
 
     <script src="javascripts/common.bundle.js"></script>
     <script src="javascripts/mainapp.bundle.js"></script>
