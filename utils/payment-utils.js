@@ -139,6 +139,34 @@ exports.getPaymethods = function (req, res) {
 
 /* PERFORM PAYMENT ------------------------------------------------------------------------------------------------------------- */
 
+function buildCardPaymentData(transactionId, currency, value, parameters) {
+    return {
+        'transaction_id': transactionId,
+        currency: currency,
+        value: value,
+        paymentMethod: {
+            expiration_month: parameters.expiration_month,
+            expiration_year: parameters.expiration_year,
+            method: 'card',
+            type: parameters.type,
+            number: parameters.number,
+            ccvv: parameters.ccvv
+        }
+    };
+}
+
+function buildCashPaymentData(transactionId, currency, value, parameters) {
+    return {
+        'transaction_id': transactionId,
+        currency: currency,
+        value: value,
+        paymentMethod: {
+            method: 'cash',
+            type: parameters.type,
+        }
+    };
+}
+
 /**
  * Construye el objeto de pago para invocar al PUBLIC PAYMENTS API
  * @param {string} transactionId Id de la transaccion local
@@ -148,20 +176,9 @@ exports.getPaymethods = function (req, res) {
  * @param {any} parameters Parametros de pago
  */
 function buildPaymentData(transactionId, currency, value, method, parameters) {
-    console.log('buildPaymentData');
-    return {
-        'transaction_id': transactionId,
-        currency: currency,
-        value: value,
-        paymentMethod: {
-            expiration_month: parameters.expiration_month,
-            expiration_year: parameters.expiration_year,
-            method: method || 'card',
-            type: parameters.type,
-            number: parameters.number,
-            ccvv: parameters.ccvv
-        }
-    };
+    if (method == 'card') return buildCardPaymentData(transactionId, currency, value, parameters);
+    if (method == 'cash') return buildCashPaymentData(transactionId, currency, value, parameters);
+    throw new Error('No se indico el metodo de pago');
 }
 
 exports.buildPaymentData = buildPaymentData;

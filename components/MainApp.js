@@ -9,7 +9,6 @@ import axios from 'axios';
 
 import MainAppBar from './MainAppBar';
 import Index from './Index';
-import FormExample from './FormExample';
 import Login from './Login';
 import Users from './Users';
 import Servers from './Servers';
@@ -77,7 +76,6 @@ const MainApp = React.createClass({
                 <div>
                     <MainAppBar onLogout={() => this.logoutForm.submit()} />
 
-                    <Route path="/form-example" component={FormExample} />
                     <Route path="/users/list" component={() => <Users token={token} />} />
                     <Route path="/users/create" component={() => <CreateUserForm token={token} />} />
                     <Route path="/servers/list" component={() => <Servers token={token} />} />

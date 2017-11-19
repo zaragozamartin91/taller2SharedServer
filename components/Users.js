@@ -81,7 +81,7 @@ const EditUserCard = React.createClass({
         ];
 
         return (
-            <Card style={{ marginTop: '15px' }}>
+            <Card style={{ backgroundColor: "rgba(255,255,255,0.7)" }} >
                 <CardHeader
                     title='Editar usuario'
                     subtitle={this.state.username}
@@ -192,6 +192,7 @@ const Users = React.createClass({
     componentDidMount() {
         console.log('token: ' + this.props.token);
         this.loadUsers();
+        console.log('USERS DID MOUNT');
     },
 
     openErrSnackbar(msg) {
@@ -252,6 +253,10 @@ const Users = React.createClass({
     },
 
     render() {
+        if (this.state.users.length == 0) {
+            return <div>No users...</div>;
+        }
+
         let editUserCard = null;
         if (this.state.updatingUser) {
             const user = this.state.users.find(u => u.id == this.state.updatingUser);
@@ -277,8 +282,18 @@ const Users = React.createClass({
                 onError={() => this.openErrSnackbar(`Error al eliminar el usuario ${user.id}`)} />;
         }
 
-        const userCards = this.state.users.map(user => (
-            <Card >
+        const userCards = this.state.users.map(user => {
+            const backColors = ['#1A9386', 'rgb(21, 114, 105)', '#134E48'];
+            let colIdx = 0;
+            const userRoles = user.roles.map(r =>
+                <span style={{
+                    backgroundColor: backColors[colIdx++],
+                    color: 'white',
+                    marginRight: '8px',
+                    padding: '4px'
+                }}>{r}</span>);
+            const roleList = <p>{userRoles}</p>;
+            return (<Card style={{ backgroundColor: "rgba(255,255,255,0.7)" }} >
                 <CardHeader
                     title={user.id}
                     subtitle={user.username}
@@ -286,19 +301,19 @@ const Users = React.createClass({
                 <CardText expandable={false}>
                     Nombre: {user.name} <br />
                     Apellido: {user.surname} <br />
-                    Roles: {JSON.stringify(user.roles)} <br />
+                    {roleList}
                 </CardText>
                 <CardActions>
                     <FlatButton label="Eliminar" onClick={this.openDeleteDialog(user)} />
                     <FlatButton label="Editar" onClick={this.openEditCard(user)} />
                 </CardActions>
-            </Card>
-        ));
+            </Card>);
+        });
 
         const mainElem = editUserCard || deleteUserDialog || userCards;
 
         return (
-            <div>
+            <div >
                 {mainElem}
                 <Snackbar
                     open={this.state.errSnackbarOpen}
@@ -308,7 +323,8 @@ const Users = React.createClass({
                 />
             </div >
         );
-    }
+    },
+
 });
 
 export default Users;
