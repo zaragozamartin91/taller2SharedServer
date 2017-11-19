@@ -331,7 +331,7 @@ exports.postUserTransaction = function (req, res) {
             cost = { currency, value };
 
             const method = paymethod.paymethod || paymethod.name; // metodo de pago, ej: 'card'
-            const parameters = paymethod.parameters || paymethod;
+            const parameters = paymethod.parameters || paymethod; // parametros para realizar el pago como el N de tjta de credito
             const paymentData = paymentUtils.buildPaymentData(localTransactionId, currency, value, method, parameters);
 
             return new Promise((resolve, reject) =>

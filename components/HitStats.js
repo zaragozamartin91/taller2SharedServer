@@ -13,7 +13,7 @@ import { BottomNavigation, BottomNavigationItem } from 'material-ui/BottomNaviga
 
 import axios from 'axios';
 
-import Header from './Header';
+import ActionHeader from './ActionHeader';
 
 import moment from 'moment';
 import Chart from 'chart.js/dist/Chart.min.js';
@@ -118,25 +118,28 @@ const HitStats = React.createClass({
 
         return (
             <div>
-                <h1>Estadisticas {serverName}</h1>
 
-                <div style={{ width: '100%', height: '80%' }}>
-                    <canvas ref={chartCanvas => { this.chartCanvas = chartCanvas; }} id="myChart"></canvas>
-                </div>
+                <ActionHeader onClick={this.props.goBack} />
 
-                <Snackbar
-                    open={this.state.snackbarOpen}
-                    message={this.state.snackbarMessage}
-                    autoHideDuration={3000}
-                    onRequestClose={this.handleSnackbarRequestClose} />
+                <div className='with-margin'>
+                    <h1>Estadisticas {serverName}</h1>
 
+                    <Paper
+                        zDepth={2}
+                        className='with-margin'
+                        style={{ backgroundColor: 'rgba(255,255,255,0.5)' }} >
 
-                <BottomNavigation style={{ backgroundColor: '#00BCD4', width: '100%', color: 'white' }}>
-                    <BottomNavigationItem style={{ color: 'white' }}
-                        label="Volver"
-                        icon={goBackIcon}
-                        onClick={this.props.goBack} />
-                </BottomNavigation>
+                        <div style={{ width: '100%', height: '80%' }}>
+                            <canvas ref={chartCanvas => { this.chartCanvas = chartCanvas; }} id="myChart"></canvas>
+                        </div>
+
+                        <Snackbar
+                            open={this.state.snackbarOpen}
+                            message={this.state.snackbarMessage}
+                            autoHideDuration={3000}
+                            onRequestClose={this.handleSnackbarRequestClose} />
+                    </Paper>
+                </div >
 
             </div >
         );

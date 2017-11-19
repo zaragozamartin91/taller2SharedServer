@@ -81,7 +81,7 @@ const EditUserCard = React.createClass({
         ];
 
         return (
-            <Card style={{ backgroundColor: "rgba(255,255,255,0.8)" }} >
+            <Card style={{ backgroundColor: "rgba(255,255,255,0.7)" }} >
                 <CardHeader
                     title='Editar usuario'
                     subtitle={this.state.username}
@@ -282,8 +282,18 @@ const Users = React.createClass({
                 onError={() => this.openErrSnackbar(`Error al eliminar el usuario ${user.id}`)} />;
         }
 
-        const userCards = this.state.users.map(user => (
-            <Card style={{ backgroundColor: "rgba(255,255,255,0.8)" }} >
+        const userCards = this.state.users.map(user => {
+            const backColors = ['#1A9386', 'rgb(21, 114, 105)', '#134E48'];
+            let colIdx = 0;
+            const userRoles = user.roles.map(r =>
+                <span style={{
+                    backgroundColor: backColors[colIdx++],
+                    color: 'white',
+                    marginRight: '8px',
+                    padding: '4px'
+                }}>{r}</span>);
+            const roleList = <p>{userRoles}</p>;
+            return (<Card style={{ backgroundColor: "rgba(255,255,255,0.7)" }} >
                 <CardHeader
                     title={user.id}
                     subtitle={user.username}
@@ -291,14 +301,14 @@ const Users = React.createClass({
                 <CardText expandable={false}>
                     Nombre: {user.name} <br />
                     Apellido: {user.surname} <br />
-                    Roles: {JSON.stringify(user.roles)} <br />
+                    {roleList}
                 </CardText>
                 <CardActions>
                     <FlatButton label="Eliminar" onClick={this.openDeleteDialog(user)} />
                     <FlatButton label="Editar" onClick={this.openEditCard(user)} />
                 </CardActions>
-            </Card>
-        ));
+            </Card>);
+        });
 
         const mainElem = editUserCard || deleteUserDialog || userCards;
 

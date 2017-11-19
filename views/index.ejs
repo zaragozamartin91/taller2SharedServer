@@ -2,18 +2,18 @@
 <html>
 
 <head>
-  <title>
-    <%= title %>
-  </title>
+    <title>
+        <%= title %>
+    </title>
 
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#00BCD4"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#00BCD4" />
 
-  <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500" rel="stylesheet">
-  <link rel="stylesheet" href="/stylesheets/style.css" />
+    <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500" rel="stylesheet">
+    <link rel="stylesheet" href="/stylesheets/style.css" />
 
-  <style>
-    /*body { 
+    <style>
+        /*body { 
         background-image: url('images/city_1.jpg');
         background-repeat: no-repeat;
         background-attachment: fixed;
@@ -23,8 +23,7 @@
         margin: 0px;
     }*/
 
-    
-    /* 
+        /* 
     html { 
         background: url(images/city_1.jpg) no-repeat center center fixed; 
         -webkit-background-size: cover;
@@ -34,8 +33,9 @@
         min-height: 100%;
     }*/
 
-    /*FUNCIONA MAS O MENOS*/
-    /*#background_wrap {
+        /*FUNCIONA MAS O MENOS*/
+
+        /*#background_wrap {
         z-index: -1;
         position: fixed;
         top: 0;
@@ -47,34 +47,44 @@
         background-attachment: fixed;
     }*/
 
-    #background_wrap {
-        z-index: -1;
-        position: fixed;
-        top: 0;
-        left: 0;
-        height: 110%;
-        width: 100%;
-        background-size: cover;
-        background-image: url('images/city_4.png');
-        background-repeat: no-repeat;
-        background-attachment: scroll;
-    }
+        #background_wrap {
+            z-index: -1;
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 110%;
+            width: 100%;
+            background-size: cover;
+            background-image: url('images/city_4.png');
+            background-repeat: no-repeat;
+            background-attachment: scroll;
+        }
 
-    body {
-        margin: 0px;
-    }
+        body {
+            margin: 0px;
+            color: #134E48;
+        }
 
-    .with-margin {
-        margin: 8px;
-    }
+        .with-margin {
+            margin: 8px;
+        }
 
-    .index {
-        /*mix-blend-mode: difference;*/
-    }
-  </style>
+        .submenu-svg {
+            color: white !important;
+            fill: white !important;
+        }
+
+        .trans-card {
+            background-color: rgba(255,255,255,0.7);
+        }
+
+        .index {
+            /*mix-blend-mode: difference;*/
+        }
+    </style>
 </head>
 
-<body >
+<body>
     <div id="background_wrap"></div>
     <div class="page-content" id="root"></div>
 

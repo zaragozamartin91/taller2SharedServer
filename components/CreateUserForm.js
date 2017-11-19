@@ -107,7 +107,7 @@ const CreateUserForm = React.createClass({
 
         return (
             <div>
-                <Card style={{ backgroundColor: "rgba(255,255,255,0.8)" }} >
+                <Card style={{ backgroundColor: "rgba(255,255,255,0.7)" }} >
                     <CardHeader
                         title="Crear usuario"
                         subtitle="Administradores de servidor"

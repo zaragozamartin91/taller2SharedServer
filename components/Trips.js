@@ -11,6 +11,8 @@ import Snackbar from 'material-ui/Snackbar';
 import Paper from 'material-ui/Paper';
 import { BottomNavigation, BottomNavigationItem } from 'material-ui/BottomNavigation';
 
+import ActionHeader from './ActionHeader';
+
 import axios from 'axios';
 
 import Header from './Header';
@@ -77,7 +79,7 @@ const Trips = React.createClass({
             const waitTime = `${trip.waitTime / 60} Minutos`;
             const travelTime = `${trip.travelTime / 60} Minutos`;
             return (
-                <Card style={{ backgroundColor: "rgba(255,255,255,0.8)" }} >
+                <Card style={{ backgroundColor: "rgba(255,255,255,0.7)" }} >
                     <CardHeader
                         title={title}
                         subtitle={subtitle} />
@@ -98,23 +100,20 @@ const Trips = React.createClass({
 
         return (
             <div>
-                <h1>Viajes {serverName}</h1>
-                {tripCards}
-                <Snackbar
-                    open={this.state.snackbarOpen}
-                    message={this.state.snackbarMessage}
-                    autoHideDuration={3000}
-                    onRequestClose={this.handleSnackbarRequestClose} />
+                <ActionHeader onClick={this.props.goBack} />
 
+                <div className='with-margin'>
+                    <h1>Viajes de {serverName}</h1>
+                    {tripCards}
+                    <Snackbar
+                        open={this.state.snackbarOpen}
+                        message={this.state.snackbarMessage}
+                        autoHideDuration={3000}
+                        onRequestClose={this.handleSnackbarRequestClose} />
 
-                <BottomNavigation style={{ backgroundColor: '#00BCD4', width: '100%', color: 'white' }}>
-                    <BottomNavigationItem style={{ color: 'white' }}
-                        label="Volver"
-                        icon={goBackIcon}
-                        onClick={this.props.goBack} />
-                </BottomNavigation>
+                </div>
 
-            </div >
+            </div>
         );
     }
 });
