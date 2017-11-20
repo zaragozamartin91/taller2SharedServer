@@ -538,7 +538,7 @@ describe('trips-controller', function () {
                 send({ metadata, trip, transaction }) {
                     assert.ok(transaction.success);
                     assert.equal(201, this.code);
-                    assert.ok(trip.cost > 0);
+                    assert.ok(trip.cost.value > 0);
                 }
             };
             tripsController.postTrip(req, res);
@@ -581,7 +581,7 @@ describe('trips-controller', function () {
                 send({ metadata, trip, transaction }) {
                     assert.ok(transaction.success);
                     assert.equal(201, this.code);
-                    assert.equal(0, trip.cost);
+                    assert.equal(0, trip.cost.value);
                 }
             };
             tripsController.postTrip(req, res);
@@ -628,5 +628,36 @@ describe('trips-controller', function () {
             };
             tripsController.postTrip(req, res);
         });
+    });
+
+    describe('#getServerTrips', function () {
+        it('falla por un error en la bbdd', function () {
+            const req = { params: { serverId: 'serv' } };
+            sandbox.stub(Trip, 'findByServer')
+                .callsFake((serv, callback) => callback(new Error('error')));
+
+            const res = mockErrRes(500);
+            tripsController.getServerTrips(req, res);
+        });
+
+        it('obtiene los viajes de un server', function () {
+            const req = { params: { serverId: 'serv' } };
+            const dbTrips = mockTrips();
+            sandbox.stub(Trip, 'findByServer')
+                .callsFake((serv, callback) => callback(null, dbTrips));
+
+            const res = {
+                send({ metadata, trips }) {
+                    assert.ok(metadata);
+                    assert.equal(dbTrips.length, metadata.total);
+                    assert.equal(dbTrips.length, metadata.count);
+                }
+            };
+            tripsController.getServerTrips(req, res);
+        });
+    });
+
+    describe('#measureDistance',function(){
+        it('mide la distancia entre dos puntos')
     });
 });
