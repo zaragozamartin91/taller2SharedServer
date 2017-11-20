@@ -3,6 +3,7 @@ const ApplicationServer = require('./ApplicationServer');
 const hasher = require('../utils/hasher');
 const idGenerator = require('../utils/id-generator');
 const Car = require('./Car');
+const Trip = require('./Trip');
 const logger = require('log4js').getLogger('ApplicationUser');
 const flow = require('nimble');
 
@@ -196,6 +197,21 @@ ApplicationUser.pay = function (user, cost, callback) {
 /* istanbul ignore next */
 ApplicationUser.earn = function (user, { currency, value }, callback) {
     ApplicationUser.pay(user, { currency, value: -value }, callback);
+};
+
+/* istanbul ignore next */
+ApplicationUser.findFreqPassengers = function (server, callback) {
+    const serverId = server.id || server;
+    const sql = `SELECT u.id,u.username,count(t.id) as trip_count 
+        FROM ${table} u,${Trip.TABLE} t 
+        WHERE u.id=t.passenger AND u.applicationowner=$1
+        GROUP BY u.id 
+        ORDER BY trip_count DESC 
+        LIMIT 5;`;
+
+    dbManager.queryPromise(sql, [serverId])
+        .then(rows => callback(null, rows))
+        .catch(callback);
 };
 
 /* istanbul ignore next */

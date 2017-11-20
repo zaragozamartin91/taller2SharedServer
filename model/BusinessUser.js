@@ -146,6 +146,23 @@ BusinessUser.hasRole = function (user, role, callback) {
     });
 };
 
+BusinessUser.hasRoles = function (user, roles, callback) {
+    const userId = user.id || user;
+    const roleIds = roles.map(role => role.type || role.role || role);
+
+    BusinessUser.findById(userId, (err, user) => {
+        if (err) return callback(err);
+        
+        let roleFound = undefined;
+        for (let i = 0; i < roleIds.length; i++) {
+            const roleId = roleIds[i];
+            roleFound = user.roles.find(r => r == roleId);
+            if (roleFound) break;
+        }
+        callback(null, roleFound);
+    });
+};
+
 /**
  * Elimina un usuario de la BBDD.
  * @param {BusinessUser} user Usuario a eliminar.

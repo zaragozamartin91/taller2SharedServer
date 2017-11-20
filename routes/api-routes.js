@@ -42,7 +42,8 @@ router.put('/servers/:serverId', tokenValidator.verifyManagerToken, serverContro
 
 router.post('/servers/:serverId', tokenValidator.verifyManagerToken, serverController.resetToken);
 
-router.get('/servers/:serverId/keepalive', tokenValidator.verifyManagerToken, serverController.pingServer);
+router.get('/servers/:serverId/keepalive', tokenValidator.verifyAnyRoleToken, serverController.pingServer);
+router.get('/servers/:serverId/freqpassengers', tokenValidator.verifyAnyRoleToken, serverController.getFrequentPassengers);
 /* FIN servers ROUTES ----------------------------------------------------------------------------------------------------------- */
 
 
@@ -118,7 +119,7 @@ router.get('/rules/:ruleId/commits/:commitId', tokenValidator.verifyManagerToken
 
 /* hits ROUTES ------------------------------------------------------------------------------------------------------- */
 router.use('/hits', tokenValidator.verifyToken);
-router.get('/hits/:serverId', hitsController.countLastDayByHour);
+router.get('/hits/:serverId', tokenValidator.verifyAnyRoleToken, hitsController.countLastDayByHour);
 /* FIN hits ROUTES ------------------------------------------------------------------------------------------------------- */
 
 module.exports = router;
