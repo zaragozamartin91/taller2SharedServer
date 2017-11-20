@@ -108,3 +108,29 @@ exports.verifyUserToken = verifyRoleToken(Role.user());
 
 exports.verifyServerToken = verifyServerToken;
 exports.verifyServerOrRoleToken = verifyServerOrRoleToken;
+
+
+
+function verifyAnyRoleToken(req, res, next) {
+    logger.debug('Validando token de usuario de negocio con cualquier rol');
+    const decodedToken = req.decodedToken;
+    const userId = decodedToken.id;
+    if (!userId) return sendMsgCodeResponse(res, 'No autorizado', 401);
+
+    BusinessUser.hasRoles(userId, Role.all(), (err, hasRole) => {
+        if (err) {
+            logger.debug(err);
+            return sendMsgCodeResponse(res, `Ocurrio un error al verificar los roles de ${userId}`, 500);
+        }
+        if (hasRole) {
+            req.userId = userId;
+            logger.debug(`usuario ${userId} tiene roles de usuario de negocio`);
+            return next();
+        }
+        logger.debug(`usuario ${userId} no tiene roles de usuario de negocio`);
+        return sendMsgCodeResponse(res, `Usuario ${userId} no tiene roles de usuario de negocio`, 401);
+    });
+
+}
+
+exports.verifyAnyRoleToken = verifyAnyRoleToken;

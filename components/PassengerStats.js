@@ -9,7 +9,6 @@ import Dialog from 'material-ui/Dialog';
 import Snackbar from 'material-ui/Snackbar';
 
 import Paper from 'material-ui/Paper';
-import { BottomNavigation, BottomNavigationItem } from 'material-ui/BottomNavigation';
 
 import axios from 'axios';
 
@@ -20,17 +19,9 @@ import Chart from 'chart.js/dist/Chart.min.js';
 
 /* FIN DE IMPORTS -------------------------------------------------------------------------------------- */
 
-const HOURS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23];
-
-//const goBackIcon = <FontIcon className="material-icons">restore</FontIcon>;
-const goBackIcon = <img
-    src="/images/ic_restore_white_24px.svg"
-    alt="Volver"
-    style={{ width: 25, height: 25, display: 'inline' }} />;
-
 const EMPTY_CALLBACK = () => { };
 
-const HitStats = React.createClass({
+const PassengerStats = React.createClass({
     getDefaultProps() {
         return { token: '', server: {}, goBack: EMPTY_CALLBACK };
     },
@@ -43,56 +34,42 @@ const HitStats = React.createClass({
         };
     },
 
-    loadHits() {
-        console.log('loadHits:');
+    loadStats() {
+        console.log('loadStats:');
         const serverId = this.props.server.id;
         console.log('this.chartCanvas:');
         console.log(this.chartCanvas);
+        const ctx = this.chartCanvas.getContext('2d');
 
-        const url = `/api/v1/hits/${serverId}?token=${this.props.token}`;
-        axios.get(url)
-            .then(contents => {
-                const data = contents.data;
-                const tuples = HOURS.map(h => data.find(d => d.hour == h) || { count: 0, hour: h });
-                const values = tuples.map(t => t.count);
-                const maxValue = Math.max(...values);
-                const canvasCtx = this.chartCanvas.getContext('2d');
-
-                const myChart = new Chart(canvasCtx, {
-                    type: 'line',
-                    data: {
-                        labels: HOURS,
-                        datasets: [{
-                            label: 'Hits por hora',
-                            data: values,
-                            backgroundColor: '#7AB73E',
-                        }],
-                    }, options: {
-                        responsive: true,
-                        scales: {
-                            xAxes: [{
-                                display: true,
-                                scaleLabel: {
-                                    display: true,
-                                    labelString: 'Hora'
-                                }
-                            }],
-                            yAxes: [{
-                                display: true,
-                                ticks: {
-                                    beginAtZero: true,
-                                    steps: 10,
-                                    stepValue: 1,
-                                    max: maxValue + 1
-                                }
-                            }]
-                        }
+        const url = `/api/v1/servers/${serverId}/freqpassengers?token=${this.props.token}`;
+        axios.get(url).then(contents => {
+            const labels = contents.data.map(d => d.username);
+            const data = contents.data.map(d => d.trip_count);
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: 'Pasajeros frecuentes',
+                        data,
+                        backgroundColor: '#7AB73E',
+                    }]
+                }, options: {
+                    responsive: true,
+                    scales: {
+                        yAxes: [{
+                            display: true,
+                            ticks: {
+                                beginAtZero: true,
+                            }
+                        }]
                     }
-                });
-            }).catch(cause => {
-                console.error(cause);
-                this.openSnackbar(cause.message);
+                }
             });
+        }).catch(cause => {
+            console.error(cause);
+            this.openSnackbar(cause.message);
+        });
 
     },
 
@@ -100,7 +77,7 @@ const HitStats = React.createClass({
         console.log('componentDidMount:');
         console.log('\ttoken: ' + this.props.token);
         console.log('\tserver: ' + this.props.server);
-        this.loadHits();
+        this.loadStats();
     },
 
     openSnackbar(msg) {
@@ -147,4 +124,4 @@ const HitStats = React.createClass({
 
 });
 
-export default HitStats;
+export default PassengerStats;

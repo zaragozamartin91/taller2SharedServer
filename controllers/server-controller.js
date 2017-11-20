@@ -3,6 +3,7 @@ const responseUtils = require('../utils/response-utils');
 const ApplicationServer = require('../model/ApplicationServer');
 const tokenManager = require('../utils/token-manager');
 const BusinessUser = require('../model/BusinessUser');
+const ApplicationUser = require('../model/ApplicationUser');
 const TokenModel = require('../model/Token');
 const axios = require('axios');
 
@@ -178,4 +179,13 @@ exports.pingServer = function (req, res) {
         if (serverOk) sendMsgCodeResponse(res, 'OK', 200);
         else sendMsgCodeResponse(res, `Servidor ${serverId} inactivo`, 500);
     }
+};
+
+
+exports.getFrequentPassengers = function (req, res) {
+    const serverId = req.params.serverId;
+    ApplicationUser.findFreqPassengers(serverId, (err, rows) => {
+        if (err) return sendMsgCodeResponse(res, 'Error al obtener los pasajeros frecuentes de ' + serverId, 500);
+        res.send(rows);
+    });
 };
