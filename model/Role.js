@@ -29,6 +29,10 @@ Role.admin = function () {
     return new Role('admin');
 };
 
+Role.all = function () {
+    return [Role.user(), Role.admin(), Role.manager()];
+};
+
 /**
  * Convierte a objetos de tipo Role en un arreglo de sus nombres.
  * @param {Array<Role>} roles Roles a convertir en un arreglo de strings.
