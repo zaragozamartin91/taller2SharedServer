@@ -18,6 +18,22 @@ const DEFAULT_ROUTE = [{
 
 /* FIN DE CONSTANTES ----------------------------------------------------------------------------------------------------------------------------- */
 
+/**
+ * Crea una instancia de viaje
+ * @param {number} id Identificador del viaje
+ * @param {string} applicationOwner Server del viaje
+ * @param {string} driver Id de conductor
+ * @param {string} passenger Id de pasajero
+ * @param {object} start Punto de inicio
+ * @param {object} end Punto de llegada
+ * @param {number} totalTime Tiempo total en segundos
+ * @param {number} waitTime Tiempo de espera del pasajero en segundos
+ * @param {number} travelTime Tiempo de viaje en segundos
+ * @param {number} distance Distancia en metros
+ * @param {object} route Puntos de la ruta del viaje
+ * @param {object} cost Costo del viaje {moneda,valor}
+ * @param {Date} date Fecha de alta del viaje
+ */
 function Trip(id, applicationOwner, driver, passenger, start, end, totalTime, waitTime, travelTime, distance, route, cost, date) {
     this.id = id;
     this.applicationOwner = applicationOwner;
@@ -65,12 +81,15 @@ Trip.insert = function (tripObj, callback) {
     const { applicationOwner, driver, passenger, start, end, totalTime, waitTime, travelTime, distance, route, cost } = trip;
     const sql = `INSERT INTO ${TABLE}(applicationOwner, driver, passenger, _start, _end, totalTime, waitTime, travelTime, distance, route, cost)
         VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) RETURNING *`;
-    const values = [applicationOwner, driver, passenger, JSON.stringify(start), JSON.stringify(end), totalTime,
-        waitTime, travelTime, distance, JSON.stringify(route), JSON.stringify(cost)];
+    const values = [applicationOwner, driver, passenger, JSON.stringify(start), JSON.stringify(end), parseInt(totalTime),
+        parseInt(waitTime), parseInt(travelTime), parseInt(distance), JSON.stringify(route), JSON.stringify(cost)];
 
     dbManager.queryPromise(sql, values)
         .then(rows => callback(null, fromObj(rows[0])))
-        .catch(cause => callback(cause));
+        .catch(cause => {
+            console.error(cause);
+            callback(cause);
+        });
 };
 
 /* istanbul ignore next */
