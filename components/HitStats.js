@@ -53,6 +53,8 @@ const HitStats = React.createClass({
         axios.get(url)
             .then(contents => {
                 const data = contents.data;
+                // las horas estan sin TIMEZONE por lo cual resto 3 horas a cada valor
+                data.forEach(d => d.hour = d.hour - 3 > 0 ? d.hour - 3 : d.hour - 3 + 24);
                 const tuples = HOURS.map(h => data.find(d => d.hour == h) || { count: 0, hour: h });
                 const values = tuples.map(t => t.count);
                 const maxValue = Math.max(...values);
