@@ -1,0 +1,24 @@
+{
+    "driver": "llevame-mzaragoza",
+    "passenger": "llevame-quelopario",
+    "start": {
+        "address": {
+            "street": "Sto domingo 1180",
+            "location": {
+                "lat": -34.497956,
+                "lon": -58.534823
+            }
+        },
+        "timestamp": 1509237426992
+    },
+    "end": {
+        "address": {
+            "street": "Maipu 1234",
+            "location": {
+                "lat": -34.497800,
+                "lon": -58.497652
+            }
+        },
+        "timestamp": 1509238026992
+    }
+}

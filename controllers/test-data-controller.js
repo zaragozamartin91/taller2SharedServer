@@ -124,7 +124,7 @@ exports.createTestData = function (req, res) {
                         moment('1991-03-21').toDate(),
                         'driver',
                         ['https://www.postgresql.org/docs/9.6/static/datatype-json.html'],
-                        [{ currency: 'ARS', value: 123.45 }, { currency: 'USD', value: 6789.10 }]
+                        [{ currency: 'ARS', value: 123.45 }, { currency: 'USD', value: 6789.10 }, { currency: 'EUR', value: 678 }]
                     ];
                     let userObj = { applicationOwner, username, password, name, surname, country, email, birthdate, type, images, balance };
                     ApplicationUser.insert(userObj, (err, user) => {
@@ -153,7 +153,7 @@ exports.createTestData = function (req, res) {
                         moment('1960-09-18').toDate(),
                         'passenger',
                         ['https://www.postgresql.org/docs/9.6/static/datatype-json.html', 'https://docs.google.com/document/d/1Ekd8ohj2WdSd5gg4_s4SGvP3P65CLb69U4-5fMBab4o/'],
-                        [{ currency: 'ARS', value: 5000 }, { currency: 'EUR', value: 45678.98 }]
+                        [{ currency: 'ARS', value: 5000 }, { currency: 'USD', value: 1 }, { currency: 'EUR', value: 45678.98 }]
                     ];
                     let userObj = { applicationOwner, username, password, name, surname, country, email, birthdate, type, images, balance };
                     ApplicationUser.insert(userObj, (err, user) => {
@@ -289,12 +289,14 @@ exports.createTestData = function (req, res) {
                 jsonRule.consequence = jsonRule.consequence.replace(/\r/g, '').replace(/\n */g, '');
             });
 
+            let priority = 1;
             const ruleObjs = jsonRules.map(jsonRule => {
                 return {
                     'author': 'martin',
                     'message': 'New rule',
                     'blob': jsonRule,
-                    'active': true
+                    'active': true,
+                    'priority': priority++
                 };
             });
 

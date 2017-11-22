@@ -6,28 +6,32 @@ const TABLE = 'rules';
 
 
 const DEFAULT_LANGUAGE = 'node-rules/javascript';
+const DEFAULT_PRIORITY = 999;
 
 
-/*
-id SERIAL PRIMARY KEY, 
-_ref VARCHAR(128) NOT NULL,
-language VARCHAR(32) DEFAULT 'node-rules/javascript',
-author ${BusinessUser.idType} REFERENCES ${BusinessUser.table}(id) ON DELETE SET NULL,
-message VARCHAR(128),
-timestamp TIMESTAMP DEFAULT now(),
-blob JSON NOT NULL,
-active BOOLEAN */
-function Rule(id, _ref, language, lastCommit, blob, active = false) {
+/**
+ * Regla de negocio
+ * @param {number} id Identificador unico.
+ * @param {string} _ref Referencia para ediciones para prevenir colisiones.
+ * @param {string} language Lenguaje de la regla.
+ * @param {date} lastCommit Ultima fecha de modificacion.
+ * @param {object} blob Especificacion de la regla.
+ * @param {boolean} active Activa o no.
+ * @param {number} priority Prioridad de la regla. Mas bajo es mas importante.
+ */
+function Rule(id, _ref, language, lastCommit, blob, active = false, priority = DEFAULT_PRIORITY) {
     this.id = id;
     this._ref = _ref;
     this.language = language || DEFAULT_LANGUAGE;
     this.lastCommit = lastCommit;
     this.blob = blob;
     this.active = active;
+    this.priority = priority;
 }
 
 Rule.TABLE = TABLE;
 Rule.DEFAULT_LANGUAGE = DEFAULT_LANGUAGE;
+Rule.DEFAULT_PRIORITY = DEFAULT_PRIORITY;
 
 function hashRule(ruleObj) {
     const { language, blob, active } = ruleObj;
@@ -37,8 +41,8 @@ function hashRule(ruleObj) {
 function fromObj(ruleObj) {
     if (!ruleObj) return null;
     const { id, _ref, language, blob, active, author = '', message = '',
-        timestamp = new Date(), lastCommit = { author, message, timestamp } } = ruleObj;
-    return new Rule(id, _ref, language, lastCommit, blob, active);
+        timestamp = new Date(), lastCommit = { author, message, timestamp }, priority = DEFAULT_PRIORITY } = ruleObj;
+    return new Rule(id, _ref, language, lastCommit, blob, active, priority);
 }
 
 function fromRows(rows = []) {
@@ -47,14 +51,14 @@ function fromRows(rows = []) {
 
 /* istanbul ignore next */
 Rule.insert = function (ruleObj, callback) {
-    const { language = DEFAULT_LANGUAGE, blob, active = true, author, message = '' } = ruleObj;
+    const { language = DEFAULT_LANGUAGE, blob, active = true, author, message = '', priority = DEFAULT_PRIORITY } = ruleObj;
     const _ref = hashRule(ruleObj);
 
     const blobValue = typeof blob == 'string' ? blob : JSON.stringify(blob);
-    const values = [_ref, language, blobValue, active];
+    const values = [_ref, language, blobValue, active, priority];
 
-    const sql = `INSERT INTO ${TABLE}(_ref, language, blob, active)
-        VALUES ($1,$2,$3,$4) RETURNING *`;
+    const sql = `INSERT INTO ${TABLE}(_ref, language, blob, active, priority)
+        VALUES ($1,$2,$3,$4,$5) RETURNING *`;
 
     let dbRule;
     dbManager.queryPromise(sql, values)
@@ -75,7 +79,7 @@ Rule.insert = function (ruleObj, callback) {
 
 /* istanbul ignore next */
 Rule.findActive = function (callback) {
-    const sql = `SELECT * FROM ${TABLE} WHERE active=$1 ORDER BY id ASC`;
+    const sql = `SELECT * FROM ${TABLE} WHERE active=$1 ORDER BY priority , id ASC`;
     dbManager.queryPromise(sql, [true])
         .then(rules => callback(null, fromRows(rules)))
         .catch(callback);
@@ -104,9 +108,9 @@ Rule.delete = function (rule, callback) {
 /* istanbul ignore next */
 Rule.update = function (rule, callback) {
     const newRef = hashRule(rule);
-    const { id, language, blob, active, author, message } = rule;
-    const sql = `UPDATE ${TABLE} SET _ref=$1, language=$2, blob=$3, active=$4 WHERE id=$5 RETURNING *`;
-    const values = [newRef, language, blob, active, id];
+    const { id, language, blob, active, author, message, priority } = rule;
+    const sql = `UPDATE ${TABLE} SET _ref=$1, language=$2, blob=$3, active=$4, priority=$5 WHERE id=$6 RETURNING *`;
+    const values = [newRef, language, blob, active, priority, id];
 
     let dbRule;
     dbManager.queryPromise(sql, values)
@@ -122,6 +126,13 @@ Rule.update = function (rule, callback) {
             dbRule.lastCommit = { author, message, timestamp: commit.timestamp };
             callback(null, fromObj(dbRule));
         })
+        .catch(callback);
+};
+
+/* istanbul ignore next */
+Rule.find = function (callback) {
+    dbManager.queryPromise(`SELECT * FROM ${TABLE} ORDER BY priority , id ASC`, [])
+        .then(rows => callback(null, fromRows(rows)))
         .catch(callback);
 };
 

@@ -146,9 +146,9 @@
     },
     "paymethod": {
       "paymethod": "cash",
-      "currency": "EUR",
+      "currency": "USD",
       "parameters": {
-        "type": "EUR"
+        "type": "USD"
       }
     }
   }
