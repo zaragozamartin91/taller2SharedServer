@@ -153,8 +153,12 @@ exports.runRule = function (req, res) {
 exports.deleteRule = function (req, res) {
     const ruleId = req.params.ruleId;
 
-    findRulePromise(ruleId)
-        .then(rule => sendMsgCodeResponse(res, 'Baja correcta', 204))
+    new Promise((resolve, reject) =>
+        Rule.delete(ruleId, (err, delRule) => err ? reject(err) : resolve(delRule)))
+        .then(delRule => {
+            if (!delRule) return Promise.reject({ code: 404, message: 'La regla no existe' });
+            sendMsgCodeResponse(res, 'Baja correcta', 204);
+        })
         .catch(handleError(res));
 };
 

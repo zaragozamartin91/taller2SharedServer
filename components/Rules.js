@@ -21,6 +21,45 @@ import Header from './Header';
 
 const EMPTY_CALLBACK = () => { };
 
+function DeleteRuleDialog(props) {
+    const ruleId = props.rule.id || props.rule;
+    const token = props.token;
+
+    function deleteRule() {
+        axios.delete(`/api/v1/rules/${ruleId}?token=${token}`)
+            .then(contents => {
+                console.log('Regla eliminada');
+                props.onSuccess();
+            }).catch(cause => {
+                console.error(cause);
+                props.onError();
+            });
+    }
+
+    const actions = [
+        <FlatButton
+            label="Cancelar"
+            primary={true}
+            onClick={props.onClose}
+        />,
+        <FlatButton
+            label="Eliminar"
+            primary={true}
+            onClick={deleteRule}
+        />,
+    ];
+
+    return (
+        <Dialog
+            title={`Eliminar regla ${ruleId}`}
+            actions={actions}
+            modal={true}
+            open={props.open}>
+            Desea eliminar la regla?
+        </Dialog>
+    );
+}
+
 const Rules = React.createClass({
     getDefaultProps() {
         return { user: {}, token: '' };
@@ -30,7 +69,8 @@ const Rules = React.createClass({
         return {
             rules: [],
             snackbarOpen: false,
-            snackbarMessage: ''
+            snackbarMessage: '',
+            deleteRuleDialog: null
         };
     },
 
@@ -65,7 +105,7 @@ const Rules = React.createClass({
     openDeleteDialog(rule) {
         const self = this;
         return function () {
-
+            self.setState({ deleteRuleDialog: rule });
         };
     },
 
@@ -77,7 +117,27 @@ const Rules = React.createClass({
     },
 
     render() {
-        const ruleCards = this.state.rules.map(rule => {
+        let mainElem = null;
+
+        if (this.state.deleteRuleDialog) {
+            const ruleToDelete = this.state.deleteRuleDialog;
+            mainElem = <DeleteRuleDialog
+                token={this.props.token}
+                rule={ruleToDelete}
+                open={true}
+                onSuccess={() => {
+                    this.loadRules();
+                    this.setState({ deleteRuleDialog: null });
+                    this.openSnackbar('Regla eliminada');
+                }}
+                onClose={() => this.setState({ deleteRuleDialog: null })}
+                onError={() => {
+                    this.setState({ deleteRuleDialog: null });
+                    this.openSnackbar(`Error al eliminar regla ${ruleToDelete.id}`);
+                }} />;
+        }
+
+        mainElem = mainElem || this.state.rules.map(rule => {
             const title = `Regla ${rule.id} :: ${rule.language}`;
             const subtitle = `Prioridad ${rule.priority}`;
             const condition = rule.blob.condition;
@@ -106,7 +166,8 @@ const Rules = React.createClass({
             <div>
                 <div className='with-margin'>
 
-                    {ruleCards}
+                    {mainElem}
+
                     <Snackbar
                         open={this.state.snackbarOpen}
                         message={this.state.snackbarMessage}
