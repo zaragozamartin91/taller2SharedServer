@@ -190,7 +190,7 @@ exports.createRulesTable = function (callback) {
         language VARCHAR(32) DEFAULT '${Rule.DEFAULT_LANGUAGE}',
         blob JSON NOT NULL,
         active BOOLEAN,
-        priority INTEGER DEFAULT 999
+        priority INTEGER DEFAULT ${Rule.DEFAULT_PRIORITY}
     )`;
     dbManager.queryPromise(sql, [])
         .then(() => callback())

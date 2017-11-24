@@ -6,7 +6,7 @@ const TABLE = 'rules';
 
 
 const DEFAULT_LANGUAGE = 'node-rules/javascript';
-const DEFAULT_PRIORITY = 999;
+const DEFAULT_PRIORITY = 20;
 
 
 /**

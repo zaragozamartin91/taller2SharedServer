@@ -12,6 +12,7 @@ import Paper from 'material-ui/Paper';
 import { BottomNavigation, BottomNavigationItem } from 'material-ui/BottomNavigation';
 
 import ActionHeader from './ActionHeader';
+import RuleEditor from './RuleEditor';
 
 import axios from 'axios';
 
@@ -70,7 +71,8 @@ const Rules = React.createClass({
             rules: [],
             snackbarOpen: false,
             snackbarMessage: '',
-            deleteRuleDialog: null
+            deleteRuleDialog: null,
+            editRule: null
         };
     },
 
@@ -112,7 +114,7 @@ const Rules = React.createClass({
     openEditCard(rule) {
         const self = this;
         return function () {
-
+            self.setState({ editRule: rule });
         };
     },
 
@@ -135,6 +137,24 @@ const Rules = React.createClass({
                     this.setState({ deleteRuleDialog: null });
                     this.openSnackbar(`Error al eliminar regla ${ruleToDelete.id}`);
                 }} />;
+        }
+
+        if (this.state.editRule) {
+            const ruleToEdit = this.state.editRule;
+            mainElem = <RuleEditor
+                token={this.props.token}
+                rule={ruleToEdit}
+                onClose={() => this.setState({ editRule: null })}
+                onSuccess={() => {
+                    this.loadRules();
+                    this.setState({ editRule: null });
+                    this.openSnackbar('Regla actualizada');
+                }}
+                onError={() => {
+                    this.setState({ editRule: null });
+                    this.openSnackbar('Error al actualizar la regla');
+                }}
+            />;
         }
 
         mainElem = mainElem || this.state.rules.map(rule => {

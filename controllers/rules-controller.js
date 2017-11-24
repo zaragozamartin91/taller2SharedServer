@@ -173,7 +173,7 @@ exports.updateRule = function (req, res) {
             if (_ref != rule._ref) return Promise.reject({ code: 409, message: 'Ocurrio una colision' });
 
             rule.message = message || rule.message;
-            rule.active = active || rule.active;
+            rule.active = active === undefined ? rule.active : active;
             rule.blob = blob || rule.blob;
             rule.author = userId;
             rule.priority = priority || rule.priority;
