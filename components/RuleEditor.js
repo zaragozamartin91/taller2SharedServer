@@ -10,6 +10,11 @@ import Dialog from 'material-ui/Dialog';
 import Snackbar from 'material-ui/Snackbar';
 import Slider from 'material-ui/Slider';
 
+/*
+import FontIcon from 'material-ui/FontIcon';
+import { blue500, red500, greenA200 } from 'material-ui/styles/colors';
+*/
+
 import axios from 'axios';
 
 import Header from './Header';
@@ -82,7 +87,9 @@ const RuleEditor = React.createClass({
 
     render() {
         const rule = this.props.rule;
-
+        const iconStyles = {
+            marginRight: 24,
+        };
         return (
             <Card style={{ backgroundColor: "rgba(255,255,255,0.7)" }} >
                 <CardHeader
@@ -97,7 +104,8 @@ const RuleEditor = React.createClass({
                         floatingLabelText="Condicion"
                         value={this.state.condition}
                         multiLine={true}
-                        onChange={e => this.setState({ condition: e.target.value })} /><br />
+                        onChange={e => this.setState({ condition: e.target.value })} />
+
                     <TextField
                         style={{ width: '75%' }}
                         name="Consecuencia"
@@ -106,13 +114,15 @@ const RuleEditor = React.createClass({
                         value={this.state.consequence}
                         multiLine={true}
                         onChange={e => this.setState({ consequence: e.target.value })} /><br />
+
+
+                    <p>Prioridad: {this.state.priority == 1 ? 'Maxima' : this.state.priority}</p>
                     <Slider
                         min={min}
                         max={max}
                         step={1}
                         value={max - this.state.priority + 1}
                         onChange={this.handleSlider} />
-                    <p>Prioridad: {this.state.priority == 1 ? 'Maxima' : this.state.priority}</p>
 
                     <Checkbox
                         label='Activa'
@@ -121,7 +131,7 @@ const RuleEditor = React.createClass({
                 </CardText>
                 <CardActions>
                     <FlatButton label="Cancelar" onClick={this.props.onClose} />
-                    <FlatButton label="Actualizar" onClick={this.updateRule} />
+                    <FlatButton label="Actualizar" onClick={this.updateRule} primary={true} />
                 </CardActions>
             </Card>);
     }
