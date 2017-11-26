@@ -63,8 +63,19 @@ function fromObj(tripObj) {
     const { id, applicationOwner, driver, passenger, start, end, totalTime, waitTime, travelTime, distance, route, cost, date,
         _start, _end, applicationowner, totaltime, waittime, traveltime } = tripObj;
 
-    return new Trip(id, applicationOwner || applicationowner, driver, passenger, start || _start, end || _end, totalTime || totaltime,
-        waitTime || waittime, travelTime || traveltime, distance, route, cost, date);
+    return new Trip(id,
+        applicationOwner || applicationowner,
+        driver,
+        passenger,
+        start || _start,
+        end || _end,
+        totalTime || totaltime || 0,
+        waitTime || waittime || 0,
+        travelTime || traveltime || 0,
+        distance || 0,
+        route,
+        cost,
+        date);
 }
 
 Trip.fromObj = fromObj;
