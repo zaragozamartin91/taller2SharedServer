@@ -97,7 +97,7 @@ function processResult(res) {
             metadata, facts: [{ language: Rule.DEFAULT_LANGUAGE, blob: 'Viaje gratis' }]
         });
 
-        let amount = 0;
+        let amount = result.initialValue;
         result.operations.forEach(op => {
             amount = op(amount);
             console.log('amount: ' + amount);

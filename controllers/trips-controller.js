@@ -157,7 +157,7 @@ function postTrip(req, res) {
             })
             .then(driver => estimatePromise(distance, driver, currency, 'driver'))
             .then(result => {
-                let amount = 0;
+                let amount = result.initialValue;
                 result.operations.forEach(operation => amount = operation(amount));
                 console.log('Ganancia del conductor: ' + amount);
 
@@ -257,7 +257,7 @@ exports.estimate = function (req, res) {
             const metadata = { version: apiVersion };
             if (result.free) return res.send({ metadata, cost: { currency, value: 0 } });
 
-            let amount = 0;
+            let amount = result.initialValue;
             result.operations.forEach(op => {
                 amount = op(amount);
                 console.log('amount: ' + amount);
