@@ -43,7 +43,8 @@ const RuleTester = React.createClass({
         return {
             mts: "0",
             type: 'passenger',
-            pocketBalance: "0",
+            pocketBalanceValue: "0",
+            pocketBalanceCurrency: "ARS",
             email: 'callefalsa123@gmail.com',
             todayTripCount: "0",
             tripCount: "0",
@@ -65,7 +66,7 @@ const RuleTester = React.createClass({
         if (!this.state.todayTripCount.match(/^\d+$/)) return { valid: false, message: 'Cantidad de viajes del dia invalido' };
         if (!this.state.tripCount.match(/^\d+$/)) return { valid: false, message: 'Cantidad de viajes invalido' };
 
-        if (!this.state.pocketBalance.match(/^-?\d+(\.\d+)?$/)) return { valid: false, message: 'Balance invalido' };
+        if (!this.state.pocketBalanceValue.match(/^-?\d+(\.\d+)?$/)) return { valid: false, message: 'Balance invalido' };
 
         return { valid: true };
     },
@@ -77,10 +78,10 @@ const RuleTester = React.createClass({
 
         const rule = this.props.rule;
 
-        let { mts, type, pocketBalance, email, dayOfWeek,
-            hour, todayTripCount, tripCount, initialValue } = this.state;
+        let { mts, type, pocketBalanceValue, pocketBalanceCurrency, email,
+            dayOfWeek, hour, todayTripCount, tripCount, initialValue } = this.state;
         mts = parseInt(mts);
-        pocketBalance = parseFloat(pocketBalance);
+        pocketBalanceValue = parseFloat(pocketBalanceValue);
         initialValue = parseFloat(initialValue);
         todayTripCount = parseInt(todayTripCount);
         tripCount = parseInt(tripCount);
@@ -88,7 +89,11 @@ const RuleTester = React.createClass({
         const facts = [
             {
                 "language": rule.language,
-                "blob": { mts, type, pocketBalance, email, dayOfWeek, hour, todayTripCount, tripCount, initialValue }
+                "blob": {
+                    mts, type, pocketBalance: {
+                        currency: pocketBalanceCurrency, value: pocketBalanceValue
+                    }, email, dayOfWeek, hour, todayTripCount, tripCount, initialValue
+                }
             }
         ];
 
@@ -141,48 +146,65 @@ const RuleTester = React.createClass({
                         {resultP}
 
                         <SelectField
+                            style={{ width: '40%', marginRight: 4 }}
                             floatingLabelText="Tipo cliente"
                             value={this.state.type}
                             onChange={(event, index, value) => this.setState({ type: value })}>
 
                             <MenuItem value={'passenger'} primaryText="Pasajero" />
                             <MenuItem value={'driver'} primaryText="Chofer" />
-                        </SelectField><br />
+                        </SelectField>
+
+                        <SelectField
+                            style={{ width: '40%', marginRight: 4 }}
+                            floatingLabelText="Moneda"
+                            value={this.state.pocketBalanceCurrency}
+                            onChange={(event, index, value) => this.setState({ pocketBalanceCurrency: value })}>
+
+                            <MenuItem value={'ARS'} primaryText="Pesos" />
+                            <MenuItem value={'USD'} primaryText="Dolares" />
+                            <MenuItem value={'EUR'} primaryText="Euros" />
+                        </SelectField>
 
                         <TextField
+                            style={{ width: '40%', marginRight: 4 }}
                             name="Distancia"
-                            hint="Distancia en metros"
-                            floatingLabelText="Distancia en metros"
+                            hint="Distancia (mts)"
+                            floatingLabelText="Distancia (mts)"
                             value={this.state.mts}
-                            onChange={e => this.setState({ mts: e.target.value })} /><br />
+                            onChange={e => this.setState({ mts: e.target.value })} />
 
                         <TextField
+                            style={{ width: '40%', marginRight: 4 }}
                             name="Costo inicial"
                             hint="Costo inicial"
                             floatingLabelText="Costo inicial"
                             value={this.state.initialValue}
-                            onChange={e => this.setState({ initialValue: e.target.value })} /><br />
+                            onChange={e => this.setState({ initialValue: e.target.value })} />
 
                         <TextField
-                            name="Balance de pasajero"
-                            hint="Balance de pasajero"
-                            floatingLabelText="Balance de pasajero"
-                            value={this.state.pocketBalance}
-                            onChange={e => this.setState({ pocketBalance: e.target.value })} /><br />
+                            style={{ width: '40%', marginRight: 4 }}
+                            name="Balance"
+                            hint="Balance"
+                            floatingLabelText="Balance"
+                            value={this.state.pocketBalanceValue}
+                            onChange={e => this.setState({ pocketBalanceValue: e.target.value })} />
 
                         <TextField
-                            name="Viajes del dia"
-                            hint="Viajes del dia"
-                            floatingLabelText="Viajes del dia"
+                            style={{ width: '40%', marginRight: 4 }}
+                            name="Viajes de hoy"
+                            hint="Viajes de hoy"
+                            floatingLabelText="Viajes de hoy"
                             value={this.state.todayTripCount}
-                            onChange={e => this.setState({ todayTripCount: e.target.value })} /><br />
+                            onChange={e => this.setState({ todayTripCount: e.target.value })} />
 
                         <TextField
+                            style={{ width: '40%', marginRight: 4 }}
                             name="Viajes totales"
                             hint="Viajes totales"
                             floatingLabelText="Viajes totales"
                             value={this.state.tripCount}
-                            onChange={e => this.setState({ tripCount: e.target.value })} /><br />
+                            onChange={e => this.setState({ tripCount: e.target.value })} />
 
                         <TextField
                             style={{ width: '75%' }}

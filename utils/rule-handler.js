@@ -10,7 +10,8 @@ function cloneFact(fact) {
 
 function buildFact(baseFact = {}) {
     const fact = cloneFact(baseFact);
-    const { operations = [], mts = 0, type = '', pocketBalance = {}, email = '', initialValue = 0 } = fact;
+    const { operations = [], mts = 0, type = '',
+        pocketBalance = { currency: 'ARS', value: 0 }, email = '', initialValue = 0 } = fact;
     fact.operations = operations;
     fact.mts = mts;
     fact.type = type;
