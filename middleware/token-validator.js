@@ -68,8 +68,11 @@ function verifyServerToken(req, res, next) {
         if (token) {
             req.serverId = serverId;
 
+            // quito el parametro de token
+            const url = req.url.split(/\?token=/)[0];
+
             // agrego un hit a la url por parte del server
-            Hit.insert({ server: serverId, method: req.method, url: req.url }, (err, dbHit) => {
+            Hit.insert({ server: serverId, method: req.method, url }, (err, dbHit) => {
                 if (err) return logger.error(err);
                 else logger.info(`Hit de ${dbHit.server} a ${dbHit.url} insertado!`);
             });

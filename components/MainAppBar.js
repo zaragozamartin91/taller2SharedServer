@@ -67,6 +67,12 @@ const MainAppBar = React.createClass({
                             <Link to="/users/list" onClick={this.closeDrawer}><MenuItem >Ver</MenuItem></Link>
                         ]} />
                     <Link to="/servers/list" onClick={this.closeDrawer}><MenuItem >Servidores</MenuItem></Link>
+                    <MenuItem primaryText='Reglas'
+                        rightIcon={<ArrowDropRight />}
+                        menuItems={[
+                            <Link to="/rules/list" onClick={this.closeDrawer}><MenuItem >Ver</MenuItem></Link>,
+                            <Link to="/rules/create" onClick={this.closeDrawer}><MenuItem >Crear</MenuItem></Link>
+                        ]} />
                 </Drawer>
             </div >
         );

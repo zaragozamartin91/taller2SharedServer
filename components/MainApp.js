@@ -13,6 +13,8 @@ import Login from './Login';
 import Users from './Users';
 import Servers from './Servers';
 import CreateUserForm from './CreateUserForm';
+import Rules from './Rules';
+import RuleCreator from './RuleCreator';
 
 /* ESTE FRAGMENTO DE CODIGO ES REQUERIDO PARA LOS EVENTOS DE TIPO TOUCH O CLICK EN COMPONENTES MATERIAL-UI */
 import injectTapEventPlugin from 'react-tap-event-plugin';
@@ -63,6 +65,8 @@ const MainApp = React.createClass({
         const token = this.state.token;
         if (!token) return <Login onSubmit={this.setToken} />;
 
+        const user = this.state.user;
+
         console.log('window.location.hash: ' + window.location.hash);
         if (window.location.hash == '#/') {
             console.log('REPLACING LOCATION');
@@ -80,6 +84,9 @@ const MainApp = React.createClass({
                     <Route path="/users/create" component={() => <CreateUserForm token={token} />} />
                     <Route path="/servers/list" component={() => <Servers token={token} />} />
                     <Route path="/index" component={Index} />
+
+                    <Route path="/rules/list" component={() => <Rules token={token} user={user} />} />
+                    <Route path="/rules/create" component={() => <RuleCreator token={token} />} />
 
                     <form
                         action='/logout'

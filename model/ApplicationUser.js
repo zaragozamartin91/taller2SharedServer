@@ -183,6 +183,8 @@ ApplicationUser.pay = function (user, cost, callback) {
         if (err) return callback(err);
         const specBalance = dbUser.balance.find(bal => bal.currency.toLowerCase() == cost.currency.toLowerCase());
         if (!specBalance) return callback(new Error(`El usuario ${userId} no tiene balance ${cost.currency}`));
+
+        cost = transformCost(cost);
         specBalance.value = specBalance.value - cost.value;
 
         const sql = `UPDATE ${table} SET balance=$1 WHERE id=$2 RETURNING *`;
@@ -192,6 +194,12 @@ ApplicationUser.pay = function (user, cost, callback) {
             .catch(cause => callback(cause));
     });
 };
+
+const COSTS = { ARS: 1, USD: 18, EUR: 20 };
+function transformCost(cost = { currency: 'ARS', value: 0 }) {
+    const div = COSTS[cost.currency] || 1;
+    return { currency: cost.currency, value: cost.value / div };
+}
 
 /* Incrementa el saldo del usuario */
 /* istanbul ignore next */
