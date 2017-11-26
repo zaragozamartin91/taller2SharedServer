@@ -11,10 +11,9 @@ import Snackbar from 'material-ui/Snackbar';
 import Slider from 'material-ui/Slider';
 import moment from 'moment';
 
-/*
-import FontIcon from 'material-ui/FontIcon';
-import { blue500, red500, greenA200 } from 'material-ui/styles/colors';
-*/
+import SelectField from 'material-ui/SelectField';
+import Menu from 'material-ui/Menu';
+import MenuItem from 'material-ui/MenuItem';
 
 import axios from 'axios';
 
@@ -30,8 +29,6 @@ const RuleTester = React.createClass({
             token: '',
             rule: null,
             onClose: EMPTY_CALLBACK,
-            onSuccess: EMPTY_CALLBACK,
-            onError: EMPTY_CALLBACK
         };
     },
 
@@ -48,96 +45,100 @@ const RuleTester = React.createClass({
             dayOfWeek,
             hour,
             todayTripCount,
-            tripCount
+            tripCount,
         };
     },
 
-    componentDidMount() {
-        const { blob: { condition, consequence }, priority, active } = this.props.rule;
-        console.log('Seteando el estado del editor:');
-        console.log(condition, consequence, priority, active);
-        this.setState({ condition, consequence, priority, active });
+    validateParams() {
+        if (!this.mts.match(/\d+/)) return { valid: false, message: 'Distancia invalida' };
+        if (!this.email.match(/^(\w|\.)+@(\w+\.\w+)+$/)) return { valid: false, message: 'Email invalido' };
+        return { valid: true };
     },
 
-    handleSlider(event, value) {
-        console.log('Slider value: ' + value);
-        const priority = max - value + min;
-        this.setState({ priority });
-    },
 
-    updateRule() {
-        const rule = {
-            "_ref": this.props.rule._ref,
-            "language": this.props.rule.language,
-            "blob": {
-                "condition": this.state.condition,
-                "consequence": this.state.consequence,
-                "on": true
-            },
-            "priority": this.state.priority,
-            "active": this.state.active
-        };
+    testRule() {
+        const paramsValidation = this.validateParams();
+        if (!paramsValidation.valid) return this.openSnackbar(paramsValidation.message);
+
+        const { mts, type, pocketBalance, email, dayOfWeek, hour, todayTripCount, tripCount } = this.state;
+        const facts = [
+            {
+                "language": "string",
+                "blob": { mts, type, pocketBalance, email, dayOfWeek, hour, todayTripCount, tripCount }
+            }
+        ];
 
         const config = { headers: { 'Authorization': `Bearer ${this.props.token}` } };
-        axios.put(`/api/v1/rules/${this.props.rule.id}`, rule, config)
+        axios.post(`/api/v1/rules/${this.props.rule.id}/run`, facts, config)
             .then(contents => {
                 console.log(contents.data);
-                this.props.onSuccess();
+
             }).catch(cause => {
                 console.error(cause);
-                this.props.onError();
+
             });
+    },
+
+    openSnackbar(msg) {
+        console.log('Abriendo snack bar');
+        this.setState({ snackbarOpen: true, snackbarMessage: msg });
+    },
+
+    handleSnackbarRequestClose() {
+        this.setState({ snackbarOpen: false });
     },
 
     render() {
         const rule = this.props.rule;
-        const iconStyles = {
-            marginRight: 24,
-        };
+
         return (
-            <Card style={{ backgroundColor: "rgba(255,255,255,0.7)" }} >
-                <CardHeader
-                    title={'Editar regla ' + rule.id}
-                    subtitle={'Lenguaje ' + rule.language}
-                />
-                <CardText>
-                    <TextField
-                        style={{ width: '75%' }}
-                        name="Condicion"
-                        hint="Condicion"
-                        floatingLabelText="Condicion"
-                        value={this.state.condition}
-                        multiLine={true}
-                        onChange={e => this.setState({ condition: e.target.value })} />
+            <div>
+                <Card style={{ backgroundColor: "rgba(255,255,255,0.7)" }} >
+                    <CardHeader
+                        title={`Probar regla ${rule.id}`}
+                        subtitle={`Lenguaje ${rule.language}`}
+                    />
 
-                    <TextField
-                        style={{ width: '75%' }}
-                        name="Consecuencia"
-                        hint="Consecuencia"
-                        floatingLabelText="Consecuencia"
-                        value={this.state.consequence}
-                        multiLine={true}
-                        onChange={e => this.setState({ consequence: e.target.value })} /><br />
+                    <CardText>
+                        <SelectField
+                            floatingLabelText="Tipo cliente"
+                            value={this.state.type}
+                            onChange={(event, index, value) => this.setState({ type: value })}>
 
+                            <MenuItem value={'passenger'} primaryText="Pasajero" />
+                            <MenuItem value={'driver'} primaryText="Chofer" />
+                        </SelectField><br />
 
-                    <p>Prioridad: {this.state.priority == 1 ? 'Maxima' : this.state.priority}</p>
-                    <Slider
-                        min={min}
-                        max={max}
-                        step={1}
-                        value={max - this.state.priority + 1}
-                        onChange={this.handleSlider} />
+                        <TextField
+                            name="Distancia"
+                            hint="Distancia en metros"
+                            floatingLabelText="Distancia en metros"
+                            value={this.state.mts}
+                            onChange={e => this.setState({ mts: e.target.value })} /><br />
 
-                    <Checkbox
-                        label='Activa'
-                        checked={this.state.active}
-                        onClick={this.toggleActive} />
-                </CardText>
-                <CardActions>
-                    <FlatButton label="Cancelar" onClick={this.props.onClose} />
-                    <FlatButton label="Actualizar" onClick={this.updateRule} primary={true} />
-                </CardActions>
-            </Card>);
+                        <TextField
+                            style={{ width: '75%' }}
+                            name="Email"
+                            hint="Email"
+                            floatingLabelText="Email"
+                            value={this.state.email}
+                            multiLine={true}
+                            onChange={e => this.setState({ email: e.target.value })} /><br />
+
+                    </CardText>
+
+                    <CardActions>
+                        <FlatButton label="Cancelar" onClick={this.props.onClose} />
+                        <FlatButton label="Probar" onClick={this.testRule} primary={true} />
+                    </CardActions>
+                </Card>
+
+                <Snackbar
+                    open={this.state.snackbarOpen}
+                    message={this.state.snackbarMessage}
+                    autoHideDuration={3000}
+                    onRequestClose={this.handleSnackbarRequestClose} />
+            </div>);
     }
 });
 

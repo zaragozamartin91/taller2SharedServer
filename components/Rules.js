@@ -13,6 +13,7 @@ import { BottomNavigation, BottomNavigationItem } from 'material-ui/BottomNaviga
 
 import ActionHeader from './ActionHeader';
 import RuleEditor from './RuleEditor';
+import RuleTester from './RuleTester';
 
 import axios from 'axios';
 
@@ -72,7 +73,8 @@ const Rules = React.createClass({
             snackbarOpen: false,
             snackbarMessage: '',
             deleteRuleDialog: null,
-            editRule: null
+            editRule: null,
+            testRule: null
         };
     },
 
@@ -118,6 +120,13 @@ const Rules = React.createClass({
         };
     },
 
+    openRuleTester(rule) {
+        const self = this;
+        return function () {
+            self.setState({ testRule: rule });
+        };
+    },
+
     render() {
         let mainElem = null;
 
@@ -157,6 +166,15 @@ const Rules = React.createClass({
             />;
         }
 
+        if (this.state.testRule) {
+            const ruleToTest = this.state.testRule;
+            mainElem = <RuleTester
+                token={this.props.token}
+                rule={ruleToTest}
+                onClose={() => this.setState({ testRule: null })}
+            />;
+        }
+
         mainElem = mainElem || this.state.rules.map(rule => {
             const title = `Regla ${rule.id} :: ${rule.language}`;
             const subtitle = `Prioridad ${rule.priority}`;
@@ -177,6 +195,7 @@ const Rules = React.createClass({
                     <CardActions>
                         <FlatButton label="Eliminar" onClick={this.openDeleteDialog(rule)} />
                         <FlatButton label="Editar" onClick={this.openEditCard(rule)} />
+                        <FlatButton label="Probar" onClick={this.openRuleTester(rule)} />
                     </CardActions>
                 </Card>
             );
