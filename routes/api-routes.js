@@ -86,6 +86,8 @@ router.put('/users/:userId/cars/:carId', tokenValidator.verifyServerToken, appUs
 
 router.get('/users/:userId/transactions', tokenValidator.verifyServerOrRoleToken('user'), appUserController.getUserTransactions);
 router.post('/users/:userId/transactions', tokenValidator.verifyServerToken, appUserController.postUserTransaction);
+
+router.post('/users/:userId/balance', tokenValidator.verifyServerToken, appUserController.augmentUserBalance);
 /* FIN users ROUTES ----------------------------------------------------------------------------------------------------------------- */
 
 /* paymethods ROUTES ------------------------------------------------------------------------------------------------------- */
