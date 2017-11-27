@@ -12,6 +12,7 @@ import Index from './Index';
 import Login from './Login';
 import Users from './Users';
 import Servers from './Servers';
+import ServerCreator from './ServerCreator';
 import CreateUserForm from './CreateUserForm';
 import Rules from './Rules';
 import RuleCreator from './RuleCreator';
@@ -82,7 +83,10 @@ const MainApp = React.createClass({
 
                     <Route path="/users/list" component={() => <Users token={token} />} />
                     <Route path="/users/create" component={() => <CreateUserForm token={token} />} />
+                    
                     <Route path="/servers/list" component={() => <Servers token={token} />} />
+                    <Route path="/servers/create" component={() => <ServerCreator token={token} user={user} />} />
+                    
                     <Route path="/index" component={Index} />
 
                     <Route path="/rules/list" component={() => <Rules token={token} user={user} />} />
