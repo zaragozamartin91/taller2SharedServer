@@ -501,6 +501,16 @@ describe('trips-controller', function () {
             tripsController.postTrip(req, res);
         });
 
+        it('Falla porque el tipo de moneda es invalido', function () {
+            const dbTrip = mockInsertedTrip();
+            const body = mockPostTripReqBody();
+            body.paymethod.currency = 'INVALIDA';
+
+            const req = { body, serverId: dbTrip.applicationOwner };
+            const res = mockErrRes(400, 'postTrip-400');
+            tripsController.postTrip(req, res);
+        });
+
         it('Da de alta un viaje', function () {
             const dbTrip = mockInsertedTrip();
             sandbox.stub(Trip, 'insert')
@@ -655,9 +665,5 @@ describe('trips-controller', function () {
             };
             tripsController.getServerTrips(req, res);
         });
-    });
-
-    describe('#measureDistance',function(){
-        it('mide la distancia entre dos puntos')
     });
 });

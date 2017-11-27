@@ -1,7 +1,7 @@
 const assert = require('assert');
 const encryptor = require('../utils/encryptor');
 
-describe('token-manager', function () {
+describe('encryptor', function () {
     beforeEach(function () {
     });
 

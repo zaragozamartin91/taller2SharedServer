@@ -34,6 +34,8 @@ const RuleCreator = React.createClass({
             language: 'node-rules/javascript',
             snackbarOpen: false,
             snackbarMessage: '',
+
+            helpDialogOpen: false
         };
     },
 
@@ -80,6 +82,10 @@ const RuleCreator = React.createClass({
         this.setState({ snackbarOpen: false });
     },
 
+    handleHelpDialogClose() {
+        this.setState({ helpDialogOpen: false });
+    },
+
     render() {
         const paddingRight = 10;
         const paddingLeft = 10;
@@ -94,6 +100,11 @@ const RuleCreator = React.createClass({
                         subtitle={'Lenguaje ' + this.state.language}
                     />
                     <CardText>
+                        <RaisedButton
+                            label="Ayuda"
+                            onClick={() => this.setState({ helpDialogOpen: true })}
+                            style={{ width: '100%' }} /><br />
+
                         <TextField
                             floatingLabelText="Lenguaje"
                             hint="Lenguaje"
@@ -148,6 +159,30 @@ const RuleCreator = React.createClass({
                     message={this.state.snackbarMessage}
                     autoHideDuration={3000}
                     onRequestClose={this.handleSnackbarRequestClose} />
+
+                <Dialog
+                    title="Ayuda"
+                    modal={false}
+                    open={this.state.helpDialogOpen}
+                    onRequestClose={this.handleHelpDialogClose}
+                    actions={<FlatButton
+                        label="Ok"
+                        primary={true}
+                        onClick={this.handleHelpDialogClose} />}>
+                    Variables disponibles:
+                    <ul>
+                        <li>operations: Arreglo de operaciones sobre el costo</li>
+                        <li>mts: Distancia de viaje en metros</li>
+                        <li>type: Tipo de usuario (driver|passenger)</li>
+                        <li>pocketBalance: Balance del usuario</li>
+                        <li>email: Correo del usuario</li>
+                        <li>initialValue: Costo inicial del viaje</li>
+                        <li>waitTime: Tiempo de espera [segundos]</li>
+                        <li>travelTime: Tiempo de viaje [segundos]</li>
+                        <li>totalTime: Tiempo total [segundos]</li>
+                    </ul>
+                </Dialog>
+
             </div>);
     }
 });

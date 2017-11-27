@@ -177,14 +177,14 @@ ApplicationUser.findByFbToken = function (fbtoken, app, callback) {
 
 /* Disminuye el saldo del usuario */
 /* istanbul ignore next */
-ApplicationUser.pay = function (user, cost, callback) {
+ApplicationUser.pay = function (user, cost, callback, doTransformCost = true) {
     const userId = user.id || user;
     ApplicationUser.findById(userId, (err, dbUser) => {
         if (err) return callback(err);
         const specBalance = dbUser.balance.find(bal => bal.currency.toLowerCase() == cost.currency.toLowerCase());
         if (!specBalance) return callback(new Error(`El usuario ${userId} no tiene balance ${cost.currency}`));
 
-        cost = transformCost(cost);
+        cost = doTransformCost ? transformCost(cost) : cost;
         specBalance.value = specBalance.value - cost.value;
 
         const sql = `UPDATE ${table} SET balance=$1 WHERE id=$2 RETURNING *`;
@@ -203,8 +203,8 @@ function transformCost(cost = { currency: 'ARS', value: 0 }) {
 
 /* Incrementa el saldo del usuario */
 /* istanbul ignore next */
-ApplicationUser.earn = function (user, { currency, value }, callback) {
-    ApplicationUser.pay(user, { currency, value: -value }, callback);
+ApplicationUser.earn = function (user, { currency, value }, callback, doTransformCost = true) {
+    ApplicationUser.pay(user, { currency, value: -value }, callback, doTransformCost);
 };
 
 /* istanbul ignore next */

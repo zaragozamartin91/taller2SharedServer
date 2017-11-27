@@ -85,6 +85,9 @@ function postTrip(req, res) {
     let responseSent = false;
     let passengerTransaction;
 
+    const currencyValid = dataValidator.validateCurrency(currency);
+    if (!currencyValid) return sendMsgCodeResponse(res,
+        'Moneda invalida. Monedas soportadas: ' + dataValidator.AVAIL_CURRENCIES, 400);
 
     /* TODO : USAR EL API DE PAGOS PARA PAGAR EL VIAJE QUE SE ESTA DANDO DE ALTA */
     Trip.insert(trip, (err, dbTrip) => {
@@ -121,7 +124,7 @@ function postTrip(req, res) {
                     payment.success = err ? false : true;
                     if (err) {
                         console.error('Error en el pago');
-                        console.error(err);
+                        console.error(err.message);
                     }
                     resolve(payment);
                 }));
@@ -236,9 +239,14 @@ function estimatePromise(distance, user, currency, type = 'passenger') {
 
 
 exports.estimate = function (req, res) {
-    const { start, end, passenger, distance, cost = { currency: DEF_CURRENCY, value: 0 } } = req.body;
+    const { start, end, passenger, distance,
+        cost = { currency: DEF_CURRENCY, value: 0 }, currency = cost.currency } = req.body;
     if (!passenger) return sendMsgCodeResponse(res, 'Falta parametro de pasajero', 400);
     if (!distance && (!start || !end)) return sendMsgCodeResponse(res, 'Faltan parametros para calcular distancia', 400);
+
+    const currencyValid = dataValidator.validateCurrency(currency);
+    if (!currencyValid) return sendMsgCodeResponse(res,
+        'Moneda invalida. Monedas soportadas: ' + dataValidator.AVAIL_CURRENCIES, 400);
 
     let mts;
     try {
@@ -247,8 +255,6 @@ exports.estimate = function (req, res) {
     } catch (error) {
         return sendMsgCodeResponse(res, 'Error al obtener distancia de viaje', 400);
     }
-
-    const currency = cost.currency;
 
     estimatePromise(mts, passenger, currency)
         .then(result => {

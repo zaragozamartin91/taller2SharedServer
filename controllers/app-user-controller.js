@@ -362,3 +362,23 @@ exports.postUserTransaction = function (req, res) {
         })
         .catch(handleError(res));
 };
+
+exports.augmentUserBalance = function (req, res) {
+    const { currency = 'ARS', value = 0 } = req.body;
+    if (!dataValidator.validateCurrency(currency)) return sendMsgCodeResponse(res, 'Moneda invalida', 400);
+
+    findUserPromise(req)
+        .then(user => {
+            if (!user) return Promise.reject({ code: 404, message: 'El usuario no existe' });
+            if (value == 0) return Promise.resolve(user);
+
+            /* Establezco que el costo no debe ser modificado al incrementar el saldo
+            (es decir, no pasar pesos a dolares o a euros, etc.) */
+            const doTransformCost = false;
+            return new Promise((resolve, reject) =>
+                ApplicationUser.earn(user, { currency, value }, (err, usr) =>
+                    err ? reject(err) : resolve(usr), doTransformCost));
+        })
+        .then(user => sendMsgCodeResponse(res, user.balance, 200))
+        .catch(handleError(res));
+};
