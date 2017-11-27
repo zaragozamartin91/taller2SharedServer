@@ -29,6 +29,7 @@ const CreateUserForm = React.createClass({
             name: '',
             surname: '',
             password: '',
+            passwordRepeat: '',
             roles: []
         };
     },
@@ -74,9 +75,10 @@ const CreateUserForm = React.createClass({
     },
 
     checkFields() {
-        const { username, name, surname, password, roles } = this.state;
-        if (!username || !name || !surname || !password) return { ok: false, msg: 'Parametros incompletos' };
+        const { username, name, surname, password , passwordRepeat, roles } = this.state;
+        if (!username || !name || !surname || !password || !passwordRepeat) return { ok: false, msg: 'Parametros incompletos' };
         if (roles.length == 0) return { ok: false, msg: 'El usuario debe tener al menos un rol' };
+        if( password != passwordRepeat ) return { ok: false, msg: 'Los passwords no coinciden' };
         return { ok: true };
     },
 
@@ -138,6 +140,13 @@ const CreateUserForm = React.createClass({
                             type="password"
                             value={this.state.password}
                             onChange={e => this.setState({ password: e.target.value })} /><br />
+                        <TextField
+                            name="password"
+                            hintText="Confirmacion password"
+                            floatingLabelText="Confirmacion password"
+                            type="password"
+                            value={this.state.passwordRepeat}
+                            onChange={e => this.setState({ passwordRepeat: e.target.value })} /><br />
                         <div style={{ margin: '10px' }}>
                             {checkBoxes}
                         </div>
