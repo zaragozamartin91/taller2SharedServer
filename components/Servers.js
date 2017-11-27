@@ -32,6 +32,26 @@ const STATUS_SUFFIX = {
     err: ' - NO RESPONDE',
 };
 
+function ShowTokenDialog(props) {
+    const actions = [
+        <FlatButton
+            label="Ok"
+            primary={true}
+            onClick={props.onClose}
+        />,
+    ];
+
+    return (
+        <Dialog
+            title={`Token de servidor ${props.server.id}`}
+            actions={actions}
+            modal={false}
+            open={true}>
+            {props.serverToken}
+        </Dialog>
+    );
+}
+
 const Servers = React.createClass({
     getDefaultProps() {
         return { token: '' };
@@ -44,7 +64,10 @@ const Servers = React.createClass({
             snackbarMessage: '',
             tripsServer: null,
             hitsServer: null,
-            passengersServer: null
+            passengersServer: null,
+
+            tokenServer: null,
+            serverToken: null,
         };
     },
 
@@ -116,6 +139,18 @@ const Servers = React.createClass({
         };
     },
 
+    showToken(server) {
+        const self = this;
+        return function () {
+            axios.get(`/api/v1/token/${server.id}?token=${self.props.token}`)
+                .then(response => {
+                    self.setState({ tokenServer: server, serverToken: response.data.token });
+                })
+                .catch(cause => {
+                    self.openSnackbar('Error al obtener el token');
+                });
+        };
+    },
 
     render() {
         let mainView;
@@ -137,6 +172,13 @@ const Servers = React.createClass({
                 server={this.state.passengersServer}
                 token={this.props.token}
                 goBack={() => this.setState({ passengersServer: null })} />;
+        } else if (this.state.tokenServer) {
+            console.log('Renderizando dialogo de token de servidor');
+            mainView = <ShowTokenDialog
+                server={this.state.tokenServer}
+                serverToken={this.state.serverToken}
+                onClose={() => this.setState({ tokenServer: null, serverToken: null })}
+            />;
         } else {
             console.log('Renderizando vista de servidores');
             mainView = this.state.servers.map(server => {
@@ -153,6 +195,7 @@ const Servers = React.createClass({
                             Ultima conexion: {server.lastConnection} <br />
                         </CardText>
                         <CardActions>
+                            <FlatButton label="Token" onClick={this.showToken(server)} />
                             <FlatButton label="Verificar" onClick={this.checkServer(server)} />
                             <FlatButton label="Viajes" onClick={this.viewTrips(server)} />
                             <FlatButton label="Hits" onClick={this.viewHits(server)} />
