@@ -5,6 +5,7 @@ const BusinessUser = require('../model/BusinessUser');
 const dbManager = require('../model/db-manager');
 const sinon = require('sinon');
 const Role = require('../model/Role');
+const TokenModel = require('../model/Token');
 
 let sandbox = null;
 
@@ -142,6 +143,37 @@ describe('token-controller', function () {
                 }
             };
             tokenController.generateToken(req, res);
+        });
+    });
+
+    describe('#getServerToken', function () {
+        it('Falla porque no encuentra el token', function () {
+            sandbox.stub(TokenModel, 'findByOwner')
+                .callsFake((serverId, callback) => callback());
+
+            const req = { params: { serverId: 'llevame' } };
+            const res = mockErrRes(404);
+        });
+
+        it('Falla por un error en la BBDD', function () {
+            sandbox.stub(TokenModel, 'findByOwner')
+                .callsFake((serverId, callback) => callback(new Error('error')));
+
+            const req = { params: { serverId: 'llevame' } };
+            const res = mockErrRes(500);
+        });
+
+        it('Obtiene el token de un server', function () {
+            const tokenObj = { token: 'aoisjdfoaisfjoaisfjsafoi', owner: 'llevame' };
+            sandbox.stub(TokenModel, 'findByOwner')
+                .callsFake((serverId, callback) => callback(null, tokenObj));
+
+            const req = { params: { serverId: 'llevame' } };
+            const res = {
+                send(token) {
+                    assert.equal(tokenObj, token);
+                }
+            };
         });
     });
 });

@@ -65,6 +65,7 @@ exports.getLlevame = function (req, res) {
 exports.getServerToken = function (req, res) {
     const serverId = req.params.serverId;
     TokenModel.findByOwner(serverId, (err, token) => {
+        if (err) return responseUtils.sendMsgCodeResponse(res, err.message, 500);
         if (!token) return responseUtils.sendMsgCodeResponse(res, 'Token no encontrado', 404);
         res.send(token);
     });
