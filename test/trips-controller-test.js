@@ -666,4 +666,81 @@ describe('trips-controller', function () {
             tripsController.getServerTrips(req, res);
         });
     });
+
+    describe('#estimate', function () {
+        it('falla porque no se indico el pasajero', function () {
+            const req = { body: {} };
+            const res = mockErrRes(400);
+            tripsController.estimate(req, res);
+        });
+
+        it('falla porque no se indico la distancia ni los puntos de inicio / fin', function () {
+            const dbTrip = mockInsertedTrip();
+            const req = { body: { passenger: dbTrip.passenger } };
+            const res = mockErrRes(400);
+            tripsController.estimate(req, res);
+        });
+
+        it('falla porque la moneda es invalida', function () {
+            const dbTrip = mockInsertedTrip();
+            const req = {
+                body: {
+                    passenger: dbTrip.passenger,
+                    distance: 2000
+                }
+            };
+            const res = mockErrRes(400);
+            tripsController.estimate(req, res);
+        });
+
+        it('falla porque la moneda es invalida', function () {
+            const dbTrip = mockInsertedTrip();
+            const req = {
+                body: {
+                    passenger: dbTrip.passenger,
+                    distance: 2000,
+                    currency: 'INVALIDA'
+                }
+            };
+            const res = mockErrRes(400);
+            tripsController.estimate(req, res);
+        });
+
+        it('falla porque la distancia es invalida', function () {
+            const dbTrip = mockInsertedTrip();
+            const req = {
+                body: {
+                    passenger: dbTrip.passenger,
+                    distance: -1500,
+                    currency: 'ARS'
+                }
+            };
+            const res = mockErrRes(400);
+            tripsController.estimate(req, res);
+        });
+
+        it('falla porque el pasajero no tiene dinero suficiente', function () {
+            const dbTrip = mockInsertedTrip();
+            dbTrip.currency = 'ARS';
+
+            sandbox.stub(Trip, 'findByUser')
+                .callsFake((user, callback) => callback(null, mockTrips()));
+
+            const dbPassenger = mockPassenger();
+            dbPassenger.balance[0] = { currency: 'ARS', value: -1 };
+            dbPassenger.getBalance = currency => dbPassenger.balance[0];
+            sandbox.stub(ApplicationUser, 'findById')
+                .callsFake((user, callback) => callback(null, dbPassenger));
+
+            const dbRules = mockActiveRules();
+            sandbox.stub(Rule, 'findActive')
+                .callsFake(callback => callback(null, dbRules));
+
+            const req = {
+                body: dbTrip
+            };
+            const res = mockErrRes(402);
+            tripsController.estimate(req, res);
+        });
+    });
 });

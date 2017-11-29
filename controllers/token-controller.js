@@ -3,6 +3,7 @@ const tokenManager = require('../utils/token-manager');
 const mainConf = require('../config/main-config');
 const basicAuthParser = require('../utils/basic-auth-parser');
 const responseUtils = require('../utils/response-utils');
+const TokenModel = require('../model/Token');
 
 const logger = require('log4js').getLogger('token-controller');
 
@@ -48,4 +49,24 @@ exports.generateToken = function (req, res) {
 
 
     responseUtils.sendMsgCodeResponse(res, 'Request incompleto', 400);
+};
+
+exports.getLlevame = function (req, res) {
+    console.log(req.header('Authorization'));
+    TokenModel.findByOwner('llevame', (err, token) => {
+        token = token || {};
+        res.send(token);
+    });
+};
+
+/**
+ * Obtiene el token de un servidor particular.
+ */
+exports.getServerToken = function (req, res) {
+    const serverId = req.params.serverId;
+    TokenModel.findByOwner(serverId, (err, token) => {
+        if (err) return responseUtils.sendMsgCodeResponse(res, err.message, 500);
+        if (!token) return responseUtils.sendMsgCodeResponse(res, 'Token no encontrado', 404);
+        res.send(token);
+    });
 };

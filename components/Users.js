@@ -156,7 +156,8 @@ function DeleteUserDialog(props) {
             actions={actions}
             modal={true}
             open={props.open}>
-            Desea eliminar el usuario?
+            ¿Desea eliminar el usuario?
+            Esta accion no es reversible
         </Dialog>
     );
 }

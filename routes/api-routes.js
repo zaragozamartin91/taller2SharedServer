@@ -24,6 +24,7 @@ router.get('/test', function (req, res) {
 });
 
 router.post('/token', tokenController.generateToken);
+router.get('/token/:serverId',tokenValidator.verifyToken, tokenValidator.verifyAnyRoleToken, tokenController.getServerToken );
 
 /* servers ROUTES -------------------------------------------------------------------------------------------------------------- */
 router.post('/servers/ping', serverController.renewToken);
@@ -134,11 +135,4 @@ router.delete('/test-data', testDataController.deleteTestData);
 
 /* RUTAS EXCLUSIVAS PARA PROBAR EL SERVER DE PYTHON */
 
-const TokenModel = require('../model/Token');
-router.get('/llevame', (req, res) => {
-    console.log(req.header('Authorization'));
-    TokenModel.findByOwner('llevame', (err, token) => {
-        token = token || {};
-        res.send(token);
-    });
-});
+router.get('/llevame', tokenController.getLlevame);
