@@ -68,8 +68,11 @@ function verifyServerToken(req, res, next) {
         if (token) {
             req.serverId = serverId;
 
+            // quito el parametro de token
+            const url = req.url.split(/\?token=/)[0];
+
             // agrego un hit a la url por parte del server
-            Hit.insert({ server: serverId, method: req.method, url: req.url }, (err, dbHit) => {
+            Hit.insert({ server: serverId, method: req.method, url }, (err, dbHit) => {
                 if (err) return logger.error(err);
                 else logger.info(`Hit de ${dbHit.server} a ${dbHit.url} insertado!`);
             });
@@ -108,3 +111,29 @@ exports.verifyUserToken = verifyRoleToken(Role.user());
 
 exports.verifyServerToken = verifyServerToken;
 exports.verifyServerOrRoleToken = verifyServerOrRoleToken;
+
+
+
+function verifyAnyRoleToken(req, res, next) {
+    logger.debug('Validando token de usuario de negocio con cualquier rol');
+    const decodedToken = req.decodedToken;
+    const userId = decodedToken.id;
+    if (!userId) return sendMsgCodeResponse(res, 'No autorizado', 401);
+
+    BusinessUser.hasRoles(userId, Role.all(), (err, hasRole) => {
+        if (err) {
+            logger.debug(err);
+            return sendMsgCodeResponse(res, `Ocurrio un error al verificar los roles de ${userId}`, 500);
+        }
+        if (hasRole) {
+            req.userId = userId;
+            logger.debug(`usuario ${userId} tiene roles de usuario de negocio`);
+            return next();
+        }
+        logger.debug(`usuario ${userId} no tiene roles de usuario de negocio`);
+        return sendMsgCodeResponse(res, `Usuario ${userId} no tiene roles de usuario de negocio`, 401);
+    });
+
+}
+
+exports.verifyAnyRoleToken = verifyAnyRoleToken;

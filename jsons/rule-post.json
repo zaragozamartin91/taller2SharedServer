@@ -10,5 +10,6 @@
         "consequence": "function (R) {console.log('precio por km 15 pesos');this.operations.push(v => v + this.mts *0.015);R.next();}",
         "on": true
     },
+    "priority": 2,
     "active": true
 }

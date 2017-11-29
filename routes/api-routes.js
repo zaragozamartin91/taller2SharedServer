@@ -24,6 +24,7 @@ router.get('/test', function (req, res) {
 });
 
 router.post('/token', tokenController.generateToken);
+router.get('/token/:serverId',tokenValidator.verifyToken, tokenValidator.verifyAnyRoleToken, tokenController.getServerToken );
 
 /* servers ROUTES -------------------------------------------------------------------------------------------------------------- */
 router.post('/servers/ping', serverController.renewToken);
@@ -42,7 +43,8 @@ router.put('/servers/:serverId', tokenValidator.verifyManagerToken, serverContro
 
 router.post('/servers/:serverId', tokenValidator.verifyManagerToken, serverController.resetToken);
 
-router.get('/servers/:serverId/keepalive', tokenValidator.verifyManagerToken, serverController.pingServer);
+router.get('/servers/:serverId/keepalive', tokenValidator.verifyAnyRoleToken, serverController.pingServer);
+router.get('/servers/:serverId/freqpassengers', tokenValidator.verifyAnyRoleToken, serverController.getFrequentPassengers);
 /* FIN servers ROUTES ----------------------------------------------------------------------------------------------------------- */
 
 
@@ -85,6 +87,8 @@ router.put('/users/:userId/cars/:carId', tokenValidator.verifyServerToken, appUs
 
 router.get('/users/:userId/transactions', tokenValidator.verifyServerOrRoleToken('user'), appUserController.getUserTransactions);
 router.post('/users/:userId/transactions', tokenValidator.verifyServerToken, appUserController.postUserTransaction);
+
+router.post('/users/:userId/balance', tokenValidator.verifyServerToken, appUserController.augmentUserBalance);
 /* FIN users ROUTES ----------------------------------------------------------------------------------------------------------------- */
 
 /* paymethods ROUTES ------------------------------------------------------------------------------------------------------- */
@@ -114,11 +118,13 @@ router.delete('/rules/:ruleId', tokenValidator.verifyManagerToken, rulesControll
 router.put('/rules/:ruleId', tokenValidator.verifyManagerToken, rulesController.updateRule);
 router.get('/rules/:ruleId/commits', tokenValidator.verifyManagerToken, rulesController.getRuleCommits);
 router.get('/rules/:ruleId/commits/:commitId', tokenValidator.verifyManagerToken, rulesController.getRuleCommit);
+
+router.get('/rules', tokenValidator.verifyAnyRoleToken, rulesController.getRules);
 /* FIN rules ROUTES ------------------------------------------------------------------------------------------------------- */
 
 /* hits ROUTES ------------------------------------------------------------------------------------------------------- */
 router.use('/hits', tokenValidator.verifyToken);
-router.get('/hits/:serverId', hitsController.countLastDayByHour);
+router.get('/hits/:serverId', tokenValidator.verifyAnyRoleToken, hitsController.countLastDayByHour);
 /* FIN hits ROUTES ------------------------------------------------------------------------------------------------------- */
 
 module.exports = router;
@@ -129,11 +135,4 @@ router.delete('/test-data', testDataController.deleteTestData);
 
 /* RUTAS EXCLUSIVAS PARA PROBAR EL SERVER DE PYTHON */
 
-const TokenModel = require('../model/Token');
-router.get('/llevame', (req, res) => {
-    console.log(req.header('Authorization'));
-    TokenModel.findByOwner('llevame', (err, token) => {
-        token = token || {};
-        res.send(token);
-    });
-});
+router.get('/llevame', tokenController.getLlevame);

@@ -1,7 +1,7 @@
 const assert = require('assert');
 const hasher = require('../utils/hasher');
 
-describe('token-manager', function () {
+describe('hasher', function () {
     beforeEach(function () {
     });
 

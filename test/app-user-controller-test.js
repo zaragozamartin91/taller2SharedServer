@@ -972,6 +972,9 @@ describe('app-user-controller', function () {
             sandbox.stub(ApplicationUser, 'findByIdAndApp')
                 .callsFake((userId, serverId, callback) => callback());
 
+            sandbox.stub(Trip, 'findByUser')
+                .callsFake((userId, callback) => callback());
+
             const req = { serverId: dbUser.applicationOwner, params: { userId: dbUser.id } };
             const res = mockErrRes(404);
             appUserController.getUserTrips(req, res);
@@ -997,8 +1000,58 @@ describe('app-user-controller', function () {
             };
             appUserController.getUserTrips(req, res);
         });
+    });
 
+    describe('#augmentUserBalance', function () {
+        it('Falla porque la moneda es invalida', function () {
+            const req = { body: { currency: 'INVALIDA' } };
+            const res = mockErrRes(400);
+            appUserController.augmentUserBalance(req, res);
+        });
 
+        it('Falla porque el usuario no existe augmentUserBalance', function () {
+            const dbUser = ApplicationUser.fromObj(userMock2);
+            sandbox.stub(ApplicationUser, 'findByIdAndApp')
+                .callsFake((userId, serverId, callback) => callback());
+            const req = {
+                serverId: dbUser.applicationOwner,
+                params: { userId: dbUser.id },
+                body: {
+                    currency: 'ARS',
+                }
+            };
+
+            const res = mockErrRes(404);
+            appUserController.augmentUserBalance(req, res);
+        });
+
+        it('Termina antes porque el valor es cero', function () {
+            const dbUser = ApplicationUser.fromObj(userMock2);
+            sandbox.stub(ApplicationUser, 'findByIdAndApp')
+                .callsFake((userId, serverId, callback) => callback(null, dbUser));
+            const req = { serverId: dbUser.applicationOwner, params: { userId: dbUser.id }, body: {} };
+
+            const res = mockErrRes(200);
+            appUserController.augmentUserBalance(req, res);
+        });
+
+        it('Modifica el balance del usuario', function () {
+            const dbUser = ApplicationUser.fromObj(userMock2);
+            sandbox.stub(ApplicationUser, 'findByIdAndApp')
+                .callsFake((userId, serverId, callback) => callback(null, dbUser));
+
+            sandbox.stub(ApplicationUser, 'earn')
+                .callsFake((user, cost, callback) => callback(null, user));
+
+            const req = {
+                serverId: dbUser.applicationOwner,
+                params: { userId: dbUser.id },
+                body: { currency: 'USD', value: 1200 }
+            };
+
+            const res = mockErrRes(200);
+            appUserController.augmentUserBalance(req, res);
+        });
     });
 });
 

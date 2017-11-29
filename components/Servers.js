@@ -14,13 +14,14 @@ import axios from 'axios';
 import Header from './Header';
 import Trips from './Trips';
 import HitStats from './HitStats';
+import PassengerStats from './PassengerStats';
 
 /* FIN DE IMPORTS -------------------------------------------------------------------------------------- */
 
 const EMPTY_CALLBACK = () => { };
 
 const CARD_STYLES = {
-    unknown: { backgroundColor: 'rgba(255,255,255)', color: 'black' },
+    unknown: { backgroundColor: 'rgba(255,255,255,0.7)', color: 'black' },
     ok: { backgroundColor: 'rgba(49, 182, 116, 0.64)', color: 'black' },
     err: { backgroundColor: 'rgba(219, 64, 64, 0.75)', color: 'black' },
 };
@@ -30,6 +31,26 @@ const STATUS_SUFFIX = {
     ok: ' - OK',
     err: ' - NO RESPONDE',
 };
+
+function ShowTokenDialog(props) {
+    const actions = [
+        <FlatButton
+            label="Ok"
+            primary={true}
+            onClick={props.onClose}
+        />,
+    ];
+
+    return (
+        <Dialog
+            title={`Token de servidor ${props.server.id}`}
+            actions={actions}
+            modal={false}
+            open={true}>
+            {props.serverToken}
+        </Dialog>
+    );
+}
 
 const Servers = React.createClass({
     getDefaultProps() {
@@ -43,6 +64,10 @@ const Servers = React.createClass({
             snackbarMessage: '',
             tripsServer: null,
             hitsServer: null,
+            passengersServer: null,
+
+            tokenServer: null,
+            serverToken: null,
         };
     },
 
@@ -107,6 +132,25 @@ const Servers = React.createClass({
         };
     },
 
+    viewPassengerStats(server) {
+        const self = this;
+        return function () {
+            self.setState({ passengersServer: server });
+        };
+    },
+
+    showToken(server) {
+        const self = this;
+        return function () {
+            axios.get(`/api/v1/token/${server.id}?token=${self.props.token}`)
+                .then(response => {
+                    self.setState({ tokenServer: server, serverToken: response.data.token });
+                })
+                .catch(cause => {
+                    self.openSnackbar('Error al obtener el token');
+                });
+        };
+    },
 
     render() {
         let mainView;
@@ -122,6 +166,19 @@ const Servers = React.createClass({
                 server={this.state.hitsServer}
                 token={this.props.token}
                 goBack={() => this.setState({ hitsServer: null })} />;
+        } else if (this.state.passengersServer) {
+            console.log('Renderizando vista de estadisticas de pasajeros');
+            mainView = <PassengerStats
+                server={this.state.passengersServer}
+                token={this.props.token}
+                goBack={() => this.setState({ passengersServer: null })} />;
+        } else if (this.state.tokenServer) {
+            console.log('Renderizando dialogo de token de servidor');
+            mainView = <ShowTokenDialog
+                server={this.state.tokenServer}
+                serverToken={this.state.serverToken}
+                onClose={() => this.setState({ tokenServer: null, serverToken: null })}
+            />;
         } else {
             console.log('Renderizando vista de servidores');
             mainView = this.state.servers.map(server => {
@@ -138,9 +195,11 @@ const Servers = React.createClass({
                             Ultima conexion: {server.lastConnection} <br />
                         </CardText>
                         <CardActions>
+                            <FlatButton label="Token" onClick={this.showToken(server)} />
                             <FlatButton label="Verificar" onClick={this.checkServer(server)} />
                             <FlatButton label="Viajes" onClick={this.viewTrips(server)} />
                             <FlatButton label="Hits" onClick={this.viewHits(server)} />
+                            <FlatButton label="Pasajeros" onClick={this.viewPassengerStats(server)} />
                         </CardActions>
                     </Card>
                 );

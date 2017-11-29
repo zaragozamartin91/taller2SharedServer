@@ -17,8 +17,19 @@ const moment = require('moment');
 
 const logger = require('log4js').getLogger('test-data-controller');
 
+const testDataGenerator = require('../utils/test-data-generator');
+
+let BUSINESS_USERS = [];
+let APP_SERVERS = [];
+
+
 exports.createTestData = function (req, res) {
     flow.series([
+        callback => {
+            BUSINESS_USERS = [];
+            APP_SERVERS = [];
+            callback();
+        },
         callback => {
             logger.debug('Creando tabla de tokens');
             tableManager.createTokensTable(() => callback());
@@ -62,90 +73,125 @@ exports.createTestData = function (req, res) {
         callback => {
             logger.debug('Insertando usuario');
             BusinessUser.insert({
-                username: 'martin', password: 'pepe', name: 'Martin',
-                surname: 'Zaragoza', roles: ['manager', 'admin', 'user']
-            }, () => callback());
+                username: 'martin', password: 'pepe', name: 'Martin', surname: 'Zaragoza', roles: ['manager', 'admin', 'user']
+            }, (err, user) => {
+                BUSINESS_USERS.push(user);
+                callback();
+            });
         },
         callback => {
             logger.debug('Insertando usuario');
             BusinessUser.insert({
-                username: 'mateo', password: 'posting', name: 'Mateo',
-                surname: 'Zaragoza', roles: ['user', 'admin']
-            }, () => callback());
+                username: 'mateo', password: 'posting', name: 'Mateo', surname: 'Zaragoza', roles: ['user', 'admin']
+            }, (err, user) => {
+                BUSINESS_USERS.push(user);
+                callback();
+            });
         },
         callback => {
             logger.debug('Insertando usuario');
-            BusinessUser.insert({ username: 'hector', password: 'rules', name: 'Hector', surname: 'Zaragoza' }, () => callback());
+            BusinessUser.insert({ username: 'hector', password: 'rules', name: 'Hector', surname: 'Zaragoza' }, (err, user) => {
+                BUSINESS_USERS.push(user);
+                callback();
+            });
         },
 
         callback => {
             logger.debug('Agregando app server');
-            BusinessUser.findByUsername('martin', (err, user) => {
-                ApplicationServer.insert({ name: 'Llevame', createdBy: user.id }, (err, server) => {
-                    logger.debug('Agregando token de servidor ' + server.name);
-                    const token = tokenManager.signServer(server);
-                    TokenModel.insert(token, server.id, err => {
-                        if (err) logger.error(err);
-                    });
+            const user = BUSINESS_USERS[0];
 
-                    const p1 = new Promise(resolve => {
-                        logger.debug('Agregando usuario de aplicacion');
-                        let [applicationOwner, username, password, name, surname, country, email, birthdate, type, images, balance] = [
-                            server.id,
-                            'mzaragoza',
-                            'pepe',
-                            'Martin',
-                            'Zaragoza',
-                            'Argentina',
-                            'mzaragoza@accusys.com',
-                            moment('1991-03-21').toDate(),
-                            'driver',
-                            ['https://www.postgresql.org/docs/9.6/static/datatype-json.html'],
-                            [{ currency: 'ARS', value: 123.45 }, { currency: 'USD', value: 6789.10 }]
-                        ];
-                        let userObj = { applicationOwner, username, password, name, surname, country, email, birthdate, type, images, balance };
-                        ApplicationUser.insert(userObj, (err, user) => {
-                            logger.debug('Agregando auto a usuario');
-                            let [owner, properties] = [user.id, [{ name: 'model', value: 'renault' }, { name: 'year', value: 2001 }]];
-                            Car.insert({ owner, properties }, (err, res) => {
-                                logger.debug('Auto insertado');
-                                logger.debug('Usuario ' + username + ' insertado');
-                                resolve(user);
-                            });
-                        });
-                    });
+            ApplicationServer.insert({ name: 'Llevame', createdBy: user.id }, (err, server) => {
+                logger.debug('Agregando token de servidor ' + server.name);
+                const token = tokenManager.signServer(server);
+                TokenModel.insert(token, server.id, err => {
+                    if (err) logger.error(err);
+                });
 
-                    const p2 = new Promise(resolve => {
-                        logger.debug('Agregando usuario de aplicacion');
-                        let [applicationOwner, username, password, name, surname, country, email, birthdate, type, images, balance] = [
-                            server.id,
-                            'quelopario',
-                            'posting',
-                            'Hector',
-                            'Zaragoza',
-                            'Argentina',
-                            'quelopario@gmail.com',
-                            moment('1960-09-18').toDate(),
-                            'passenger',
-                            ['https://www.postgresql.org/docs/9.6/static/datatype-json.html', 'https://docs.google.com/document/d/1Ekd8ohj2WdSd5gg4_s4SGvP3P65CLb69U4-5fMBab4o/'],
-                            [{ currency: 'ARS', value: 5000 }, { currency: 'EUR', value: 45678.98 }]
-                        ];
-                        let userObj = { applicationOwner, username, password, name, surname, country, email, birthdate, type, images, balance };
-                        ApplicationUser.insert(userObj, (err, user) => {
+                APP_SERVERS.push(server);
+                server.passengers = [];
+                server.drivers = [];
+
+                const p1 = new Promise(resolve => {
+                    logger.debug('Agregando usuario de aplicacion');
+                    let [applicationOwner, username, password, name, surname, country, email, birthdate, type, images, balance] = [
+                        server.id,
+                        'mzaragoza',
+                        'pepe',
+                        'Martin',
+                        'Zaragoza',
+                        'Argentina',
+                        'mzaragoza@accusys.com',
+                        moment('1991-03-21').toDate(),
+                        'driver',
+                        ['https://www.postgresql.org/docs/9.6/static/datatype-json.html'],
+                        [{ currency: 'ARS', value: 123.45 }, { currency: 'USD', value: 6789.10 }, { currency: 'EUR', value: 678 }]
+                    ];
+                    let userObj = { applicationOwner, username, password, name, surname, country, email, birthdate, type, images, balance };
+                    ApplicationUser.insert(userObj, (err, user) => {
+                        logger.debug('Agregando auto a usuario');
+                        let [owner, properties] = [user.id, [{ name: 'model', value: 'renault' }, { name: 'year', value: 2001 }]];
+                        server.drivers.push(user);
+
+                        Car.insert({ owner, properties }, (err, res) => {
+                            logger.debug('Auto insertado');
                             logger.debug('Usuario ' + username + ' insertado');
                             resolve(user);
                         });
                     });
-
-                    Promise.all([p1, p2]).then(fulfilled => callback());
                 });
+
+                const p2 = new Promise(resolve => {
+                    logger.debug('Agregando usuario de aplicacion');
+                    let [applicationOwner, username, password, name, surname, country, email, birthdate, type, images, balance] = [
+                        server.id,
+                        'quelopario',
+                        'posting',
+                        'Hector',
+                        'Zaragoza',
+                        'Argentina',
+                        'quelopario@gmail.com',
+                        moment('1960-09-18').toDate(),
+                        'passenger',
+                        ['https://www.postgresql.org/docs/9.6/static/datatype-json.html', 'https://docs.google.com/document/d/1Ekd8ohj2WdSd5gg4_s4SGvP3P65CLb69U4-5fMBab4o/'],
+                        [{ currency: 'ARS', value: 5000 }, { currency: 'USD', value: 1 }, { currency: 'EUR', value: 45678.98 }]
+                    ];
+                    let userObj = { applicationOwner, username, password, name, surname, country, email, birthdate, type, images, balance };
+                    ApplicationUser.insert(userObj, (err, user) => {
+                        logger.debug('Usuario ' + username + ' insertado');
+                        server.passengers.push(user);
+                        resolve(user);
+                    });
+                });
+
+                const promises = [p1, p2];
+                for (let i = 0; i < 5; i++) {
+                    promises.push(new Promise(resolve => {
+                        logger.debug('Agregando usuario de aplicacion');
+                        const userObj = testDataGenerator.generatePassenger(server);
+
+                        ApplicationUser.insert(userObj, (err, user) => {
+                            logger.debug(`Usuario ${userObj.username} insertado`);
+                            server.passengers.push(user);
+                            resolve(user);
+                        });
+                    }));
+                }
+
+                Promise.all(promises).then(fulfilled => callback());
             });
+
         },
 
         callback => {
             logger.debug('Agregando app server');
             BusinessUser.findByUsername('martin', (err, user) => {
                 ApplicationServer.insert({ name: 'Super Taxi', createdBy: user.id }, (err, server) => {
+
+                    APP_SERVERS.push(server);
+                    server.passengers = [];
+                    server.drivers = [];
+
+
                     logger.debug('Agregando token de servidor ' + server.name);
                     const token = tokenManager.signServer(server);
                     TokenModel.insert(token, server.id, err => {
@@ -171,6 +217,9 @@ exports.createTestData = function (req, res) {
                         ApplicationUser.insert(userObj, (err, user) => {
                             logger.debug('Agregando auto a usuario');
                             let [owner, properties] = [user.id, [{ name: 'model', value: 'ford' }, { name: 'year', value: 2007 }]];
+
+                            server.drivers.push(user);
+
                             Car.insert({ owner, properties }, (err, res) => {
                                 logger.debug('Auto insertado');
                                 logger.debug('Usuario ' + username + ' insertado');
@@ -196,6 +245,7 @@ exports.createTestData = function (req, res) {
                         ];
                         let userObj = { applicationOwner, username, password, name, surname, country, email, birthdate, type, images, balance };
                         ApplicationUser.insert(userObj, (err, user) => {
+                            server.passengers.push(user);
                             logger.debug('Usuario ' + username + ' insertado');
                             resolve(user);
                         });
@@ -207,33 +257,28 @@ exports.createTestData = function (req, res) {
         },
 
         callback => {
-            const p1 = new Promise(resolve => ApplicationUser.findByUsernameAndApp('mzaragoza', 'llevame', (err, user) => resolve(user)));
-            const p2 = new Promise(resolve => ApplicationUser.findByUsernameAndApp('quelopario', 'llevame', (err, user) => resolve(user)));
-            Promise.all([p1, p2]).then(([user1, user2]) => {
-                const driver = user1.isDriver() ? user1 : user2;
-                const passenger = user1.isPassenger() ? user1 : user2;
-                const start = {
-                    'address': { 'street': 'Sto domingo 1180', 'location': { 'lat': -34.497956, 'lon': -58.534823 } },
-                    'timestamp': moment().toDate().getTime()
-                };
-                const end = {
-                    'address': { 'street': 'Av. Cordoba 673', 'location': { 'lat': -34.598282, 'lon': -58.376498 } },
-                    'timestamp': moment().add(35, 'm').toDate().getTime()
-                };
-                const route = [];
-                const cost = {
-                    'currency': 'ARS',
-                    'value': 123.25
-                };
-                const tripObj = new Trip(null, 'llevame', driver.id, passenger.id, start, end, 60 * 35, 60 * 5, 60 * 30, 2500, route, cost);
+            logger.debug('Insertando viajes');
 
-                logger.debug('Insertando viaje');
-                Trip.insert(tripObj, (err, dbTrip) => {
-                    if (err) logger.error(err);
-                    callback();
-                });
-            });
+            const server = APP_SERVERS[0];
+            const driver = APP_SERVERS[0].drivers[0];
+            const passenger = APP_SERVERS[0].passengers[0];
 
+            const promises = [];
+            for (let i = 0; i < server.passengers.length; i++) {
+                const tripCount = 3 - i > 0 ? 3 - i : 0;
+
+                for (let j = 0; j < tripCount; j++) {
+                    const tripObj = testDataGenerator.generateTrip(server, driver, server.passengers[i]);
+                    promises.push(new Promise(resolve => {
+                        Trip.insert(tripObj, (err, trip) => {
+                            logger.debug(`Viaje ${trip.id} insertado`);
+                            resolve(trip);
+                        });
+                    }));
+                }
+            }
+
+            Promise.all(promises).then(fulfilled => callback());
         },
 
         callback => {
@@ -244,12 +289,14 @@ exports.createTestData = function (req, res) {
                 jsonRule.consequence = jsonRule.consequence.replace(/\r/g, '').replace(/\n */g, '');
             });
 
+            let priority = 1;
             const ruleObjs = jsonRules.map(jsonRule => {
                 return {
                     'author': 'martin',
                     'message': 'New rule',
                     'blob': jsonRule,
-                    'active': true
+                    'active': true,
+                    'priority': priority++
                 };
             });
 

@@ -97,7 +97,7 @@ function processResult(res) {
             metadata, facts: [{ language: Rule.DEFAULT_LANGUAGE, blob: 'Viaje gratis' }]
         });
 
-        let amount = 0;
+        let amount = result.initialValue;
         result.operations.forEach(op => {
             amount = op(amount);
             console.log('amount: ' + amount);
@@ -153,15 +153,19 @@ exports.runRule = function (req, res) {
 exports.deleteRule = function (req, res) {
     const ruleId = req.params.ruleId;
 
-    findRulePromise(ruleId)
-        .then(rule => sendMsgCodeResponse(res, 'Baja correcta', 204))
+    new Promise((resolve, reject) =>
+        Rule.delete(ruleId, (err, delRule) => err ? reject(err) : resolve(delRule)))
+        .then(delRule => {
+            if (!delRule) return Promise.reject({ code: 404, message: 'La regla no existe' });
+            sendMsgCodeResponse(res, 'Baja correcta', 204);
+        })
         .catch(handleError(res));
 };
 
 exports.updateRule = function (req, res) {
     const userId = req.userId;
     const ruleId = req.params.ruleId;
-    const { _ref, blob, active, message = '' } = req.body;
+    const { _ref, blob, active, message = '', priority } = req.body;
 
     findRulePromise(ruleId)
         .then(rule => {
@@ -169,9 +173,10 @@ exports.updateRule = function (req, res) {
             if (_ref != rule._ref) return Promise.reject({ code: 409, message: 'Ocurrio una colision' });
 
             rule.message = message || rule.message;
-            rule.active = active || rule.active;
+            rule.active = active === undefined ? rule.active : active;
             rule.blob = blob || rule.blob;
             rule.author = userId;
+            rule.priority = priority || rule.priority;
 
             const p1 = new Promise((resolve, reject) =>
                 Rule.update(rule, (err, upRule) => err ? reject(err) : resolve(upRule)));
@@ -236,4 +241,11 @@ exports.getRuleCommit = function (req, res) {
             res.send({ metadata, rule: resRule });
         })
         .catch(handleError(res));
+};
+
+exports.getRules = function (req, res) {
+    Rule.find((err, rules) => {
+        if (err) return sendMsgCodeResponse(res, err.message, 500);
+        res.send(rules);
+    });
 };

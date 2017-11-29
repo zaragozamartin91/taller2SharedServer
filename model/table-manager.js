@@ -145,7 +145,9 @@ exports.dropCarsTable = function (callback) {
 // Trip -------------------------------------------------------------------------------------------------------
 
 /* NOTA: LOS NOMBRES DE COLUMNA start Y end SON INVALIDOS, POR LO CUAL SE ASIGNAN LOS NOMBRES DE COLUMNA
-_start Y _end. */
+_start Y _end. 
+La distancia se mide en METROS
+El tiempo se mide en segundos*/
 exports.createTripsTable = function (callback) {
     const sql = `CREATE TABLE ${Trip.TABLE} (
         id SERIAL PRIMARY KEY, 
@@ -157,7 +159,7 @@ exports.createTripsTable = function (callback) {
         totalTime INTEGER DEFAULT 0, 
         waitTime INTEGER DEFAULT 0, 
         travelTime INTEGER DEFAULT 0, 
-        distance INTEGER DEFAULT 0, 
+        distance INTEGER DEFAULT 0,
         route JSON DEFAULT '[]', 
         cost JSON DEFAULT '{}',
         date TIMESTAMP DEFAULT NOW()
@@ -187,7 +189,8 @@ exports.createRulesTable = function (callback) {
         _ref VARCHAR(128) NOT NULL,
         language VARCHAR(32) DEFAULT '${Rule.DEFAULT_LANGUAGE}',
         blob JSON NOT NULL,
-        active BOOLEAN
+        active BOOLEAN,
+        priority INTEGER DEFAULT ${Rule.DEFAULT_PRIORITY}
     )`;
     dbManager.queryPromise(sql, [])
         .then(() => callback())

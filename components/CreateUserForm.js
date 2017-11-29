@@ -29,6 +29,7 @@ const CreateUserForm = React.createClass({
             name: '',
             surname: '',
             password: '',
+            passwordRepeat: '',
             roles: []
         };
     },
@@ -74,9 +75,10 @@ const CreateUserForm = React.createClass({
     },
 
     checkFields() {
-        const { username, name, surname, password, roles } = this.state;
-        if (!username || !name || !surname || !password) return { ok: false, msg: 'Parametros incompletos' };
+        const { username, name, surname, password , passwordRepeat, roles } = this.state;
+        if (!username || !name || !surname || !password || !passwordRepeat) return { ok: false, msg: 'Parametros incompletos' };
         if (roles.length == 0) return { ok: false, msg: 'El usuario debe tener al menos un rol' };
+        if( password != passwordRepeat ) return { ok: false, msg: 'Los passwords no coinciden' };
         return { ok: true };
     },
 
@@ -106,45 +108,61 @@ const CreateUserForm = React.createClass({
         ];
 
         return (
-            <div style={{ margin: '10px' }}>
-                <h1>Crear usuario</h1>
-                <TextField
-                    name="username"
-                    hint="username"
-                    floatingLabelText="username"
-                    value={this.state.username}
-                    onChange={e => this.setState({ username: e.target.value })} /><br />
-                <TextField
-                    name="Nombre"
-                    hint="Nombre"
-                    floatingLabelText="Nombre"
-                    value={this.state.name}
-                    onChange={e => this.setState({ name: e.target.value })} /><br />
-                <TextField
-                    name="Apellido"
-                    hint="Apellido"
-                    floatingLabelText="Apellido"
-                    value={this.state.surname}
-                    onChange={e => this.setState({ surname: e.target.value })} /><br />
-                <TextField
-                    name="password"
-                    hintText="Password"
-                    floatingLabelText="Password"
-                    type="password"
-                    value={this.state.password}
-                    onChange={e => this.setState({ password: e.target.value })} /><br />
+            <div>
+                <Card style={{ backgroundColor: "rgba(255,255,255,0.7)" }} >
+                    <CardHeader
+                        title="Crear usuario"
+                        subtitle="Administradores de servidor"
+                    />
+                    <CardText expandable={false}>
+                        <TextField
+                            name="username"
+                            hint="username"
+                            floatingLabelText="username"
+                            value={this.state.username}
+                            onChange={e => this.setState({ username: e.target.value })} /><br />
+                        <TextField
+                            name="Nombre"
+                            hint="Nombre"
+                            floatingLabelText="Nombre"
+                            value={this.state.name}
+                            onChange={e => this.setState({ name: e.target.value })} /><br />
+                        <TextField
+                            name="Apellido"
+                            hint="Apellido"
+                            floatingLabelText="Apellido"
+                            value={this.state.surname}
+                            onChange={e => this.setState({ surname: e.target.value })} /><br />
+                        <TextField
+                            name="password"
+                            hintText="Password"
+                            floatingLabelText="Password"
+                            type="password"
+                            value={this.state.password}
+                            onChange={e => this.setState({ password: e.target.value })} /><br />
+                        <TextField
+                            name="password"
+                            hintText="Confirmacion password"
+                            floatingLabelText="Confirmacion password"
+                            type="password"
+                            value={this.state.passwordRepeat}
+                            onChange={e => this.setState({ passwordRepeat: e.target.value })} /><br />
+                        <div style={{ margin: '10px' }}>
+                            {checkBoxes}
+                        </div>
+                    </CardText>
+                    <CardActions>
+                        <RaisedButton label="Crear usuario" secondary={true} onClick={this.createUser} />
+                    </CardActions>
+                </Card>
+
                 <Snackbar
                     open={this.state.msgSnackbarOpen}
                     message={this.state.snackbarMessage}
                     autoHideDuration={3000}
                     onRequestClose={this.handleSnackbarRequestClose}
                 />
-                <div style={{ margin: '10px' }}>
-                    <h2>Roles</h2>
-                    {checkBoxes}
-                </div>
-                <RaisedButton label="Crear usuario" secondary={true} onClick={this.createUser} />
-            </div >
+            </div>
         );
     }
 });

@@ -9,13 +9,20 @@ function cloneFact(fact) {
 }
 
 function buildFact(baseFact = {}) {
+    // mts representa distancia en metros
     const fact = cloneFact(baseFact);
-    const { operations = [], mts = 0, type = '', pocketBalance = {}, email = '' } = fact;
+    const { operations = [], mts = 0, type = '',
+        pocketBalance = { currency: 'ARS', value: 0 }, email = '', initialValue = 0,
+        waitTime = 0, travelTime = 0, totalTime = waitTime + travelTime } = fact;
     fact.operations = operations;
     fact.mts = mts;
     fact.type = type;
     fact.pocketBalance = pocketBalance;
     fact.email = email;
+    fact.initialValue = initialValue;
+    fact.waitTime = waitTime;
+    fact.travelTime = travelTime;
+    fact.totalTime = totalTime;
     return fact;
 }
 

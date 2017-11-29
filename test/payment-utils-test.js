@@ -40,22 +40,24 @@ const paymentDataMock = {
     currency: 'ARS',
     value: 125.95000000000002,
     paymentMethod:
-    {
-        expiration_month: '12',
-        expiration_year: '19',
-        method: 'card',
-        type: 'visa',
-        number: '1111222233334444',
-        ccvv: 123
-    }
+        {
+            expiration_month: '12',
+            expiration_year: '19',
+            method: 'card',
+            type: 'visa',
+            number: '1111222233334444',
+            ccvv: 123
+        }
 };
 
-const paymentMock = {
-    "currency": "ARS",
-    "paymentMethod": { "expiration_month": "12", "expiration_year": "19", "method": "card", "number": "1111222233334444", "type": "visa" },
-    "transaction_id": "d01b5eaa-d0c8-4cb0-8158-ad4ac543d4ca",
-    "value": 125.95000000000002
-};
+function mockCardPayment() {
+    return {
+        "transaction_id": "d01b5eaa-d0c8-4cb0-8158-ad4ac543d4ca",
+        "currency": "ARS",
+        "value": 125.95000000000002,
+        "paymentMethod": { "expiration_month": "12", "expiration_year": "19", "method": "card", "number": "1111222233334444", "type": "visa" },
+    };
+}
 
 describe('payment-utils-test', function () {
     beforeEach(function () {
@@ -136,7 +138,7 @@ describe('payment-utils-test', function () {
             const tokenRes = { data: { access_token: token } };
             sandbox.stub(paymentUtils, 'getTokenPromise').returns(Promise.resolve(tokenRes));
 
-            const paymentRes = { data: paymentMock };
+            const paymentRes = { data: mockCardPayment() };
             sandbox.stub(paymentUtils, 'paymentPromise').returns(Promise.resolve(paymentRes));
 
             paymentUtils.postPayment(paymentDataMock, (err, payment) => {

@@ -3,6 +3,7 @@ const ApplicationServer = require('./ApplicationServer');
 const hasher = require('../utils/hasher');
 const idGenerator = require('../utils/id-generator');
 const Car = require('./Car');
+const Trip = require('./Trip');
 const logger = require('log4js').getLogger('ApplicationUser');
 const flow = require('nimble');
 
@@ -176,12 +177,14 @@ ApplicationUser.findByFbToken = function (fbtoken, app, callback) {
 
 /* Disminuye el saldo del usuario */
 /* istanbul ignore next */
-ApplicationUser.pay = function (user, cost, callback) {
+ApplicationUser.pay = function (user, cost, callback, doTransformCost = true) {
     const userId = user.id || user;
     ApplicationUser.findById(userId, (err, dbUser) => {
         if (err) return callback(err);
         const specBalance = dbUser.balance.find(bal => bal.currency.toLowerCase() == cost.currency.toLowerCase());
         if (!specBalance) return callback(new Error(`El usuario ${userId} no tiene balance ${cost.currency}`));
+
+        cost = doTransformCost ? transformCost(cost) : cost;
         specBalance.value = specBalance.value - cost.value;
 
         const sql = `UPDATE ${table} SET balance=$1 WHERE id=$2 RETURNING *`;
@@ -192,17 +195,38 @@ ApplicationUser.pay = function (user, cost, callback) {
     });
 };
 
+const COSTS = { ARS: 1, USD: 18, EUR: 20 };
+function transformCost(cost = { currency: 'ARS', value: 0 }) {
+    const div = COSTS[cost.currency] || 1;
+    return { currency: cost.currency, value: cost.value / div };
+}
+
 /* Incrementa el saldo del usuario */
 /* istanbul ignore next */
-ApplicationUser.earn = function (user, { currency, value }, callback) {
-    ApplicationUser.pay(user, { currency, value: -value }, callback);
+ApplicationUser.earn = function (user, { currency, value }, callback, doTransformCost = true) {
+    ApplicationUser.pay(user, { currency, value: -value }, callback, doTransformCost);
+};
+
+/* istanbul ignore next */
+ApplicationUser.findFreqPassengers = function (server, callback) {
+    const serverId = server.id || server;
+    const sql = `SELECT u.id,u.username,count(t.id) as trip_count 
+        FROM ${table} u,${Trip.TABLE} t 
+        WHERE u.id=t.passenger AND u.applicationowner=$1
+        GROUP BY u.id 
+        ORDER BY trip_count DESC 
+        LIMIT 5;`;
+
+    dbManager.queryPromise(sql, [serverId])
+        .then(rows => callback(null, rows))
+        .catch(callback);
 };
 
 /* istanbul ignore next */
 ApplicationUser.prototype.validate = function (password, fbToken) {
     if (password) return password == this.password;
     const authToken = this.fb.authToken;
-    return authToken && fbToken == authToken;
+    return authToken && fbToken.authToken == authToken;
 };
 
 /* istanbul ignore next */
