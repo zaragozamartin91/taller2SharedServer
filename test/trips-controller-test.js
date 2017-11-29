@@ -681,19 +681,7 @@ describe('trips-controller', function () {
             tripsController.estimate(req, res);
         });
 
-        it('falla porque la moneda es invalida', function () {
-            const dbTrip = mockInsertedTrip();
-            const req = {
-                body: {
-                    passenger: dbTrip.passenger,
-                    distance: 2000
-                }
-            };
-            const res = mockErrRes(400);
-            tripsController.estimate(req, res);
-        });
-
-        it('falla porque la moneda es invalida', function () {
+        it('falla porque la moneda es invalida_2', function () {
             const dbTrip = mockInsertedTrip();
             const req = {
                 body: {
@@ -740,6 +728,64 @@ describe('trips-controller', function () {
                 body: dbTrip
             };
             const res = mockErrRes(402);
+            tripsController.estimate(req, res);
+        });
+
+        it('determina que el pasajero podra viajar gratis', function () {
+            const dbTrip = mockInsertedTrip();
+            dbTrip.currency = 'ARS';
+
+            sandbox.stub(Trip, 'findByUser')
+                .callsFake((user, callback) => callback(null, mockTrips()));
+
+            const dbPassenger = mockPassenger();
+            dbPassenger.balance[0] = { currency: 'ARS', value: 100 };
+            dbPassenger.email = 'someEmail@@llevame.com';
+            dbPassenger.getBalance = currency => dbPassenger.balance[0];
+            sandbox.stub(ApplicationUser, 'findById')
+                .callsFake((user, callback) => callback(null, dbPassenger));
+
+            const dbRules = mockActiveRules();
+            sandbox.stub(Rule, 'findActive')
+                .callsFake(callback => callback(null, dbRules));
+
+            const req = {
+                body: dbTrip
+            };
+            const res = {
+                send({ metadata, cost: { currency, value } }) {
+                    assert.equal(0, value);
+                }
+            };
+            tripsController.estimate(req, res);
+        });
+
+        it('estima un viaje con costo regular', function () {
+            const dbTrip = mockInsertedTrip();
+            dbTrip.currency = 'ARS';
+
+            sandbox.stub(Trip, 'findByUser')
+                .callsFake((user, callback) => callback(null, mockTrips()));
+
+            const dbPassenger = mockPassenger();
+            dbPassenger.balance[0] = { currency: 'ARS', value: 100 };
+            dbPassenger.distance = undefined;
+            dbPassenger.getBalance = currency => dbPassenger.balance[0];
+            sandbox.stub(ApplicationUser, 'findById')
+                .callsFake((user, callback) => callback(null, dbPassenger));
+
+            const dbRules = mockActiveRules();
+            sandbox.stub(Rule, 'findActive')
+                .callsFake(callback => callback(null, dbRules));
+
+            const req = {
+                body: dbTrip
+            };
+            const res = {
+                send({ metadata, cost: { currency, value } }) {
+                    assert.ok(value > 0);
+                }
+            };
             tripsController.estimate(req, res);
         });
     });

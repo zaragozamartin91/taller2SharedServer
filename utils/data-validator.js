@@ -130,5 +130,6 @@ exports.validateTransaction = validateTransaction;
 const AVAIL_CURRENCIES = ['ARS', 'EUR', 'USD'];
 exports.AVAIL_CURRENCIES = AVAIL_CURRENCIES;
 exports.validateCurrency = function (curr) {
+    console.log('VALIDANDO MONEDA ' + curr);
     return AVAIL_CURRENCIES.indexOf(curr) >= 0;
 };
