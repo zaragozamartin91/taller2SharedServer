@@ -46,6 +46,7 @@ const ServerCreator = React.createClass({
         return {
             msgSnackbarOpen: false,
             name: '',
+            url: '',
             serverToken: null
         };
     },
@@ -68,7 +69,7 @@ const ServerCreator = React.createClass({
         console.log(data);
         const { server: { token: { token } } } = data;
         console.log(token);
-        this.setState({ msgSnackbarOpen: true, snackbarMessage: 'Servidor creado exitosamente' , serverToken: token });
+        this.setState({ msgSnackbarOpen: true, snackbarMessage: 'Servidor creado exitosamente', serverToken: token });
         //this.setState({ serverToken: token });
     },
 
@@ -77,8 +78,8 @@ const ServerCreator = React.createClass({
     },
 
     checkFields() {
-        const { name } = this.state;
-        if (!name) return { ok: false, msg: 'Parametros incompletos' };
+        const { name, url } = this.state;
+        if (!name || !url) return { ok: false, msg: 'Parametros incompletos' };
         return { ok: true };
     },
 
@@ -86,10 +87,11 @@ const ServerCreator = React.createClass({
         const fieldsCheck = this.checkFields();
         if (!fieldsCheck.ok) return this.openSnackbar(fieldsCheck.msg);
 
-        const { name } = this.state;
+        let { name, url } = this.state;
+        if (!url.startsWith('http://') && !url.startsWith('https://')) url = `http://${url}`;
         const createdBy = this.props.user.id || this.props.user;
 
-        const body = { name, createdBy };
+        const body = { name, createdBy, url };
         const config = { headers: { 'Authorization': `Bearer ${this.props.token}` } };
         axios.post('/api/v1/servers', body, config)
             .then(contents => {
@@ -121,6 +123,13 @@ const ServerCreator = React.createClass({
                             floatingLabelText="Nombre"
                             value={this.state.name}
                             onChange={e => this.setState({ name: e.target.value })} /><br />
+                        <TextField
+                            style={{ width: "75%" }}
+                            name="Url"
+                            hint="Url"
+                            floatingLabelText="Url"
+                            value={this.state.url}
+                            onChange={e => this.setState({ url: e.target.value })} /><br />
                     </CardText>
                     <CardActions>
                         <RaisedButton label="Crear servidor" secondary={true} onClick={this.createServer} />

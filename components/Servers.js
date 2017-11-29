@@ -248,9 +248,12 @@ const Servers = React.createClass({
                             title={server.id}
                             subtitle={subtitle} />
                         <CardText expandable={false}>
-                            Creado por: {server.createdBy} <br />
-                            Creado en: {server.createdTime} <br />
-                            Ultima conexion: {server.lastConnection} <br />
+                            <p><strong>Creado por:</strong> {server.createdBy} </p>
+                            <p><strong>Creado en:</strong> {server.createdTime} </p>
+                            <p><strong>Ultima conexion:</strong> {server.lastConnection} </p>
+                            {server.url ?
+                                <p><strong>Url:</strong> <a>{server.url}</a> </p> :
+                                <p><strong>Url DESCONOCIDA</strong> </p>}
                         </CardText>
                         <CardActions>
                             <FlatButton label="Eliminar" secondary={true} onClick={this.showDeleteDialog(server)} />

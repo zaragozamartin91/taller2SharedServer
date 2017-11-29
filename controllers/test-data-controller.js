@@ -100,7 +100,7 @@ exports.createTestData = function (req, res) {
             logger.debug('Agregando app server');
             const user = BUSINESS_USERS[0];
 
-            ApplicationServer.insert({ name: 'Llevame', createdBy: user.id }, (err, server) => {
+            ApplicationServer.insert({ name: 'Llevame', createdBy: user.id, url: 'http://taller2-application-server.herokuapp.com/api/v1' }, (err, server) => {
                 logger.debug('Agregando token de servidor ' + server.name);
                 const token = tokenManager.signServer(server);
                 TokenModel.insert(token, server.id, err => {

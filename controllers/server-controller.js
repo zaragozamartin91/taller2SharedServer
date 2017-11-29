@@ -170,15 +170,32 @@ exports.renewToken = function (req, res) {
 
 exports.pingServer = function (req, res) {
     const serverId = req.params.serverId;
-    if (serverId == 'llevame') {
-        axios.get('http://taller2-application-server.herokuapp.com/api/v1/keepalive')
-            .then(contents => sendMsgCodeResponse(res, contents.data.code || 'OK', 200))
-            .catch(err => sendMsgCodeResponse(res, err.message || 'Error al verificar el estado de llevame', 500));
-    } else {
-        const serverOk = Math.random() >= 0.5;
-        if (serverOk) sendMsgCodeResponse(res, 'OK', 200);
-        else sendMsgCodeResponse(res, `Servidor ${serverId} inactivo`, 500);
-    }
+    ApplicationServer.findById(serverId, (err, server) => {
+        if (err) return sendMsgCodeResponse(res, 'Error al obtener el servidor ' + serverId, 500);
+        if (!server) return sendMsgCodeResponse(res, `El server ${serverId} no existe`, 404);
+
+        if (server.url) {
+            axios.get(`${server.url}/keepalive`)
+                .then(contents => sendMsgCodeResponse(res, contents.data.code || 'OK', 200))
+                .catch(err => sendMsgCodeResponse(res, err.message || 'Error al verificar el estado de ' + serverId, 500));
+        } else {
+            const serverOk = Math.random() >= 0.5;
+            if (serverOk) sendMsgCodeResponse(res, 'OK', 200);
+            else sendMsgCodeResponse(res, `Servidor ${serverId} inactivo`, 500);
+        }
+    });
+
+    /*
+        if (serverId == 'llevame') {
+            axios.get('http://taller2-application-server.herokuapp.com/api/v1/keepalive')
+                .then(contents => sendMsgCodeResponse(res, contents.data.code || 'OK', 200))
+                .catch(err => sendMsgCodeResponse(res, err.message || 'Error al verificar el estado de llevame', 500));
+        } else {
+            const serverOk = Math.random() >= 0.5;
+            if (serverOk) sendMsgCodeResponse(res, 'OK', 200);
+            else sendMsgCodeResponse(res, `Servidor ${serverId} inactivo`, 500);
+        }
+        */
 };
 
 
