@@ -305,7 +305,7 @@ const Users = React.createClass({
                     {roleList}
                 </CardText>
                 <CardActions>
-                    <FlatButton label="Eliminar" onClick={this.openDeleteDialog(user)} />
+                    <FlatButton label="Eliminar" secondary={true} onClick={this.openDeleteDialog(user)} />
                     <FlatButton label="Editar" onClick={this.openEditCard(user)} />
                 </CardActions>
             </Card>);

@@ -17,15 +17,36 @@ import Header from './Header';
 
 const EMPTY_CALLBACK = () => { };
 
+function ShowTokenDialog(props) {
+    const actions = [
+        <FlatButton
+            label="Ok"
+            primary={true}
+            onClick={props.onClose}
+        />,
+    ];
+
+    return (
+        <Dialog
+            title={`Token de servidor`}
+            actions={actions}
+            modal={false}
+            open={true}>
+            {props.serverToken}
+        </Dialog>
+    );
+}
+
 const ServerCreator = React.createClass({
     getDefaultProps() {
-        return { token: '' , user: null };
+        return { token: '', user: null };
     },
 
     getInitialState() {
         return {
             msgSnackbarOpen: false,
             name: '',
+            serverToken: null
         };
     },
 
@@ -42,8 +63,13 @@ const ServerCreator = React.createClass({
         this.setState({ msgSnackbarOpen: false });
     },
 
-    handleCreateSuccess() {
-        this.openSnackbar(`Servidor creado`);
+    handleCreateSuccess(data) {
+        //this.openSnackbar(`Servidor creado exitosamente`);
+        console.log(data);
+        const { server: { token: { token } } } = data;
+        console.log(token);
+        this.setState({ msgSnackbarOpen: true, snackbarMessage: 'Servidor creado exitosamente' , serverToken: token });
+        //this.setState({ serverToken: token });
     },
 
     handleCreateError(cause) {
@@ -60,7 +86,7 @@ const ServerCreator = React.createClass({
         const fieldsCheck = this.checkFields();
         if (!fieldsCheck.ok) return this.openSnackbar(fieldsCheck.msg);
 
-        const { name} = this.state;
+        const { name } = this.state;
         const createdBy = this.props.user.id || this.props.user;
 
         const body = { name, createdBy };
@@ -76,6 +102,11 @@ const ServerCreator = React.createClass({
     },
 
     render() {
+        if (this.state.serverToken) return <ShowTokenDialog
+            serverToken={this.state.serverToken}
+            onClose={() => this.setState({ serverToken: null })}
+        />;
+
         return (
             <div>
                 <Card style={{ backgroundColor: "rgba(255,255,255,0.7)" }} >

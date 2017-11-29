@@ -32,6 +32,41 @@ const STATUS_SUFFIX = {
     err: ' - NO RESPONDE',
 };
 
+function DeleteServerDialog(props) {
+    const serverId = props.server.id || props.server;
+    const token = props.token;
+
+    function deleterServer() {
+        axios.delete(`/api/v1/servers/${serverId}?token=${token}`)
+            .then(props.onSuccess)
+            .catch(props.onError);
+    }
+
+    const actions = [
+        <FlatButton
+            label="Eliminar"
+            primary={true}
+            onClick={deleterServer}
+        />,
+        <FlatButton
+            label="Cancelar"
+            primary={true}
+            onClick={props.onClose}
+        />,
+    ];
+
+    return (
+        <Dialog
+            title={`Eliminar servidor ${serverId}`}
+            actions={actions}
+            modal={false}
+            open={true}>
+            ¿Esta seguro de querer eliminar el servidor?
+            Esta accion no es reversible
+        </Dialog>
+    );
+}
+
 function ShowTokenDialog(props) {
     const actions = [
         <FlatButton
@@ -68,6 +103,8 @@ const Servers = React.createClass({
 
             tokenServer: null,
             serverToken: null,
+
+            deleteServer: null
         };
     },
 
@@ -152,6 +189,11 @@ const Servers = React.createClass({
         };
     },
 
+    showDeleteDialog(server) {
+        const self = this;
+        return () => self.setState({ deleterServer: server });
+    },
+
     render() {
         let mainView;
         if (this.state.tripsServer) {
@@ -179,6 +221,22 @@ const Servers = React.createClass({
                 serverToken={this.state.serverToken}
                 onClose={() => this.setState({ tokenServer: null, serverToken: null })}
             />;
+        } else if (this.state.deleterServer) {
+            console.log('Renderizando dialogo de eliminacion de servidor');
+            mainView = <DeleteServerDialog
+                server={this.state.deleterServer}
+                token={this.props.token}
+                onClose={() => this.setState({ deleterServer: null })}
+                onSuccess={data => {
+                    this.openSnackbar(`Servidor ${this.state.deleterServer.id} Eliminado`);
+                    this.setState({ deleterServer: null });
+                    this.loadServers();
+                }}
+                onError={cause => {
+                    this.openSnackbar(`Error: ${cause.message}`);
+                    this.setState({ deleterServer: null });
+                }}
+            />;
         } else {
             console.log('Renderizando vista de servidores');
             mainView = this.state.servers.map(server => {
@@ -195,6 +253,7 @@ const Servers = React.createClass({
                             Ultima conexion: {server.lastConnection} <br />
                         </CardText>
                         <CardActions>
+                            <FlatButton label="Eliminar" secondary={true} onClick={this.showDeleteDialog(server)} />
                             <FlatButton label="Token" onClick={this.showToken(server)} />
                             <FlatButton label="Verificar" onClick={this.checkServer(server)} />
                             <FlatButton label="Viajes" onClick={this.viewTrips(server)} />
