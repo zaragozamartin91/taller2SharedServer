@@ -226,7 +226,8 @@ ApplicationUser.findFreqPassengers = function (server, callback) {
 ApplicationUser.prototype.validate = function (password, fbToken) {
     if (password) return password == this.password;
     const authToken = this.fb.authToken;
-    return authToken && fbToken.authToken == authToken;
+    const theToken = fbToken.authToken || fbToken;
+    return authToken && theToken == authToken;
 };
 
 /* istanbul ignore next */
