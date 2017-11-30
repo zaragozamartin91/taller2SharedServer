@@ -28,14 +28,16 @@ function hashServer(id, name) {
  * @param {Date} createdTime Momento de creacion del server.
  * @param {string} name Nombre del server.
  * @param {Date} lastConnection Momento de ultima conexion con el server.
+ * @param {string} url Url base del servidor para operar contra el (ej para hacerle un ping)
  */
-function ApplicationServer(id, _ref, createdBy, createdTime, name, lastConnection) {
+function ApplicationServer(id, _ref, createdBy, createdTime, name, lastConnection, url = '') {
     this.id = id;
     this._ref = _ref;
     this.createdBy = createdBy;
     this.createdTime = createdTime;
     this.name = name;
     this.lastConnection = lastConnection;
+    this.url = url;
 }
 
 ApplicationServer.table = table;
@@ -55,7 +57,8 @@ ApplicationServer.fromObj = function (obj) {
             obj.createdBy || obj.created_by,
             new Date(obj.createdTime || obj.created_time),
             obj.name,
-            new Date(obj.lastConn || obj.last_conn || obj.lastConnection)
+            new Date(obj.lastConn || obj.last_conn || obj.lastConnection),
+            obj.url
         );
         return appServer;
     } else return null;
@@ -65,11 +68,11 @@ function fromRows(rows = []) {
     return rows.map(ApplicationServer.fromObj);
 }
 
-function buildServer({ name, createdBy, created_by }) {
+function buildServer({ name, createdBy, created_by, url = '' }) {
     const id = idGenerator.generateId(name);
     const _ref = hashServer(id, name);
     const createdTime = new Date();
-    return new ApplicationServer(id, _ref, created_by || createdBy, createdTime, name, createdTime);
+    return new ApplicationServer(id, _ref, created_by || createdBy, createdTime, name, createdTime, url);
 }
 
 ApplicationServer.buildServer = buildServer;
@@ -77,12 +80,12 @@ ApplicationServer.buildServer = buildServer;
 /* istanbul ignore next */
 ApplicationServer.insert = function (obj, callback) {
     const server = buildServer(obj);
-    const { id, _ref, createdBy, createdTime, name } = server;
+    const { id, _ref, createdBy, createdTime, name, url = '' } = server;
 
     dbManager.query(`INSERT INTO ${table} 
-        (id,_ref,created_by,name,created_time)
-        VALUES ($1,$2,$3,$4,$5) RETURNING *`,
-        [id, _ref, createdBy, name, createdTime], (err, res) => {
+        (id,_ref,created_by,name,created_time,url)
+        VALUES ($1,$2,$3,$4,$5,$6) RETURNING *`,
+        [id, _ref, createdBy, name, createdTime, url], (err, res) => {
             if (err) return callback(err);
             return callback(null, ApplicationServer.fromObj(res.rows[0]));
         });

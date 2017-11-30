@@ -29,6 +29,17 @@ Hit.insert = function (hitObj, callback) {
 };
 
 /* istanbul ignore next */
+Hit.insertOnTime = function (hitObj, callback) {
+    const { server, method, url, hour } = hitObj;
+    const sql = `INSERT INTO ${table}(server, method, url, date) VALUES($1,$2,$3, now() + time '${hour}' ) RETURNING *`;
+    const values = [server, method, url];
+
+    dbManager.queryPromise(sql, values)
+        .then(([dbHit]) => callback(null, fromObj(dbHit)))
+        .catch(callback);
+};
+
+/* istanbul ignore next */
 Hit.countLastDayByHour = function (server, callback) {
     const serverId = server.id || server;
     const sql = `SELECT COUNT(id) AS count, EXTRACT(hour FROM h.date) AS hour 

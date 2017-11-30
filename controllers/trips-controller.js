@@ -245,8 +245,11 @@ exports.estimate = function (req, res) {
     if (!distance && (!start || !end)) return sendMsgCodeResponse(res, 'Faltan parametros para calcular distancia', 400);
 
     const currencyValid = dataValidator.validateCurrency(currency);
-    if (!currencyValid) return sendMsgCodeResponse(res,
-        'Moneda invalida. Monedas soportadas: ' + dataValidator.AVAIL_CURRENCIES, 400);
+    if (!currencyValid) {
+        console.log('MONEDA ES INVALIDA!');
+        return sendMsgCodeResponse(res,
+            'Moneda invalida. Monedas soportadas: ' + dataValidator.AVAIL_CURRENCIES, 400);
+    }
 
     let mts;
     try {
@@ -261,7 +264,10 @@ exports.estimate = function (req, res) {
             if (result.cannotTravel) return Promise.reject({ code: 402, message: 'El pasajero debe normalizar su situación de pago' });
 
             const metadata = { version: apiVersion };
-            if (result.free) return res.send({ metadata, cost: { currency, value: 0 } });
+            if (result.free) {
+                console.log('SE ESTIMO UN VIAJE GRATIS');
+                return res.send({ metadata, cost: { currency, value: 0 } });
+            }
 
             let amount = result.initialValue;
             result.operations.forEach(op => {

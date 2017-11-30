@@ -51,7 +51,9 @@ exports.createApplicationServersTable = function (callback) {
         created_by ${BusinessUser.idType} REFERENCES ${BusinessUser.table}(id) ON DELETE SET NULL,
         created_time TIMESTAMP DEFAULT now(),
         name VARCHAR(64) UNIQUE NOT NULL,
-        last_conn TIMESTAMP DEFAULT now())`, [], callback);
+        last_conn TIMESTAMP DEFAULT now(),
+        url VARCHAR(128) DEFAULT ''
+    )`, [], callback);
 };
 
 exports.dropApplicationServersTable = function (callback) {

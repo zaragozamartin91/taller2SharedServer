@@ -100,7 +100,7 @@ exports.createTestData = function (req, res) {
             logger.debug('Agregando app server');
             const user = BUSINESS_USERS[0];
 
-            ApplicationServer.insert({ name: 'Llevame', createdBy: user.id }, (err, server) => {
+            ApplicationServer.insert({ name: 'Llevame', createdBy: user.id, url: 'http://taller2-application-server.herokuapp.com/api/v1' }, (err, server) => {
                 logger.debug('Agregando token de servidor ' + server.name);
                 const token = tokenManager.signServer(server);
                 TokenModel.insert(token, server.id, err => {
@@ -313,6 +313,54 @@ exports.createTestData = function (req, res) {
                 callback();
             });
         },
+
+        /*
+        callback => {
+            logger.debug('Agregando hits de prueba');
+            const promises = [];
+            for (let h = 0; h < 24; h++) {
+                const shour = h < 10 ? `0${h}:15` : `${h}:45`;
+                const [server, method, url, hour] = [APP_SERVERS[0].id, 'GET', '/users', shour];
+
+                promises.push(new Promise((resolve, reject) => {
+                    Hit.insertOnTime({ server, method, url, hour }, (err, hit) => {
+                        if (err) console.error(err);
+                        resolve(hit);
+                    });
+                }));
+            }
+
+            promises.push(new Promise((resolve, reject) => {
+                Hit.insertOnTime({ server: APP_SERVERS[0].id, method: 'POST', url: '/ping', hour: '12:30' }, (err, hit) => {
+                    if (err) console.error(err);
+                    resolve(hit);
+                });
+            }));
+
+            promises.push(new Promise((resolve, reject) => {
+                Hit.insertOnTime({ server: APP_SERVERS[0].id, method: 'POST', url: '/ping', hour: '12:30' }, (err, hit) => {
+                    if (err) console.error(err);
+                    resolve(hit);
+                });
+            }));
+
+            promises.push(new Promise((resolve, reject) => {
+                Hit.insertOnTime({ server: APP_SERVERS[0].id, method: 'POST', url: '/ping', hour: '15:30' }, (err, hit) => {
+                    if (err) console.error(err);
+                    resolve(hit);
+                });
+            }));
+
+            promises.push(new Promise((resolve, reject) => {
+                Hit.insertOnTime({ server: APP_SERVERS[0].id, method: 'POST', url: '/ping', hour: '16:30' }, (err, hit) => {
+                    if (err) console.error(err);
+                    resolve(hit);
+                });
+            }));
+
+            Promise.all(promises).then(() => callback());
+        },
+        */
 
         callback => {
             logger.debug('Fin');
