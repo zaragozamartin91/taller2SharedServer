@@ -6,7 +6,7 @@
 Para poder correr la aplicación, es necesario contar con:
 * Nodejs v >= 6.2
 * Npm v >= 3.2
-* PostgreSql v >= 9
+* PostgreSql v >= 9.2
 
 ## Instalación
 Previo a iniciar el server, es necesario correr los siguientes comandos:
@@ -29,11 +29,16 @@ Para iniciar el server, se debe:
 * correr el comando **npm start**
 * visitar la app en http://localhost:PORT/
 
-## Reporte de cobertura
-El reporte de cobertura de código se generará en /coverage luego de correr el comando **npm run coverage**
-
 ## Linter
 Para correr el linter de la aplicacion, correr el comando **npm run lint**
 
-## Tests
-Para correr los tests de la aplicación, correr el comando **npm test**
+## Tests y cobertura
+Para correr los tests de la aplicación y generar los reportes de cobertura, correr el comando **npm test**
+
+## Docker
+Es posible correr el shared server usando docker:
+* Abrir una terminal
+* Iniciar docker
+* Situarse en el directorio del proyecto
+* Correr el comando "docker-compose up"
+* El servidor estará levantado en http://localhost:PORT/ o http://192.168.99.100:5000 (dependiendo de la instalación de docker y el sistema operativo donde esté corriendo)

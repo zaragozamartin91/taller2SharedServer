@@ -628,6 +628,34 @@ describe('app-user-controller', function () {
             appUserController.updateUser(req, res);
         });
 
+        it('Actualiza correctamente al usuario con parametros similares al post user', function () {
+            const dbUser = ApplicationUser.fromObj(userMock1);
+            sandbox.stub(ApplicationUser, 'findById')
+                .callsFake((user, callback) => callback(null, dbUser));
+
+            let { _ref, type, username, password, fb, name, surname, country, email, birthdate, images } = dbUser;
+            name = 'Different name';
+            surname = 'Different last name';
+            country = 'Brasil';
+            images = [];
+
+            dbUser.update = function (callback) {
+                callback(null, dbUser);
+            };
+
+            const req = {
+                params: { userId: dbUser.id },
+                body: { _ref, type, username, password, fb, name, surname, country, email, birthdate, images }
+            };
+            const res = {
+                send({ metadata, user }) {
+                    assert.ok(metadata.version);
+                    assert.equal(JSON.stringify(appUserController.getUserView(dbUser)), JSON.stringify(user));
+                }
+            };
+            appUserController.updateUser(req, res);
+        });
+
         it('Falla porque el tipo de usuario es invalido', function () {
             const dbUser = ApplicationUser.fromObj(userMock1);
             sandbox.stub(ApplicationUser, 'findById')
