@@ -6,7 +6,7 @@ var options = {
     "port": "5000",
     "path": "/api/v1/client/llevame-khaleesi",
     "headers": {
-        "cookie": "session=eyJ1c2VybmFtZSI6Im16YXJhZ296YSJ9.DP-4_g.kjxq1vE9C3M16_78ntFiYAWlDf0",
+        "cookie": "session=eyJ1c2VybmFtZSI6Im16YXJhZ296YSJ9.DQEE3Q.cJpxlyaBe7X5RzDvZOkL1f0AUHU",
         "cache-control": "no-cache"
     }
 };

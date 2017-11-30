@@ -136,7 +136,7 @@ exports.updateUser = function (req, res) {
     findUserAndDo(req, (err, user) => {
         if (!user) return sendMsgCodeResponse(res, 'El usuario no existe', 404);
 
-        const { _ref, type, username, password, fb, firstName, lastName, country, email, birthdate, images, balance } = req.body;
+        const { _ref, type, username, password, fb, firstName, lastName, country, email, birthdate, images, balance, name, surname } = req.body;
         const oldRef = _ref;
         if (user._ref != oldRef) return sendMsgCodeResponse(res, 'Ocurrio una colision', 409);
 
@@ -148,8 +148,8 @@ exports.updateUser = function (req, res) {
         user.username = username || user.username;
         user.password = password || user.password;
         user.fb = fb || user.fb;
-        user.name = firstName || user.name;
-        user.surname = lastName || user.surname;
+        user.name = firstName || name || user.name;
+        user.surname = lastName || surname || user.surname;
         user.country = country || user.country;
         if (email && !dataValidator.validateEmail(email)) return sendMsgCodeResponse(res, 'El email es invalido', 400);
         user.email = email || user.email;
