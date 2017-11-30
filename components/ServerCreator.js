@@ -17,15 +17,37 @@ import Header from './Header';
 
 const EMPTY_CALLBACK = () => { };
 
+function ShowTokenDialog(props) {
+    const actions = [
+        <FlatButton
+            label="Ok"
+            primary={true}
+            onClick={props.onClose}
+        />,
+    ];
+
+    return (
+        <Dialog
+            title={`Token de servidor`}
+            actions={actions}
+            modal={false}
+            open={true}>
+            {props.serverToken}
+        </Dialog>
+    );
+}
+
 const ServerCreator = React.createClass({
     getDefaultProps() {
-        return { token: '' , user: null };
+        return { token: '', user: null };
     },
 
     getInitialState() {
         return {
             msgSnackbarOpen: false,
             name: '',
+            url: '',
+            serverToken: null
         };
     },
 
@@ -42,8 +64,13 @@ const ServerCreator = React.createClass({
         this.setState({ msgSnackbarOpen: false });
     },
 
-    handleCreateSuccess() {
-        this.openSnackbar(`Servidor creado`);
+    handleCreateSuccess(data) {
+        //this.openSnackbar(`Servidor creado exitosamente`);
+        console.log(data);
+        const { server: { token: { token } } } = data;
+        console.log(token);
+        this.setState({ msgSnackbarOpen: true, snackbarMessage: 'Servidor creado exitosamente', serverToken: token });
+        //this.setState({ serverToken: token });
     },
 
     handleCreateError(cause) {
@@ -51,8 +78,8 @@ const ServerCreator = React.createClass({
     },
 
     checkFields() {
-        const { name } = this.state;
-        if (!name) return { ok: false, msg: 'Parametros incompletos' };
+        const { name, url } = this.state;
+        if (!name || !url) return { ok: false, msg: 'Parametros incompletos' };
         return { ok: true };
     },
 
@@ -60,10 +87,11 @@ const ServerCreator = React.createClass({
         const fieldsCheck = this.checkFields();
         if (!fieldsCheck.ok) return this.openSnackbar(fieldsCheck.msg);
 
-        const { name} = this.state;
+        let { name, url } = this.state;
+        if (!url.startsWith('http://') && !url.startsWith('https://')) url = `http://${url}`;
         const createdBy = this.props.user.id || this.props.user;
 
-        const body = { name, createdBy };
+        const body = { name, createdBy, url };
         const config = { headers: { 'Authorization': `Bearer ${this.props.token}` } };
         axios.post('/api/v1/servers', body, config)
             .then(contents => {
@@ -76,6 +104,11 @@ const ServerCreator = React.createClass({
     },
 
     render() {
+        if (this.state.serverToken) return <ShowTokenDialog
+            serverToken={this.state.serverToken}
+            onClose={() => this.setState({ serverToken: null })}
+        />;
+
         return (
             <div>
                 <Card style={{ backgroundColor: "rgba(255,255,255,0.7)" }} >
@@ -90,6 +123,13 @@ const ServerCreator = React.createClass({
                             floatingLabelText="Nombre"
                             value={this.state.name}
                             onChange={e => this.setState({ name: e.target.value })} /><br />
+                        <TextField
+                            style={{ width: "75%" }}
+                            name="Url"
+                            hint="Url"
+                            floatingLabelText="Url"
+                            value={this.state.url}
+                            onChange={e => this.setState({ url: e.target.value })} /><br />
                     </CardText>
                     <CardActions>
                         <RaisedButton label="Crear servidor" secondary={true} onClick={this.createServer} />

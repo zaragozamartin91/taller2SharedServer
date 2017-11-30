@@ -169,17 +169,21 @@ const RuleCreator = React.createClass({
                         label="Ok"
                         primary={true}
                         onClick={this.handleHelpDialogClose} />}>
-                    Variables disponibles:
+                    <p>Variables disponibles (referenciables usando <strong>this</strong>):</p>
                     <ul>
-                        <li>operations: Arreglo de operaciones sobre el costo</li>
-                        <li>mts: Distancia de viaje en metros</li>
-                        <li>type: Tipo de usuario (driver|passenger)</li>
-                        <li>pocketBalance: Balance del usuario</li>
-                        <li>email: Correo del usuario</li>
-                        <li>initialValue: Costo inicial del viaje</li>
-                        <li>waitTime: Tiempo de espera [segundos]</li>
-                        <li>travelTime: Tiempo de viaje [segundos]</li>
-                        <li>totalTime: Tiempo total [segundos]</li>
+                        <li><strong>operations</strong>: Arreglo de operaciones sobre el costo.
+                        Para incrementar o disminuir el costo se debe agregar un lambda sobre este arreglo en el cual
+                        la variable inyectada sera el costo actual y el valor retornado, el nuevo costo. </li>
+                        <li><strong>mts</strong>: Distancia de viaje en metros</li>
+                        <li><strong>type</strong>: Tipo de usuario (driver|passenger)</li>
+                        <li><strong>pocketBalance</strong>: Balance del usuario</li>
+                        <li><strong>email</strong>: Correo del usuario</li>
+                        <li><strong>initialValue</strong>: Costo inicial del viaje</li>
+                        <li><strong>waitTime</strong>: Tiempo de espera [segundos]</li>
+                        <li><strong>travelTime</strong>: Tiempo de viaje [segundos]</li>
+                        <li><strong>totalTime</strong>: Tiempo total [segundos]</li>
+                        <li><strong>dayOfWeek</strong>: Dia de la semana [0=Domingo]</li>
+                        <li><strong>hour</strong>: Hora del dia [De 0 a 23]</li>
                     </ul>
                 </Dialog>
 

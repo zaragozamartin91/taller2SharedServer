@@ -18,7 +18,8 @@ const serverMock1 = {
     'createdBy': 'martin',
     'createdTime': 1507059410810,
     'name': 'Llevame',
-    'lastConnection': 1507070208147
+    'lastConnection': 1507070208147,
+    'url': 'http://someurl.com/api/v1'
 };
 
 const serverMock2 = {
@@ -27,7 +28,8 @@ const serverMock2 = {
     'createdBy': 'martin',
     'createdTime': 1507061025653,
     'name': 'Super mega Taxi',
-    'lastConnection': 1507071823785
+    'lastConnection': 1507071823785,
+    'url': ''
 };
 
 const serverInstanceMock1 = ApplicationServer.fromObj(serverMock1);
@@ -346,41 +348,69 @@ describe('server-controller', function () {
     describe('#pingServer', function () {
         it('Obtiene el estado de llevame', function () {
             sandbox.stub(axios, 'get').returns(Promise.resolve({ data: { code: 200 } }));
+            sandbox.stub(ApplicationServer, 'findById')
+                .callsFake((serverId, callback) => callback(null, serverMock1));
 
-            const req = { params: { serverId: 'llevame' } };
+            const req = { params: { serverId: serverMock1.id } };
             const res = mockErrRes(200);
             serverController.pingServer(req, res);
         });
 
         it('Obtiene el estado de llevame con codigo ausente', function () {
             sandbox.stub(axios, 'get').returns(Promise.resolve({ data: {} }));
+            sandbox.stub(ApplicationServer, 'findById')
+                .callsFake((serverId, callback) => callback(null, serverMock1));
 
-            const req = { params: { serverId: 'llevame' } };
+            const req = { params: { serverId: serverMock1.id } };
             const res = mockErrRes(200);
             serverController.pingServer(req, res);
         });
 
         it('Falla al obtener el estado de llevame', function () {
             sandbox.stub(axios, 'get').returns(Promise.reject({ data: { code: 500 } }));
+            sandbox.stub(ApplicationServer, 'findById')
+                .callsFake((serverId, callback) => callback(null, serverMock1));
 
-            const req = { params: { serverId: 'llevame' } };
+            const req = { params: { serverId: serverMock1.id } };
             const res = mockErrRes(500);
             serverController.pingServer(req, res);
         });
 
         it('Obtiene el estado de otro server', function () {
             sandbox.stub(Math, 'random').returns(0.6);
+            sandbox.stub(ApplicationServer, 'findById')
+                .callsFake((serverId, callback) => callback(null, serverMock2));
 
-            const req = { params: { serverId: 'another' } };
+            const req = { params: { serverId: serverMock2.id } };
             const res = mockErrRes(200);
             serverController.pingServer(req, res);
         });
 
         it('Obtiene el estado de otro server como fallido', function () {
             sandbox.stub(Math, 'random').returns(0.4);
+            sandbox.stub(ApplicationServer, 'findById')
+                .callsFake((serverId, callback) => callback(null, serverMock2));
 
-            const req = { params: { serverId: 'another' } };
+            const req = { params: { serverId: serverMock2.id } };
             const res = mockErrRes(500);
+            serverController.pingServer(req, res);
+        });
+
+        it('Falla porque ocurrio un error en la BBDD', function () {
+            sandbox.stub(ApplicationServer, 'findById')
+                .callsFake((serverId, callback) => callback(new Error('error')));
+
+            const req = { params: { serverId: serverMock2.id } };
+            const res = mockErrRes(500);
+            serverController.pingServer(req, res);
+        });
+
+        it('Falla porque el server no existe', function () {
+            sandbox.stub(ApplicationServer, 'findById')
+                .callsFake((serverId, callback) => callback());
+
+            const req = { params: { serverId: serverMock2.id } };
+            const res = mockErrRes(404);
             serverController.pingServer(req, res);
         });
     });
