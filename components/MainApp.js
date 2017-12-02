@@ -16,6 +16,7 @@ import ServerCreator from './ServerCreator';
 import CreateUserForm from './CreateUserForm';
 import Rules from './Rules';
 import RuleCreator from './RuleCreator';
+import AppUsers from './AppUsers';
 
 /* ESTE FRAGMENTO DE CODIGO ES REQUERIDO PARA LOS EVENTOS DE TIPO TOUCH O CLICK EN COMPONENTES MATERIAL-UI */
 import injectTapEventPlugin from 'react-tap-event-plugin';
@@ -83,14 +84,16 @@ const MainApp = React.createClass({
 
                     <Route path="/users/list" component={() => <Users token={token} />} />
                     <Route path="/users/create" component={() => <CreateUserForm token={token} />} />
-                    
+
                     <Route path="/servers/list" component={() => <Servers token={token} />} />
                     <Route path="/servers/create" component={() => <ServerCreator token={token} user={user} />} />
-                    
+
                     <Route path="/index" component={Index} />
 
                     <Route path="/rules/list" component={() => <Rules token={token} user={user} />} />
                     <Route path="/rules/create" component={() => <RuleCreator token={token} />} />
+
+                    <Route path="/appusers/list" component={() => <AppUsers token={token} />} />
 
                     <form
                         action='/logout'

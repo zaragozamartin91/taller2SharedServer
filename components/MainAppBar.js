@@ -80,6 +80,8 @@ const MainAppBar = React.createClass({
                             <Link to="/rules/list" onClick={this.closeDrawer}><MenuItem >Ver</MenuItem></Link>,
                             <Link to="/rules/create" onClick={this.closeDrawer}><MenuItem >Crear</MenuItem></Link>
                         ]} />
+
+                    <Link to="/appusers/list" onClick={this.closeDrawer}><MenuItem >Usuarios-app</MenuItem></Link>
                 </Drawer>
             </div >
         );
